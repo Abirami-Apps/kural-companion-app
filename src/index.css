@@ -2,39 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   :root {
-    --background: 40 20% 98%;
+    --background: 35 30% 92%;
     --foreground: 220 20% 12%;
 
-    --card: 0 0% 100%;
+    --card: 35 35% 95%;
     --card-foreground: 220 20% 12%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 220 20% 12%;
 
-    --primary: 24 80% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 30 65% 45%;
+    --primary-foreground: 35 30% 92%;
 
-    --secondary: 40 30% 94%;
-    --secondary-foreground: 220 20% 12%;
+    --secondary: 228 35% 18%;
+    --secondary-foreground: 35 30% 92%;
 
-    --muted: 40 20% 94%;
+    --muted: 35 20% 85%;
     --muted-foreground: 220 10% 46%;
 
-    --accent: 24 60% 94%;
-    --accent-foreground: 24 80% 30%;
+    --accent: 30 50% 80%;
+    --accent-foreground: 30 65% 30%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 15% 88%;
-    --input: 40 15% 88%;
-    --ring: 24 80% 50%;
+    --border: 30 25% 75%;
+    --input: 30 25% 75%;
+    --ring: 30 65% 45%;
 
     --radius: 0.75rem;
+
+    --navy: 228 35% 18%;
+    --navy-light: 228 30% 25%;
+    --cream: 35 30% 92%;
+    --gold: 30 65% 45%;
+    --gold-light: 35 55% 70%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -47,33 +53,33 @@
   }
 
   .dark {
-    --background: 220 20% 8%;
-    --foreground: 40 20% 95%;
+    --background: 228 35% 12%;
+    --foreground: 35 30% 92%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 40 20% 95%;
+    --card: 228 30% 16%;
+    --card-foreground: 35 30% 92%;
 
-    --popover: 220 18% 12%;
-    --popover-foreground: 40 20% 95%;
+    --popover: 228 30% 16%;
+    --popover-foreground: 35 30% 92%;
 
-    --primary: 24 80% 55%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 30 65% 50%;
+    --primary-foreground: 228 35% 12%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 40 20% 95%;
+    --secondary: 228 25% 22%;
+    --secondary-foreground: 35 30% 92%;
 
-    --muted: 220 15% 18%;
+    --muted: 228 20% 20%;
     --muted-foreground: 220 10% 55%;
 
-    --accent: 24 40% 18%;
-    --accent-foreground: 24 80% 70%;
+    --accent: 30 40% 25%;
+    --accent-foreground: 30 65% 70%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 24 80% 55%;
+    --border: 228 20% 25%;
+    --input: 228 20% 25%;
+    --ring: 30 65% 50%;
   }
 }
 
@@ -90,4 +96,45 @@
   .font-tamil {
     font-family: 'Noto Sans Tamil', sans-serif;
   }
+}
+
+/* Digital display font effect */
+.digital-display {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.15em;
+  text-shadow: 0 0 8px hsl(200 80% 70% / 0.6), 0 0 20px hsl(200 80% 70% / 0.3);
+}
+
+/* Ornate frame for kural text */
+.kural-frame {
+  border: 2px solid hsl(var(--gold));
+  position: relative;
+}
+.kural-frame::before,
+.kural-frame::after {
+  content: '✦';
+  position: absolute;
+  color: hsl(var(--gold));
+  font-size: 1rem;
+}
+.kural-frame::before {
+  top: -0.6rem;
+  left: -0.6rem;
+}
+.kural-frame::after {
+  bottom: -0.6rem;
+  right: -0.6rem;
+}
+
+/* Green indicator dot */
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e80;
+}
+.indicator-dot.red {
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef444480;
 }
