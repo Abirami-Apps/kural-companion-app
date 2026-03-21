@@ -79,11 +79,8 @@ const KuralPlayer = () => {
         >
           {kural ? (
             <>
-              <p className="font-tamil text-xl leading-relaxed text-foreground whitespace-pre-line mb-4">
+              <p className="font-tamil text-xl leading-relaxed text-foreground whitespace-pre-line">
                 {kural.tamil}
-              </p>
-              <p className="text-sm text-muted-foreground max-w-sm">
-                {kural.tamilMeaning}
               </p>
             </>
           ) : (
