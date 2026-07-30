@@ -29,6 +29,7 @@ Object.values(rawData).forEach((raw) => {
   const kural: Kural = {
     number: raw.kuralno,
     tamil: raw.Kural,
+    meaning: raw.Porul,
     chapter: raw.Adikaram,
     chapterNumber: raw.adikaramno,
     section: raw.pirivu,
