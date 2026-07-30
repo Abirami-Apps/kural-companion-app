@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Heart, Share2 } from "lucide-react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import type { Kural } from "@/data/sample-kurals";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -142,10 +142,6 @@ function FitLine({ text }: { text: string }) {
     ro.observe(wrap);
     if (document.fonts?.ready) document.fonts.ready.then(fit).catch(() => {});
     return () => ro.disconnect();
-  }, [text]);
-
-  useEffect(() => {
-    setScale(1);
   }, [text]);
 
   return (
