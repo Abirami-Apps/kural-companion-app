@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Heart, Share2 } from "lucide-react";
 import { useState } from "react";
 import type { Kural } from "@/data/sample-kurals";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 interface VerseDisplayProps {
   kural: Kural;
@@ -14,7 +15,9 @@ export function VerseDisplay({
   isFavourite,
   onToggleFavourite,
 }: VerseDisplayProps) {
-  const reduce = useReducedMotion();
+  const systemReduce = useReducedMotion();
+  const { reducedMotion } = useTheme();
+  const reduce = systemReduce || reducedMotion;
   const [copied, setCopied] = useState(false);
 
   const share = async () => {
@@ -39,25 +42,28 @@ export function VerseDisplay({
           animate={{ opacity: 1, y: 0 }}
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
         >
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-1.5">
+          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground mb-1.5 font-tamil">
             {kural.section}
           </p>
           <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-5">
             {kural.chapterNumber}. {kural.chapter}
           </h1>
 
-          <div className="verse-card relative rounded-[1.75rem] bg-card px-6 py-8 sm:px-10 sm:py-11">
-            <span className="absolute left-6 sm:left-10 -top-3 digital-display text-[11px] px-2.5 py-0.5 rounded-full bg-card border border-primary/30 text-primary">
+          <div className="verse-card relative rounded-[1.75rem] bg-card px-6 py-8 sm:px-10 sm:py-11 overflow-x-auto">
+            <span className="absolute left-6 sm:left-10 -top-3 digital-display text-[0.7rem] px-2.5 py-0.5 rounded-full bg-card border border-primary/30 text-primary">
               {kural.number}
             </span>
-            <p className="font-tamil text-[1.35rem] sm:text-[1.7rem] font-semibold leading-[2.1] whitespace-pre-line text-foreground text-balance">
+            {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
+                Never re-wrap — whitespace-pre-line + nowrap lines preserve the structure. */}
+            <p className="font-tamil text-[1.35rem] sm:text-[1.7rem] font-semibold leading-[2.1] whitespace-pre-line text-card-foreground">
               {kural.tamil}
             </p>
           </div>
 
           {kural.meaning && (
-            <div className="mt-5 pt-4 border-t border-border/60 max-h-28 overflow-y-auto">
+            <div className="mt-5 pt-4 border-t border-border max-h-28 overflow-y-auto">
               <p className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed">
                 {kural.meaning}
               </p>
@@ -69,21 +75,33 @@ export function VerseDisplay({
               type="button"
               onClick={onToggleFavourite}
               aria-pressed={isFavourite}
-              aria-label={isFavourite ? "Remove from favourites" : "Add to favourites"}
-              className="h-9 w-9 rounded-full border border-border/70 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+              aria-label={
+                isFavourite
+                  ? `Remove kural ${kural.number} from favourites`
+                  : `Add kural ${kural.number} to favourites`
+              }
+              className="h-11 w-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Heart
                 className={`w-4 h-4 ${isFavourite ? "fill-primary text-primary" : ""}`}
+                aria-hidden="true"
               />
             </button>
             <button
               type="button"
               onClick={share}
-              aria-label="Share this kural"
-              className="h-9 w-9 rounded-full border border-border/70 flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/40 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+              aria-label={`Share kural ${kural.number}`}
+              className="h-11 w-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {copied ? <Check className="w-4 h-4 text-primary" /> : <Share2 className="w-4 h-4" />}
+              {copied ? (
+                <Check className="w-4 h-4 text-primary" aria-hidden="true" />
+              ) : (
+                <Share2 className="w-4 h-4" aria-hidden="true" />
+              )}
             </button>
+            <span className="sr-only" role="status">
+              {copied ? "Kural copied to clipboard" : ""}
+            </span>
           </div>
         </motion.article>
       </AnimatePresence>
