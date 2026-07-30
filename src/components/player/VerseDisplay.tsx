@@ -55,7 +55,7 @@ export function VerseDisplay({
             <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
               {kural.number}
             </span>
-            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-8 sm:px-10 sm:py-11">
+            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-11">
               {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
                   Never re-wrap — each line is nowrap and auto-scaled to fit its container. */}
               <p className="font-tamil font-semibold text-card-foreground">
@@ -68,7 +68,7 @@ export function VerseDisplay({
 
 
           {kural.meaning && (
-            <div className="mt-5 pt-4 border-t border-border max-h-28 overflow-y-auto">
+            <div className="mt-4 pt-3 border-t border-border max-h-[16vh] overflow-y-auto">
               <p className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed">
                 {kural.meaning}
               </p>
