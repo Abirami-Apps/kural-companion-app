@@ -97,7 +97,7 @@ const Index = () => {
 
         {/* Recents */}
         {p.recents.length > 1 && (
-          <nav aria-label="Recently played" className="flex items-center justify-center gap-1.5 flex-wrap">
+          <nav aria-label="Recently played" className="hidden short:hidden sm:flex items-center justify-center gap-1.5 flex-wrap">
             {p.recents.map((n) => (
               <button
                 key={n}
