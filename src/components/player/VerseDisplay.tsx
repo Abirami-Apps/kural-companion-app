@@ -121,9 +121,9 @@ export function VerseDisplay({
  * and large font scales.
  */
 function FitLine({ text }: { text: string }) {
-  const wrapRef = useRef<HTMLSpanElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
-  const [scale, setScale] = useState(1);
+  const [size, setSize] = useState<number | null>(null);
 
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
@@ -132,9 +132,15 @@ function FitLine({ text }: { text: string }) {
 
     const fit = () => {
       const available = wrap.clientWidth;
-      const natural = inner.offsetWidth;
-      if (!available || !natural) return;
-      setScale(Math.min(1, available / natural));
+      if (!available) return;
+      // Reset to the CSS-defined size, measure, then shrink font-size to fit.
+      inner.style.fontSize = "";
+      const base = parseFloat(getComputedStyle(inner).fontSize);
+      const natural = inner.scrollWidth;
+      if (!natural) return;
+      const next = natural > available ? Math.max(11, (base * available) / natural) : base;
+      inner.style.fontSize = `${next}px`;
+      setSize(next);
     };
 
     fit();
@@ -148,12 +154,13 @@ function FitLine({ text }: { text: string }) {
     <span ref={wrapRef} className="block w-full overflow-hidden text-center">
       <span
         ref={innerRef}
-        className="inline-block whitespace-nowrap text-[1.35rem] sm:text-[1.7rem] leading-[2.1] origin-center"
-        style={{ transform: scale < 1 ? `scale(${scale})` : undefined }}
+        className="inline-block whitespace-nowrap text-[1.35rem] sm:text-[1.7rem] leading-[2.1]"
+        style={size ? { fontSize: `${size}px` } : undefined}
       >
         {text}
       </span>
     </span>
   );
 }
+
 
