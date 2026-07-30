@@ -114,7 +114,39 @@
 }
 
 .verse-card {
-  border: 1px solid hsl(var(--gold) / 0.35);
-  box-shadow: 0 20px 45px -30px hsl(var(--navy) / 0.55);
+  border: 1px solid hsl(var(--gold) / 0.32);
+  box-shadow:
+    0 1px 0 hsl(var(--gold) / 0.12) inset,
+    0 30px 60px -40px hsl(var(--navy) / 0.6);
+}
+
+/* Safe areas for notches / home indicator (Capacitor) */
+.safe-pad {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.control-rail {
+  box-shadow: 0 -20px 50px -40px hsl(var(--navy));
+}
+
+/* Auto-play countdown indicator */
+@keyframes countdown {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+.countdown-bar {
+  animation: countdown linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
