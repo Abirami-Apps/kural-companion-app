@@ -62,7 +62,7 @@ function Key({
       whileTap={reduce ? undefined : { scale: 0.94 }}
       transition={{ type: "spring", stiffness: 600, damping: 30 }}
       onClick={onClick}
-      className={`h-[clamp(34px,6vh,54px)] rounded-2xl text-[clamp(0.95rem,2.2vh,1.25rem)] font-semibold tabular-nums border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${styles}`}
+      className={`h-[clamp(34px,5.2vh,52px)] rounded-2xl text-[clamp(0.95rem,2.2vh,1.25rem)] font-semibold tabular-nums border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${styles}`}
     >
       {label}
     </motion.button>
