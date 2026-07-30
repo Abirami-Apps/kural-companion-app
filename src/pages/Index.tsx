@@ -5,288 +5,242 @@ import {
   getRandomKural,
   TOTAL_KURALS,
   FREE_LIMIT,
-  SECTIONS,
   type Kural,
 } from "@/data/sample-kurals";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, Pause, Play } from "lucide-react";
+import {
+  Delete,
+  Lock,
+  Pause,
+  Play,
+  Shuffle,
+  SkipBack,
+  SkipForward,
+} from "lucide-react";
 
-type InputMode = "kural" | "adhikaram";
-
-const DIGIT_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
+const pad4 = (n: number) => n.toString().padStart(4, "0");
+const fmt = (s: number) =>
+  Number.isFinite(s)
+    ? `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, "0")}`
+    : "0:00";
 
 const Index = () => {
-  const [input, setInput] = useState("0001");
-  const [currentKural, setCurrentKural] = useState<Kural | undefined>(getKural(1));
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [inputMode, setInputMode] = useState<InputMode>("kural");
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const navigate = useNavigate();
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const isPremium = currentKural && currentKural.number > FREE_LIMIT;
-  const isSubscribed = false;
-  const isLocked = isPremium && !isSubscribed;
+  const [entry, setEntry] = useState("");
+  const [current, setCurrent] = useState<Kural>(() => getKural(1)!);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [autoPlay, setAutoPlay] = useState(false);
 
-  const padNumber = (n: number) => n.toString().padStart(4, "0");
+  const isLocked = current.number > FREE_LIMIT && false; // subscription gating placeholder
 
-  const loadKural = useCallback((num: number) => {
+  const load = useCallback((num: number, play = false) => {
     if (num < 1 || num > TOTAL_KURALS) return;
     const k = getKural(num);
-    if (k) {
-      setCurrentKural(k);
-      setInput(padNumber(num));
-      setIsPlaying(false);
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-    }
+    if (!k) return;
+    setCurrent(k);
+    setEntry("");
+    setProgress(0);
+    setAutoPlay(play);
+    setIsPlaying(play);
   }, []);
 
-  const handleDigit = useCallback(
-    (digit: string) => {
-      setInput((prev) => {
-        const newVal = prev === "0000" ? digit.padStart(4, "0") : (prev + digit).slice(-4);
-        return newVal;
-      });
-    },
-    []
-  );
-
-  const handleGo = useCallback(() => {
-    const num = parseInt(input, 10);
-    if (num >= 1 && num <= TOTAL_KURALS) {
-      loadKural(num);
-    }
-  }, [input, loadKural]);
-
+  // Load audio source whenever the kural changes
   useEffect(() => {
-    // Auto-load when input forms a valid number
-    const num = parseInt(input, 10);
-    if (num >= 1 && num <= TOTAL_KURALS) {
-      const k = getKural(num);
-      if (k) setCurrentKural(k);
-    }
-  }, [input]);
+    const el = audioRef.current;
+    if (!el) return;
+    el.load();
+    if (autoPlay) el.play().catch(() => setIsPlaying(false));
+  }, [current.number, autoPlay]);
+
+  const pressDigit = (d: string) => {
+    setEntry((prev) => {
+      const next = (prev + d).replace(/^0+/, "").slice(0, 4);
+      const num = parseInt(next || "0", 10);
+      if (num > TOTAL_KURALS) return prev;
+      return next;
+    });
+  };
+
+  const backspace = () => setEntry((p) => p.slice(0, -1));
+
+  const submit = () => {
+    const num = parseInt(entry || "0", 10);
+    if (num >= 1 && num <= TOTAL_KURALS) load(num, true);
+  };
 
   const togglePlay = () => {
-    if (!audioRef.current || isLocked) return;
-    if (isPlaying) {
-      audioRef.current.pause();
+    const el = audioRef.current;
+    if (!el || isLocked) return;
+    if (el.paused) {
+      el.play().catch(() => {});
+      setIsPlaying(true);
     } else {
-      audioRef.current.play().catch(() => {});
+      el.pause();
+      setIsPlaying(false);
     }
-    setIsPlaying(!isPlaying);
   };
 
-  const handleRandom = () => {
-    const k = getRandomKural();
-    loadKural(k.number);
-  };
-
-  const handlePlayAll = () => {
-    loadKural(1);
-    setActiveSection(null);
-  };
-
-  const handleSectionFilter = (section: string) => {
-    setActiveSection(section === activeSection ? null : section);
-  };
-
-  const handleClear = () => {
-    setInput("0000");
-  };
+  const display = entry ? entry.padStart(4, "0") : pad4(current.number);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* ===== TOP SECTION (Cream) ===== */}
-      <div className="flex-1 bg-background px-4 pt-4 pb-3 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <button className="w-10 h-10 rounded-lg border-2 border-primary flex items-center justify-center text-primary hover:bg-primary/10 transition-colors">
-            <Menu className="w-5 h-5" />
-          </button>
-          <h1 className="font-tamil text-lg font-bold text-foreground tracking-wide">
-            {currentKural ? (
-              <>{currentKural.chapterNumber}.{currentKural.chapter}</>
-            ) : (
-              "திருக்குறள்"
+    <div className="h-[100dvh] w-full flex flex-col landscape:flex-row overflow-hidden bg-background">
+      {/* ================= DISPLAY PANEL ================= */}
+      <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-5 py-6 landscape:px-8 text-center">
+        <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground mb-1">
+          Thirukkural
+        </p>
+        <p className="font-tamil text-xs sm:text-sm text-primary font-semibold mb-4">
+          {current.chapterNumber}. {current.chapter} · {current.section}
+        </p>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current.number}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="w-full max-w-xl"
+          >
+            <div className="kural-frame rounded-2xl bg-card px-5 py-6 sm:px-8 sm:py-8">
+              <p className="font-tamil text-lg sm:text-2xl font-bold leading-relaxed whitespace-pre-line text-foreground">
+                {current.tamil}
+              </p>
+            </div>
+            {current.meaning && (
+              <p className="font-tamil text-xs sm:text-sm text-muted-foreground leading-relaxed mt-4 max-h-24 overflow-y-auto px-2">
+                {current.meaning}
+              </p>
             )}
-          </h1>
-          <div className="w-10" /> {/* spacer */}
+          </motion.div>
+        </AnimatePresence>
+      </main>
+
+      {/* ================= CONTROL PANEL ================= */}
+      <aside className="bg-secondary text-secondary-foreground w-full landscape:w-[360px] landscape:h-full flex flex-col justify-center gap-3 px-4 py-4 landscape:py-6 shrink-0">
+        {/* Digital readout */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 rounded-xl bg-[hsl(228_40%_10%)] border border-primary/30 px-4 py-2 flex items-baseline justify-between">
+            <span className="digital-display text-3xl font-bold text-[hsl(200_80%_75%)]">
+              {display}
+            </span>
+            <span className="text-[10px] text-secondary-foreground/50 tracking-widest">
+              / {TOTAL_KURALS}
+            </span>
+          </div>
+          <button
+            onClick={backspace}
+            aria-label="Delete digit"
+            className="h-12 w-12 rounded-xl bg-secondary-foreground/5 border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/10 active:scale-95 transition"
+          >
+            <Delete className="w-5 h-5" />
+          </button>
         </div>
 
-        {/* Kural Frame */}
-        <div className="kural-frame rounded-lg px-5 py-6 bg-card mb-3">
-          {currentKural ? (
-            <p className="font-tamil text-xl sm:text-2xl md:text-3xl font-bold leading-relaxed text-foreground text-center">
-              {currentKural.tamil}
-            </p>
-          ) : (
-            <p className="font-tamil text-lg text-muted-foreground text-center">
-              குறள் எண்ணை உள்ளிடவும்
-            </p>
-          )}
-        </div>
-
-        {/* Section & Chapter info */}
-        {currentKural && (
-          <p className="font-tamil text-xs sm:text-sm text-muted-foreground text-center leading-relaxed px-2 mb-2">
-            {currentKural.section} · {currentKural.chapter}
-          </p>
-        )}
-      </div>
-
-      {/* ===== BOTTOM SECTION (Navy) ===== */}
-      <div className="bg-secondary px-3 pt-3 pb-4">
-        {/* Section Filter Buttons */}
-        <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
-          <FilterButton
-            label="PLAY ALL"
-            active={!activeSection}
-            onClick={handlePlayAll}
+        {/* Progress */}
+        <div className="flex items-center gap-2 text-[10px] text-secondary-foreground/60">
+          <span className="tabular-nums w-8">{fmt(progress)}</span>
+          <input
+            type="range"
+            min={0}
+            max={duration || 0}
+            step={0.1}
+            value={progress}
+            onChange={(e) => {
+              const v = Number(e.target.value);
+              if (audioRef.current) audioRef.current.currentTime = v;
+              setProgress(v);
+            }}
+            aria-label="Seek"
+            className="flex-1 h-1 accent-primary cursor-pointer"
           />
-          {SECTIONS.map((s) => (
-            <FilterButton
-              key={s}
-              label={s}
-              active={activeSection === s}
-              onClick={() => handleSectionFilter(s)}
-              tamil
-            />
+          <span className="tabular-nums w-8 text-right">{fmt(duration)}</span>
+        </div>
+
+        {/* Keypad */}
+        <div className="grid grid-cols-3 gap-2">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+            <Key key={d} label={d} onClick={() => pressDigit(d)} />
           ))}
-          <FilterButton
-            label="RANDOM"
-            onClick={handleRandom}
-            dotColor="red"
+          <Key label="0" onClick={() => pressDigit("0")} />
+          <Key label="GO" onClick={submit} accent />
+          <Key
+            label={<Shuffle className="w-5 h-5 mx-auto" />}
+            onClick={() => load(getRandomKural().number, true)}
           />
         </div>
 
-        {/* Keypad + Controls Row */}
-        <div className="flex gap-2">
-          {/* Number Keys */}
-          <div className="grid grid-cols-5 gap-1.5 flex-1">
-            {DIGIT_KEYS.slice(0, 5).map((d) => (
-              <KeyButton key={d} label={d} onClick={() => handleDigit(d)} />
-            ))}
-            {DIGIT_KEYS.slice(5).map((d) => (
-              <KeyButton key={d} label={d} onClick={() => handleDigit(d)} />
-            ))}
-          </div>
-
-          {/* Play/Pause */}
-          <div className="flex flex-col gap-1.5">
-            <button
-              onClick={isLocked ? () => navigate("/subscribe") : togglePlay}
-              className="flex-1 w-16 sm:w-20 rounded-xl bg-secondary-foreground/5 border border-primary/30 flex items-center justify-center text-secondary-foreground hover:bg-secondary-foreground/10 transition-colors active:scale-95"
-            >
-              {isLocked ? (
-                <span className="text-xs font-tamil">🔒</span>
-              ) : isPlaying ? (
-                <Pause className="w-8 h-8" />
-              ) : (
-                <Play className="w-8 h-8 ml-1" />
-              )}
-            </button>
-          </div>
-
-          {/* Digital Display + Mode Toggle */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex-1 w-24 sm:w-28 rounded-xl bg-[hsl(228_40%_12%)] border border-primary/30 flex items-center justify-center px-2">
-              <span className="digital-display text-2xl sm:text-3xl text-[hsl(200_80%_75%)] font-bold">
-                {input}
-              </span>
-            </div>
-            <div className="flex gap-1">
-              <button
-                onClick={() => setInputMode("kural")}
-                className={`flex-1 rounded-lg py-1 text-[10px] font-tamil font-medium flex items-center justify-center gap-1 transition-colors ${
-                  inputMode === "kural"
-                    ? "bg-primary/20 text-primary border border-primary/40"
-                    : "bg-secondary-foreground/5 text-secondary-foreground/60 border border-secondary-foreground/10"
-                }`}
-              >
-                <span className={`indicator-dot ${inputMode === "kural" ? "" : "red"}`} />
-                குறள்
-              </button>
-              <button
-                onClick={() => setInputMode("adhikaram")}
-                className={`flex-1 rounded-lg py-1 text-[10px] font-tamil font-medium flex items-center justify-center gap-1 transition-colors ${
-                  inputMode === "adhikaram"
-                    ? "bg-primary/20 text-primary border border-primary/40"
-                    : "bg-secondary-foreground/5 text-secondary-foreground/60 border border-secondary-foreground/10"
-                }`}
-              >
-                அதிகாரம்
-              </button>
-            </div>
-          </div>
+        {/* Transport */}
+        <div className="flex items-center justify-center gap-6 pt-1">
+          <button
+            onClick={() => load(current.number - 1, isPlaying)}
+            disabled={current.number <= 1}
+            aria-label="Previous kural"
+            className="p-2 disabled:opacity-30 hover:text-primary transition active:scale-95"
+          >
+            <SkipBack className="w-6 h-6" />
+          </button>
+          <button
+            onClick={isLocked ? () => navigate("/subscribe") : togglePlay}
+            aria-label={isPlaying ? "Pause" : "Play"}
+            className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 active:scale-95 transition"
+          >
+            {isLocked ? (
+              <Lock className="w-6 h-6" />
+            ) : isPlaying ? (
+              <Pause className="w-7 h-7" />
+            ) : (
+              <Play className="w-7 h-7 ml-1" />
+            )}
+          </button>
+          <button
+            onClick={() => load(current.number + 1, isPlaying)}
+            disabled={current.number >= TOTAL_KURALS}
+            aria-label="Next kural"
+            className="p-2 disabled:opacity-30 hover:text-primary transition active:scale-95"
+          >
+            <SkipForward className="w-6 h-6" />
+          </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Audio element */}
-      {currentKural?.audioUrl && (
-        <audio
-          ref={audioRef}
-          src={currentKural.audioUrl}
-          onEnded={() => setIsPlaying(false)}
-        />
-      )}
-
-      {/* Footer links */}
-      <div className="bg-secondary px-4 pb-3 flex justify-center gap-6 text-xs text-secondary-foreground/50">
-        <button onClick={() => navigate("/subscribe")} className="hover:text-secondary-foreground transition-colors">
-          Subscribe
-        </button>
-        <button onClick={() => navigate("/login")} className="hover:text-secondary-foreground transition-colors">
-          Login
-        </button>
-      </div>
+      <audio
+        ref={audioRef}
+        src={current.audioUrl}
+        preload="metadata"
+        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+        onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
+        onEnded={() => {
+          setIsPlaying(false);
+          load(current.number + 1, true);
+        }}
+      />
     </div>
   );
 };
 
-/* ===== Sub-components ===== */
-
-function FilterButton({
+function Key({
   label,
-  active,
   onClick,
-  tamil,
-  dotColor = "green",
+  accent,
 }: {
-  label: string;
-  active?: boolean;
+  label: React.ReactNode;
   onClick: () => void;
-  tamil?: boolean;
-  dotColor?: "green" | "red";
+  accent?: boolean;
 }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-        flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors
-        ${tamil ? "font-tamil" : ""}
-        ${
-          active
-            ? "bg-primary/20 text-primary border-primary/40"
-            : "bg-secondary-foreground/5 text-secondary-foreground/70 border-secondary-foreground/15 hover:bg-secondary-foreground/10"
-        }
-      `}
-    >
-      {label}
-      <span className={`indicator-dot ${dotColor === "red" ? "red" : ""}`} />
-    </button>
-  );
-}
-
-function KeyButton({ label, onClick }: { label: string; onClick: () => void }) {
   return (
     <motion.button
       whileTap={{ scale: 0.93 }}
       onClick={onClick}
-      className="h-12 sm:h-14 rounded-xl bg-secondary-foreground/5 border border-secondary-foreground/10 text-secondary-foreground text-xl sm:text-2xl font-bold font-tamil hover:bg-secondary-foreground/10 transition-colors active:scale-95"
+      className={`h-11 sm:h-12 rounded-xl text-lg font-bold border transition-colors ${
+        accent
+          ? "bg-primary/20 text-primary border-primary/40 hover:bg-primary/30 text-sm tracking-widest"
+          : "bg-secondary-foreground/5 border-secondary-foreground/10 hover:bg-secondary-foreground/10"
+      }`}
     >
       {label}
     </motion.button>

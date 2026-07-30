@@ -3,6 +3,7 @@ import kuralsJson from "./kurals.json";
 export interface Kural {
   number: number;
   tamil: string;
+  meaning?: string;
   chapter: string;
   chapterNumber: number;
   section: string;
@@ -12,6 +13,7 @@ export interface Kural {
 interface RawKural {
   kuralno: number;
   Kural: string;
+  Porul?: string;
   Adikaram: string;
   adikaramno: number;
   pirivu: string;
@@ -27,6 +29,7 @@ Object.values(rawData).forEach((raw) => {
   const kural: Kural = {
     number: raw.kuralno,
     tamil: raw.Kural,
+    meaning: raw.Porul,
     chapter: raw.Adikaram,
     chapterNumber: raw.adikaramno,
     section: raw.pirivu,
