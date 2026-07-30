@@ -76,15 +76,14 @@ export function useFitGuard(enabled = true) {
     };
 
     const overflow = () => {
-      const el = document.getElementById("app-root") ?? root;
-      const y = Math.max(
-        el.scrollHeight - el.clientHeight,
-        root.scrollHeight - root.clientHeight,
-      );
-      const x = Math.max(
-        el.scrollWidth - el.clientWidth,
-        root.scrollWidth - root.clientWidth,
-      );
+      const targets = [
+        document.getElementById("main"),
+        document.getElementById("app-root"),
+        root,
+        document.body,
+      ].filter(Boolean) as HTMLElement[];
+      const y = Math.max(...targets.map((el) => el.scrollHeight - el.clientHeight));
+      const x = Math.max(...targets.map((el) => el.scrollWidth - el.clientWidth));
       return { y, x };
     };
 
