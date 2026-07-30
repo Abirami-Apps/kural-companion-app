@@ -142,11 +142,30 @@ function VerseLines({ text }: { text: string }) {
       els.forEach((el) => (el.style.fontSize = `${next}px`));
     };
 
+    // Instant reflow: measure on every layout-affecting signal, and once more
+    // after the browser settles a rotation (mobile reports stale sizes first).
+    const reflow = () => {
+      fit();
+      requestAnimationFrame(fit);
+      window.setTimeout(fit, 250);
+    };
+
     fit();
     const ro = new ResizeObserver(fit);
     ro.observe(wrap);
+    window.addEventListener("orientationchange", reflow);
+    window.addEventListener("resize", fit);
+    window.visualViewport?.addEventListener("resize", fit);
+    const mq = window.matchMedia("(orientation: portrait)");
+    mq.addEventListener("change", reflow);
     if (document.fonts?.ready) document.fonts.ready.then(fit).catch(() => {});
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", reflow);
+      window.removeEventListener("resize", fit);
+      window.visualViewport?.removeEventListener("resize", fit);
+      mq.removeEventListener("change", reflow);
+    };
   }, [text]);
 
   return (
@@ -155,6 +174,7 @@ function VerseLines({ text }: { text: string }) {
         <span key={i} className="block w-full overflow-hidden text-center">
           <span
             ref={(el) => (lineRefs.current[i] = el)}
+            data-fit-probe="verse-line"
             className="inline-block whitespace-nowrap text-[clamp(1rem,min(5vw,3.6vh),1.7rem)] leading-[1.9]"
           >
             {line}

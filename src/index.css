@@ -53,6 +53,13 @@
     --gold-light: 35 55% 70%;
 
     --font-scale: 1;
+    --fit-scale: 1;
+
+    /* Safe-area insets exposed as vars so JS + components can read them */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-right: env(safe-area-inset-right, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -233,7 +240,8 @@
   }
 
   html {
-    font-size: calc(16px * var(--font-scale, 1));
+    /* --fit-scale is driven by the runtime no-scroll guard */
+    font-size: calc(16px * var(--font-scale, 1) * var(--fit-scale, 1));
   }
 
   body {
@@ -291,10 +299,17 @@
 
 /* Safe areas for notches / home indicator (Capacitor) */
 .safe-pad {
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+/* Tightened spacing while the no-scroll guard is compressing the layout */
+[data-fit='tight'] .fit-tighten {
+  gap: 0.25rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .control-rail {
