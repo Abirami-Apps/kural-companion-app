@@ -16,7 +16,9 @@ export default {
       screens: {
         /* Short viewports: phones/tablets in landscape, small laptops */
         short: { raw: "(max-height: 700px)" },
-        /* Wide + short => side-by-side player layout */
+        /* Tall viewports: room for optional secondary UI */
+        tall: { raw: "(min-height: 760px)" },
+        /* Wide + landscape => side-by-side player layout */
         wide: { raw: "(orientation: landscape) and (min-width: 640px)" },
       },
       colors: {
