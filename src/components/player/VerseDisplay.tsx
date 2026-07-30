@@ -154,7 +154,7 @@ function FitLine({ text }: { text: string }) {
     <span ref={wrapRef} className="block w-full overflow-hidden text-center">
       <span
         ref={innerRef}
-        className="inline-block whitespace-nowrap text-[1.35rem] sm:text-[1.7rem] leading-[2.1]"
+        className="inline-block whitespace-nowrap text-[clamp(1rem,min(5vw,3.6vh),1.7rem)] leading-[1.9]"
         style={size ? { fontSize: `${size}px` } : undefined}
       >
         {text}
