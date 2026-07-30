@@ -113,3 +113,51 @@ export function VerseDisplay({
     </div>
   );
 }
+
+/**
+ * Renders one source line of a kural on a single visual line.
+ * The word count per line (4 then 3) comes from the source data and must never
+ * be re-wrapped, so the line is nowrap and scaled down to fit narrow screens
+ * and large font scales.
+ */
+function FitLine({ text }: { text: string }) {
+  const wrapRef = useRef<HTMLSpanElement>(null);
+  const innerRef = useRef<HTMLSpanElement>(null);
+  const [scale, setScale] = useState(1);
+
+  useLayoutEffect(() => {
+    const wrap = wrapRef.current;
+    const inner = innerRef.current;
+    if (!wrap || !inner) return;
+
+    const fit = () => {
+      const available = wrap.clientWidth;
+      const natural = inner.scrollWidth;
+      if (!available || !natural) return;
+      setScale(Math.min(1, available / natural));
+    };
+
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(wrap);
+    if (document.fonts?.ready) document.fonts.ready.then(fit).catch(() => {});
+    return () => ro.disconnect();
+  }, [text]);
+
+  useEffect(() => {
+    setScale(1);
+  }, [text]);
+
+  return (
+    <span ref={wrapRef} className="block w-full overflow-hidden text-center">
+      <span
+        ref={innerRef}
+        className="inline-block whitespace-nowrap text-[1.35rem] sm:text-[1.7rem] leading-[2.1] origin-center"
+        style={{ transform: scale < 1 ? `scale(${scale})` : undefined }}
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
