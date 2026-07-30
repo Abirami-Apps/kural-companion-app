@@ -98,43 +98,23 @@
   }
 }
 
-/* Digital display font effect */
+/* Digital readout */
 .digital-display {
   font-family: 'Courier New', monospace;
-  letter-spacing: 0.15em;
-  text-shadow: 0 0 8px hsl(200 80% 70% / 0.6), 0 0 20px hsl(200 80% 70% / 0.3);
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 10px hsl(var(--gold-light) / 0.35);
 }
 
-/* Ornate frame for kural text */
-.kural-frame {
-  border: 2px solid hsl(var(--gold));
-  position: relative;
-}
-.kural-frame::before,
-.kural-frame::after {
-  content: '✦';
-  position: absolute;
-  color: hsl(var(--gold));
-  font-size: 1rem;
-}
-.kural-frame::before {
-  top: -0.6rem;
-  left: -0.6rem;
-}
-.kural-frame::after {
-  bottom: -0.6rem;
-  right: -0.6rem;
+/* Soft app background */
+.app-surface {
+  background:
+    radial-gradient(1200px 600px at 15% -10%, hsl(var(--gold) / 0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 110%, hsl(var(--navy) / 0.10), transparent 60%),
+    hsl(var(--background));
 }
 
-/* Green indicator dot */
-.indicator-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 6px #22c55e80;
+.verse-card {
+  border: 1px solid hsl(var(--gold) / 0.35);
+  box-shadow: 0 20px 45px -30px hsl(var(--navy) / 0.55);
 }
-.indicator-dot.red {
-  background: #ef4444;
-  box-shadow: 0 0 6px #ef444480;
-}
+
