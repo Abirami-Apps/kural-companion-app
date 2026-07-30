@@ -41,8 +41,8 @@ const Index = () => {
         <div className="w-full max-w-[380px] mx-auto flex items-center gap-2">
           <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2 sm:py-2.5 flex items-center justify-between gap-2">
             <span className="lcd shrink-0" aria-hidden="true">
-              <span className="lcd-ghost digital-display text-[clamp(1.5rem,7vw,2rem)] font-bold">8888</span>
-              <span className="digital-display relative text-[clamp(1.5rem,7vw,2rem)] font-bold text-primary">
+              <span className="lcd-ghost digital-display text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold">8888</span>
+              <span className="digital-display relative text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold text-primary">
                 {display}
               </span>
             </span>
@@ -67,7 +67,7 @@ const Index = () => {
             type="button"
             onClick={p.backspace}
             aria-label="Delete last digit"
-            className="h-12 w-12 shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="h-[clamp(40px,7vh,48px)] w-[clamp(40px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Delete className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -75,14 +75,14 @@ const Index = () => {
             type="button"
             onClick={() => p.setShortcutsOpen(true)}
             aria-label="Show keyboard shortcuts"
-            className="hidden sm:flex h-12 w-12 shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="hidden sm:flex h-[clamp(40px,7vh,48px)] w-[clamp(40px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Keyboard className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         <p
-          className="text-[0.7rem] text-center text-secondary-foreground/60 tracking-wide min-h-[14px]"
+          className="text-[0.7rem] text-center text-secondary-foreground/60 tracking-wide min-h-[14px] short:hidden"
           role="status"
         >
           {p.audioState === "error"
@@ -93,6 +93,7 @@ const Index = () => {
                 ? `Type a number 1–${TOTAL_KURALS}`
                 : ""}
         </p>
+
 
         {/* Recents */}
         {p.recents.length > 1 && (
