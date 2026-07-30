@@ -146,7 +146,7 @@ export function useFitGuard(enabled = true) {
     const ro = new ResizeObserver(schedule);
     ro.observe(document.body);
     const mo = new MutationObserver(schedule);
-    mo.observe(root, { attributes: true, attributeFilter: ["style", "data-theme", "data-contrast"] });
+    mo.observe(root, { attributes: true, attributeFilter: ["data-theme", "data-contrast"] });
 
     return () => {
       cancelAnimationFrame(frame);
