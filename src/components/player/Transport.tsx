@@ -27,29 +27,30 @@ export function Transport({
   const loading = audioState === "loading" && !isPlaying;
 
   return (
-    <div className="flex items-center justify-center gap-5">
+    <div className="flex items-center justify-center gap-4" role="group" aria-label="Playback controls">
       <button
         type="button"
         onClick={onPrev}
         disabled={!canPrev}
         aria-label="Previous kural"
-        className="p-2.5 rounded-full text-secondary-foreground/70 disabled:opacity-25 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        className="min-h-11 min-w-11 p-2.5 rounded-full text-secondary-foreground/80 disabled:opacity-30 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
       >
-        <SkipBack className="w-6 h-6" />
+        <SkipBack className="w-6 h-6 mx-auto" aria-hidden="true" />
       </button>
 
       <button
         type="button"
         onClick={onToggle}
-        aria-label={isPlaying ? "Pause" : "Play"}
+        aria-label={isPlaying ? "Pause audio" : "Play audio"}
+        aria-pressed={isPlaying}
         className="w-[68px] h-[68px] rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_12px_30px_-12px_hsl(var(--gold)/0.9)] hover:brightness-110 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2"
       >
         {loading ? (
-          <Loader2 className="w-7 h-7 animate-spin" />
+          <Loader2 className="w-7 h-7 animate-spin" aria-hidden="true" />
         ) : isPlaying ? (
-          <Pause className="w-7 h-7" />
+          <Pause className="w-7 h-7" aria-hidden="true" />
         ) : (
-          <Play className="w-7 h-7 ml-1" />
+          <Play className="w-7 h-7 ml-1" aria-hidden="true" />
         )}
       </button>
 
@@ -58,21 +59,21 @@ export function Transport({
         onClick={onNext}
         disabled={!canNext}
         aria-label="Next kural"
-        className="p-2.5 rounded-full text-secondary-foreground/70 disabled:opacity-25 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        className="min-h-11 min-w-11 p-2.5 rounded-full text-secondary-foreground/80 disabled:opacity-30 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
       >
-        <SkipForward className="w-6 h-6" />
+        <SkipForward className="w-6 h-6 mx-auto" aria-hidden="true" />
       </button>
 
       <button
         type="button"
         onClick={onToggleContinuous}
         aria-pressed={continuous}
-        aria-label="Continuous play"
-        className={`p-2 rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
-          continuous ? "text-primary" : "text-secondary-foreground/40 hover:text-secondary-foreground/70"
+        aria-label={continuous ? "Turn off continuous play" : "Turn on continuous play"}
+        className={`min-h-11 min-w-11 p-2 rounded-full transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
+          continuous ? "text-primary" : "text-secondary-foreground/60 hover:text-secondary-foreground"
         }`}
       >
-        <Repeat className="w-5 h-5" />
+        <Repeat className="w-5 h-5 mx-auto" aria-hidden="true" />
       </button>
     </div>
   );

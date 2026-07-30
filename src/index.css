@@ -4,35 +4,45 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
+/* Seven-segment digital readout face */
+@font-face {
+  font-family: 'DSEG7 Classic';
+  src: url('/__l5e/assets-v1/08183bb3-89e2-4ef4-ab70-8642a4fa328d/DSEG7Classic-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
-  :root {
+  :root,
+  [data-theme='classic'] {
     --background: 35 30% 92%;
     --foreground: 220 20% 12%;
 
     --card: 35 35% 95%;
     --card-foreground: 220 20% 12%;
 
-    --popover: 0 0% 100%;
+    --popover: 35 35% 96%;
     --popover-foreground: 220 20% 12%;
 
     --primary: 30 65% 45%;
-    --primary-foreground: 35 30% 92%;
+    --primary-foreground: 35 30% 95%;
 
     --secondary: 228 35% 18%;
     --secondary-foreground: 35 30% 92%;
 
     --muted: 35 20% 85%;
-    --muted-foreground: 220 10% 46%;
+    --muted-foreground: 220 12% 38%;
 
     --accent: 30 50% 80%;
-    --accent-foreground: 30 65% 30%;
+    --accent-foreground: 30 65% 25%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 30 25% 75%;
     --input: 30 25% 75%;
-    --ring: 30 65% 45%;
+    --ring: 30 65% 40%;
 
     --radius: 0.75rem;
 
@@ -41,6 +51,8 @@
     --cream: 35 30% 92%;
     --gold: 30 65% 45%;
     --gold-light: 35 55% 70%;
+
+    --font-scale: 1;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -52,40 +64,176 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
-  .dark {
-    --background: 228 35% 12%;
-    --foreground: 35 30% 92%;
+  [data-theme='palm'] {
+    --background: 48 34% 92%;
+    --foreground: 96 25% 12%;
 
-    --card: 228 30% 16%;
-    --card-foreground: 35 30% 92%;
+    --card: 48 40% 95%;
+    --card-foreground: 96 25% 12%;
 
-    --popover: 228 30% 16%;
-    --popover-foreground: 35 30% 92%;
+    --popover: 48 40% 96%;
+    --popover-foreground: 96 25% 12%;
 
-    --primary: 30 65% 50%;
-    --primary-foreground: 228 35% 12%;
+    --primary: 74 45% 30%;
+    --primary-foreground: 48 40% 95%;
 
-    --secondary: 228 25% 22%;
-    --secondary-foreground: 35 30% 92%;
+    --secondary: 96 26% 18%;
+    --secondary-foreground: 48 34% 92%;
 
-    --muted: 228 20% 20%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 48 22% 85%;
+    --muted-foreground: 96 12% 34%;
 
-    --accent: 30 40% 25%;
-    --accent-foreground: 30 65% 70%;
+    --accent: 74 35% 78%;
+    --accent-foreground: 74 45% 22%;
 
-    --destructive: 0 62.8% 30.6%;
+    --border: 74 18% 72%;
+    --input: 74 18% 72%;
+    --ring: 74 45% 28%;
+
+    --navy: 96 26% 18%;
+    --navy-light: 96 22% 26%;
+    --cream: 48 34% 92%;
+    --gold: 74 45% 32%;
+    --gold-light: 74 40% 60%;
+  }
+
+  [data-theme='midnight'] {
+    --background: 226 40% 8%;
+    --foreground: 220 35% 92%;
+
+    --card: 226 34% 13%;
+    --card-foreground: 220 35% 92%;
+
+    --popover: 226 34% 13%;
+    --popover-foreground: 220 35% 92%;
+
+    --primary: 219 80% 72%;
+    --primary-foreground: 226 40% 10%;
+
+    --secondary: 226 30% 15%;
+    --secondary-foreground: 220 35% 92%;
+
+    --muted: 226 25% 18%;
+    --muted-foreground: 220 18% 70%;
+
+    --accent: 219 40% 24%;
+    --accent-foreground: 219 80% 78%;
+
+    --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 228 20% 25%;
-    --input: 228 20% 25%;
-    --ring: 30 65% 50%;
+    --border: 226 22% 25%;
+    --input: 226 22% 25%;
+    --ring: 219 80% 72%;
+
+    --navy: 226 40% 8%;
+    --navy-light: 226 30% 16%;
+    --cream: 220 35% 92%;
+    --gold: 219 80% 72%;
+    --gold-light: 219 70% 82%;
+  }
+
+  [data-theme='sepia'] {
+    --background: 36 44% 90%;
+    --foreground: 26 40% 14%;
+
+    --card: 36 50% 94%;
+    --card-foreground: 26 40% 14%;
+
+    --popover: 36 50% 95%;
+    --popover-foreground: 26 40% 14%;
+
+    --primary: 22 58% 38%;
+    --primary-foreground: 36 50% 95%;
+
+    --secondary: 26 38% 22%;
+    --secondary-foreground: 36 44% 92%;
+
+    --muted: 36 28% 84%;
+    --muted-foreground: 26 20% 34%;
+
+    --accent: 22 45% 80%;
+    --accent-foreground: 22 58% 26%;
+
+    --border: 26 24% 72%;
+    --input: 26 24% 72%;
+    --ring: 22 58% 36%;
+
+    --navy: 26 38% 22%;
+    --navy-light: 26 30% 30%;
+    --cream: 36 44% 92%;
+    --gold: 22 58% 40%;
+    --gold-light: 30 50% 66%;
+  }
+
+  /* High-contrast overrides — applied on top of any theme */
+  [data-contrast='high'] {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 24 100% 26%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 0%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 0 0% 15%;
+    --accent: 0 0% 88%;
+    --accent-foreground: 0 0% 0%;
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 24 100% 26%;
+    --gold: 24 100% 26%;
+    --gold-light: 24 100% 40%;
+    --navy: 0 0% 0%;
+  }
+
+  [data-contrast='high'][data-theme='midnight'] {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 52 100% 62%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 100%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 88%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 100%;
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 52 100% 62%;
+    --gold: 52 100% 62%;
+    --gold-light: 52 100% 74%;
+    --navy: 0 0% 0%;
+  }
+
+  [data-contrast='high'] * {
+    border-color: hsl(var(--border));
+  }
+
+  [data-contrast='high'] :focus-visible {
+    outline: 3px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  [data-contrast='high'] .app-surface {
+    background: hsl(var(--background));
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+  }
+
+  html {
+    font-size: calc(16px * var(--font-scale, 1));
   }
 
   body {
@@ -98,11 +246,27 @@
   }
 }
 
-/* Digital readout */
+/* Digital readout — seven-segment LCD */
 .digital-display {
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.18em;
-  text-shadow: 0 0 10px hsl(var(--gold-light) / 0.35);
+  font-family: 'DSEG7 Classic', 'Courier New', monospace;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lcd {
+  position: relative;
+  display: inline-block;
+}
+
+.lcd-ghost {
+  position: absolute;
+  inset: 0;
+  color: hsl(var(--primary) / 0.13);
+  pointer-events: none;
+}
+
+[data-contrast='high'] .lcd-ghost {
+  display: none;
 }
 
 /* Soft app background */
@@ -118,6 +282,11 @@
   box-shadow:
     0 1px 0 hsl(var(--gold) / 0.12) inset,
     0 30px 60px -40px hsl(var(--navy) / 0.6);
+}
+
+[data-contrast='high'] .verse-card {
+  border: 2px solid hsl(var(--border));
+  box-shadow: none;
 }
 
 /* Safe areas for notches / home indicator (Capacitor) */
@@ -150,3 +319,9 @@
   }
 }
 
+[data-motion='reduced'] *,
+[data-motion='reduced'] *::before,
+[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}

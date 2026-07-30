@@ -53,6 +53,8 @@ export function useKuralPlayer() {
   const [hintSeen, setHintSeen] = useState(
     () => typeof window !== "undefined" && !!localStorage.getItem(HINT_KEY),
   );
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
 
   const isFavourite = favourites.includes(current.number);
 
@@ -207,7 +209,12 @@ export function useKuralPlayer() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+      if (
+        target &&
+        (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable)
+      )
+        return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
         pressDigit(e.key);
@@ -226,10 +233,29 @@ export function useKuralPlayer() {
         togglePlay();
       } else if (e.key === "Escape") {
         clearEntry();
-      } else if (e.key === "ArrowRight") {
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
         load(current.number + 1, isPlaying);
-      } else if (e.key === "ArrowLeft") {
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
         load(current.number - 1, isPlaying);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        const a = audioRef.current;
+        if (a) {
+          a.currentTime = Math.min(a.duration || 0, a.currentTime + 5);
+          setProgress(a.currentTime);
+        }
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        const a = audioRef.current;
+        if (a) {
+          a.currentTime = Math.max(0, a.currentTime - 5);
+          setProgress(a.currentTime);
+        }
+      } else if (e.key === "?") {
+        e.preventDefault();
+        setShortcutsOpen((v) => !v);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -244,6 +270,7 @@ export function useKuralPlayer() {
     pressDigit,
     togglePlay,
   ]);
+
 
   // Media Session (lock screen / headphone controls)
   useEffect(() => {
@@ -298,6 +325,9 @@ export function useKuralPlayer() {
   return {
     audioRef,
     audioHandlers,
+    shortcutsOpen,
+    setShortcutsOpen,
+
     current,
     entry,
     pending,
