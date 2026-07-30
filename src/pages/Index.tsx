@@ -67,7 +67,7 @@ const Index = () => {
             type="button"
             onClick={p.backspace}
             aria-label="Delete last digit"
-            className="h-12 w-12 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="h-12 w-12 shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Delete className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -75,7 +75,7 @@ const Index = () => {
             type="button"
             onClick={() => p.setShortcutsOpen(true)}
             aria-label="Show keyboard shortcuts"
-            className="hidden sm:flex h-12 w-12 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="hidden sm:flex h-12 w-12 shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Keyboard className="w-5 h-5" aria-hidden="true" />
           </button>
