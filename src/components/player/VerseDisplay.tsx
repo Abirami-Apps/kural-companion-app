@@ -51,16 +51,21 @@ export function VerseDisplay({
             {kural.chapterNumber}. {kural.chapter}
           </h1>
 
-          <div className="verse-card relative rounded-[1.75rem] bg-card px-6 py-8 sm:px-10 sm:py-11 overflow-x-auto">
-            <span className="absolute left-6 sm:left-10 -top-3 digital-display text-[0.7rem] px-2.5 py-0.5 rounded-full bg-card border border-primary/30 text-primary">
+          <div className="relative pt-4">
+            <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
               {kural.number}
             </span>
-            {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
-                Never re-wrap — whitespace-pre-line + nowrap lines preserve the structure. */}
-            <p className="font-tamil text-[1.35rem] sm:text-[1.7rem] font-semibold leading-[2.1] whitespace-pre-line text-card-foreground">
-              {kural.tamil}
-            </p>
+            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-8 sm:px-10 sm:py-11">
+              {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
+                  Never re-wrap — each line is nowrap and auto-scaled to fit its container. */}
+              <p className="font-tamil font-semibold text-card-foreground">
+                {kural.tamil.split(/\r?\n/).map((line, i) => (
+                  <FitLine key={i} text={line} />
+                ))}
+              </p>
+            </div>
           </div>
+
 
           {kural.meaning && (
             <div className="mt-5 pt-4 border-t border-border max-h-28 overflow-y-auto">
