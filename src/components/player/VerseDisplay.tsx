@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check, Heart, Share2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { Kural } from "@/data/sample-kurals";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
