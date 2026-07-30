@@ -121,7 +121,7 @@ export function VerseDisplay({
  * and large font scales.
  */
 function FitLine({ text }: { text: string }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const wrapRef = useRef<HTMLSpanElement>(null);
   const innerRef = useRef<HTMLSpanElement>(null);
   const [size, setSize] = useState<number | null>(null);
 
