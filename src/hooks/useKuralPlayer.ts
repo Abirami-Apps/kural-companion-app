@@ -53,6 +53,8 @@ export function useKuralPlayer() {
   const [hintSeen, setHintSeen] = useState(
     () => typeof window !== "undefined" && !!localStorage.getItem(HINT_KEY),
   );
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
 
   const isFavourite = favourites.includes(current.number);
 
