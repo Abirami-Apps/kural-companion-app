@@ -23,8 +23,8 @@ export function AppHeader() {
     }`;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-2 sm:px-6">
+    <header className="shrink-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-2 short:py-1 sm:px-6">
         <Link
           to="/"
           className="flex items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -33,18 +33,19 @@ export function AppHeader() {
           <img
             src={logo}
             alt="Thirukkural app logo"
-            className="h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-xl object-contain"
+            className="h-10 w-10 short:h-8 short:w-8 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-xl object-contain"
             loading="eager"
           />
           <span className="leading-tight text-left">
             <span className="block font-tamil text-sm sm:text-base lg:text-lg font-bold text-foreground">
               திருக்குறள்
             </span>
-            <span className="block text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="block text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground short:hidden">
               Thirukkural
             </span>
           </span>
         </Link>
+
 
         <nav aria-label="Main" className="ml-auto hidden md:flex items-center gap-1">
           {NAV_ITEMS.map((item) => (

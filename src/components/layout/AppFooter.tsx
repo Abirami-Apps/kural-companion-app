@@ -3,7 +3,7 @@ import { FontStepper, ThemeSwatches } from "@/components/theme/AppearancePanel";
 
 export function AppFooter() {
   return (
-    <footer className="border-t border-border bg-background/80">
+    <footer className="shrink-0 border-t border-border bg-background/80 short:hidden">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-xs text-muted-foreground">
