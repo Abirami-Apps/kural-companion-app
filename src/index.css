@@ -7,7 +7,7 @@
 /* Seven-segment digital readout face */
 @font-face {
   font-family: 'DSEG7 Classic';
-  src: url('/__l5e/assets-v1/08183bb3-89e2-4ef4-ab70-8642a4fa328d/DSEG7Classic-Bold.woff2') format('woff2');
+  src: url('/fonts/DSEG7Classic-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -261,7 +261,7 @@
 .lcd-ghost {
   position: absolute;
   inset: 0;
-  color: hsl(var(--primary) / 0.13);
+  color: hsl(var(--primary) / 0.16);
   pointer-events: none;
 }
 
