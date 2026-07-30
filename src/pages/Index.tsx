@@ -38,11 +38,11 @@ const Index = () => {
         className="control-rail bg-secondary text-secondary-foreground w-full lg:w-[380px] shrink-0 flex flex-col justify-center gap-3.5 px-4 py-5 lg:px-7 lg:py-8"
       >
         {/* Readout */}
-        <div className="w-full max-w-[380px] mx-auto flex items-center gap-3">
-          <div className="relative flex-1 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 px-4 py-2.5 flex items-baseline justify-between">
-            <span className="lcd" aria-hidden="true">
-              <span className="lcd-ghost digital-display text-3xl font-bold">8888</span>
-              <span className="digital-display relative text-3xl font-bold text-primary">
+        <div className="w-full max-w-[380px] mx-auto flex items-center gap-2">
+          <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2.5 flex items-center justify-between gap-2">
+            <span className="lcd shrink-0" aria-hidden="true">
+              <span className="lcd-ghost digital-display text-[clamp(1.5rem,7vw,2rem)] font-bold">8888</span>
+              <span className="digital-display relative text-[clamp(1.5rem,7vw,2rem)] font-bold text-primary">
                 {display}
               </span>
             </span>
@@ -51,7 +51,7 @@ const Index = () => {
                 ? `Entering ${p.entry}`
                 : `Kural ${p.current.number} of ${TOTAL_KURALS}`}
             </span>
-            <span className="text-[0.65rem] text-secondary-foreground/60 tracking-widest">
+            <span className="shrink-0 text-[0.7rem] font-medium tabular-nums text-secondary-foreground/75 tracking-wide">
               / {TOTAL_KURALS}
             </span>
             {p.pending && (
@@ -62,6 +62,7 @@ const Index = () => {
               />
             )}
           </div>
+
           <button
             type="button"
             onClick={p.backspace}
