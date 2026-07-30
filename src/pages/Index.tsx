@@ -1,332 +1,145 @@
-import { useState, useCallback, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  getKural,
-  getRandomKural,
-  TOTAL_KURALS,
-  FREE_LIMIT,
-  type Kural,
-} from "@/data/sample-kurals";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Delete,
-  Lock,
-  Pause,
-  Play,
-  Shuffle,
-  SkipBack,
-  SkipForward,
-} from "lucide-react";
+import { Delete } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { TOTAL_KURALS } from "@/data/sample-kurals";
+import { useKuralPlayer } from "@/hooks/useKuralPlayer";
+import { Keypad } from "@/components/player/Keypad";
+import { Transport } from "@/components/player/Transport";
+import { VerseDisplay } from "@/components/player/VerseDisplay";
 
 const pad4 = (n: number) => n.toString().padStart(4, "0");
 const fmt = (s: number) =>
-  Number.isFinite(s)
+  Number.isFinite(s) && s > 0
     ? `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, "0")}`
     : "0:00";
 
-const AUTO_DELAY = 700;
-
 const Index = () => {
-  const navigate = useNavigate();
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
-
-  const [entry, setEntry] = useState("");
-  const [current, setCurrent] = useState<Kural>(() => getKural(1)!);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(false);
-
-  const isLocked = current.number > FREE_LIMIT && false; // subscription gating placeholder
-
-  const load = useCallback((num: number, play = false) => {
-    if (num < 1 || num > TOTAL_KURALS) return;
-    const k = getKural(num);
-    if (!k) return;
-    clearTimeout(timerRef.current);
-    setCurrent(k);
-    setEntry("");
-    setProgress(0);
-    setAutoPlay(play);
-    setIsPlaying(play);
-  }, []);
-
-  // Load audio source whenever the kural changes
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el) return;
-    el.load();
-    if (autoPlay) el.play().catch(() => setIsPlaying(false));
-  }, [current.number, autoPlay]);
-
-  const togglePlay = useCallback(() => {
-    const el = audioRef.current;
-    if (!el || isLocked) return;
-    if (el.paused) {
-      el.play().catch(() => {});
-      setIsPlaying(true);
-    } else {
-      el.pause();
-      setIsPlaying(false);
-    }
-  }, [isLocked]);
-
-  const commit = useCallback(
-    (value: string) => {
-      const num = parseInt(value || "0", 10);
-      if (num >= 1 && num <= TOTAL_KURALS) load(num, true);
-    },
-    [load],
-  );
-
-  // Auto-play shortly after the user stops typing
-  const scheduleAuto = useCallback(
-    (value: string) => {
-      clearTimeout(timerRef.current);
-      if (!value) return;
-      timerRef.current = setTimeout(() => commit(value), AUTO_DELAY);
-    },
-    [commit],
-  );
-
-  useEffect(() => () => clearTimeout(timerRef.current), []);
-
-  const pressDigit = useCallback(
-    (d: string) => {
-      setEntry((prev) => {
-        const next = (prev + d).replace(/^0+/, "").slice(0, 4);
-        const num = parseInt(next || "0", 10);
-        if (num > TOTAL_KURALS) return prev;
-        scheduleAuto(next);
-        return next;
-      });
-    },
-    [scheduleAuto],
-  );
-
-  const backspace = useCallback(() => {
-    setEntry((p) => {
-      const next = p.slice(0, -1);
-      scheduleAuto(next);
-      return next;
-    });
-  }, [scheduleAuto]);
-
-  const clearEntry = useCallback(() => {
-    clearTimeout(timerRef.current);
-    setEntry("");
-  }, []);
-
-  // Physical keyboard support
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
-      if (/^[0-9]$/.test(e.key)) {
-        e.preventDefault();
-        pressDigit(e.key);
-      } else if (e.key === "Backspace") {
-        e.preventDefault();
-        backspace();
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        setEntry((v) => {
-          commit(v);
-          return v;
-        });
-      } else if (e.key === " ") {
-        e.preventDefault();
-        togglePlay();
-      } else if (e.key === "Escape") {
-        clearEntry();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [pressDigit, backspace, commit, togglePlay, clearEntry]);
-
-  const display = entry ? entry.padStart(4, "0") : pad4(current.number);
+  const p = useKuralPlayer();
+  const display = p.entry ? p.entry.padStart(4, "0") : pad4(p.current.number);
 
   return (
-    <div className="h-[100dvh] w-full flex flex-col landscape:flex-row overflow-hidden app-surface">
-      {/* ================= DISPLAY PANEL ================= */}
-      <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-5 py-5 landscape:px-10 text-center">
-        {/* Logo lockup */}
-        <div className="flex items-center gap-2.5 mb-5">
-          <img
-            src={logo}
-            alt="Thirukkural app logo"
-            className="h-9 w-9 rounded-lg object-contain"
-            loading="eager"
-          />
-          <div className="text-left leading-tight">
-            <p className="font-tamil text-sm font-bold text-foreground">
-              திருக்குறள்
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              Thirukkural
-            </p>
-          </div>
-        </div>
-
-        <p className="font-tamil text-xs sm:text-sm text-primary font-semibold mb-4">
-          {current.chapterNumber}. {current.chapter} · {current.section}
-        </p>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current.number}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.3 }}
-            className="w-full max-w-xl"
-          >
-            <div className="verse-card rounded-3xl bg-card px-6 py-7 sm:px-10 sm:py-10">
-              <p className="font-tamil text-lg sm:text-2xl font-semibold leading-[2] whitespace-pre-line text-foreground">
-                {current.tamil}
+    <div className="app-surface min-h-[100dvh] h-[100dvh] w-full overflow-hidden flex flex-col lg:flex-row safe-pad">
+      {/* ============ VERSE ============ */}
+      <main className="flex-1 min-h-0 px-5 py-4 lg:px-10 text-center overflow-y-auto">
+        <div className="min-h-full flex flex-col items-center justify-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={logo}
+              alt="Thirukkural app logo"
+              className="h-9 w-9 rounded-lg object-contain"
+              loading="eager"
+            />
+            <div className="text-left leading-tight">
+              <p className="font-tamil text-sm font-bold text-foreground">திருக்குறள்</p>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                Thirukkural
               </p>
             </div>
-            {current.meaning && (
-              <p className="font-tamil text-xs sm:text-sm text-muted-foreground leading-relaxed mt-4 max-h-24 overflow-y-auto px-2">
-                {current.meaning}
-              </p>
-            )}
-          </motion.div>
-        </AnimatePresence>
+          </div>
+
+          <VerseDisplay
+            kural={p.current}
+            isFavourite={p.isFavourite}
+            onToggleFavourite={p.toggleFavourite}
+          />
+        </div>
       </main>
 
-      {/* ================= CONTROL PANEL ================= */}
-      <aside className="bg-secondary text-secondary-foreground w-full landscape:w-[350px] landscape:h-full flex flex-col justify-center gap-3.5 px-4 py-4 landscape:px-5 landscape:py-6 shrink-0">
-        {/* Digital readout */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 rounded-2xl bg-secondary-foreground/5 border border-secondary-foreground/10 px-4 py-2.5 flex items-baseline justify-between">
-            <span className="digital-display text-3xl font-bold text-primary">
+      {/* ============ CONTROLS ============ */}
+      <aside className="control-rail bg-secondary text-secondary-foreground w-full lg:w-[380px] shrink-0 flex flex-col justify-center gap-3.5 px-4 py-4 lg:px-7 lg:py-8">
+        {/* Readout */}
+        <div className="w-full max-w-[380px] mx-auto flex items-center gap-3">
+          <div className="relative flex-1 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 px-4 py-2.5 flex items-baseline justify-between">
+            <span className="digital-display text-3xl font-bold text-primary tabular-nums">
               {display}
             </span>
-            <span className="text-[10px] text-secondary-foreground/50 tracking-widest">
+            <span className="text-[10px] text-secondary-foreground/45 tracking-widest">
               / {TOTAL_KURALS}
             </span>
+            {p.pending && (
+              <span
+                key={p.entry}
+                className="absolute left-0 bottom-0 h-[3px] bg-primary countdown-bar"
+                style={{ animationDuration: `${p.softDelay}ms` }}
+              />
+            )}
           </div>
           <button
-            onClick={backspace}
+            type="button"
+            onClick={p.backspace}
             aria-label="Delete digit"
-            className="h-12 w-12 rounded-2xl bg-secondary-foreground/5 border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/10 active:scale-95 transition"
+            className="h-12 w-12 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Delete className="w-5 h-5" />
           </button>
         </div>
 
-        <p className="text-[10px] text-center text-secondary-foreground/45 tracking-wide -mt-1">
-          {entry ? "Playing shortly…" : "Type a number — it plays automatically"}
+        <p className="text-[10px] text-center text-secondary-foreground/45 tracking-wide min-h-[14px]">
+          {p.audioState === "error"
+            ? "Audio unavailable — showing verse"
+            : p.pending
+              ? "Playing…"
+              : !p.hintSeen
+                ? `Type a number 1–${TOTAL_KURALS}`
+                : ""}
         </p>
 
+        {/* Recents */}
+        {p.recents.length > 1 && (
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+            {p.recents.map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => p.load(n, true)}
+                className={`px-2.5 py-1 rounded-full text-[11px] tabular-nums border transition ${
+                  n === p.current.number
+                    ? "border-primary/50 text-primary bg-primary/10"
+                    : "border-secondary-foreground/10 text-secondary-foreground/55 hover:text-secondary-foreground"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Progress */}
-        <div className="flex items-center gap-2 text-[10px] text-secondary-foreground/60">
-          <span className="tabular-nums w-8">{fmt(progress)}</span>
+        <div className="w-full max-w-[380px] mx-auto flex items-center gap-2 text-[10px] text-secondary-foreground/55">
+          <span className="tabular-nums w-8">{fmt(p.progress)}</span>
           <input
             type="range"
             min={0}
-            max={duration || 0}
+            max={p.duration || 0}
             step={0.1}
-            value={progress}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              if (audioRef.current) audioRef.current.currentTime = v;
-              setProgress(v);
-            }}
+            value={p.progress}
+            onChange={(e) => p.seek(Number(e.target.value))}
             aria-label="Seek"
             className="flex-1 h-1 accent-primary cursor-pointer"
           />
-          <span className="tabular-nums w-8 text-right">{fmt(duration)}</span>
+          <span className="tabular-nums w-8 text-right">{fmt(p.duration)}</span>
         </div>
 
-        {/* Keypad */}
-        <div className="grid grid-cols-3 gap-2.5">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-            <Key key={d} label={d} onClick={() => pressDigit(d)} />
-          ))}
-          <Key label="C" onClick={clearEntry} muted />
-          <Key label="0" onClick={() => pressDigit("0")} />
-          <Key
-            label={<Shuffle className="w-5 h-5 mx-auto" />}
-            onClick={() => load(getRandomKural().number, true)}
-          />
-        </div>
+        <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onShuffle={p.shuffle} />
 
-        {/* Transport */}
-        <div className="flex items-center justify-center gap-7 pt-1">
-          <button
-            onClick={() => load(current.number - 1, isPlaying)}
-            disabled={current.number <= 1}
-            aria-label="Previous kural"
-            className="p-2 text-secondary-foreground/70 disabled:opacity-25 hover:text-primary transition active:scale-95"
-          >
-            <SkipBack className="w-6 h-6" />
-          </button>
-          <button
-            onClick={isLocked ? () => navigate("/subscribe") : togglePlay}
-            aria-label={isPlaying ? "Pause" : "Play"}
-            className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 active:scale-95 transition"
-          >
-            {isLocked ? (
-              <Lock className="w-6 h-6" />
-            ) : isPlaying ? (
-              <Pause className="w-7 h-7" />
-            ) : (
-              <Play className="w-7 h-7 ml-1" />
-            )}
-          </button>
-          <button
-            onClick={() => load(current.number + 1, isPlaying)}
-            disabled={current.number >= TOTAL_KURALS}
-            aria-label="Next kural"
-            className="p-2 text-secondary-foreground/70 disabled:opacity-25 hover:text-primary transition active:scale-95"
-          >
-            <SkipForward className="w-6 h-6" />
-          </button>
-        </div>
+        <Transport
+          isPlaying={p.isPlaying}
+          audioState={p.audioState}
+          canPrev={p.current.number > 1}
+          canNext={p.current.number < TOTAL_KURALS}
+          continuous={p.continuous}
+          onPrev={() => p.load(p.current.number - 1, p.isPlaying)}
+          onNext={() => p.load(p.current.number + 1, p.isPlaying)}
+          onToggle={p.togglePlay}
+          onToggleContinuous={() => p.setContinuous((c) => !c)}
+        />
       </aside>
 
-      <audio
-        ref={audioRef}
-        src={current.audioUrl}
-        preload="metadata"
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onTimeUpdate={(e) => setProgress(e.currentTarget.currentTime)}
-        onEnded={() => {
-          setIsPlaying(false);
-          load(current.number + 1, true);
-        }}
-      />
+      <audio ref={p.audioRef} src={p.current.audioUrl} preload="metadata" {...p.audioHandlers} />
+      {p.neighbours.map((src) => (
+        <link key={src} rel="prefetch" as="audio" href={src} />
+      ))}
     </div>
   );
 };
-
-function Key({
-  label,
-  onClick,
-  muted,
-}: {
-  label: React.ReactNode;
-  onClick: () => void;
-  muted?: boolean;
-}) {
-  return (
-    <motion.button
-      whileTap={{ scale: 0.93 }}
-      onClick={onClick}
-      className={`h-12 rounded-2xl text-lg font-semibold border transition-colors ${
-        muted
-          ? "bg-transparent text-secondary-foreground/60 border-secondary-foreground/10 hover:bg-secondary-foreground/10"
-          : "bg-secondary-foreground/5 border-secondary-foreground/10 hover:bg-secondary-foreground/10"
-      }`}
-    >
-      {label}
-    </motion.button>
-  );
-}
 
 export default Index;
