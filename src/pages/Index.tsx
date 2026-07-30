@@ -19,27 +19,29 @@ const Index = () => {
   return (
     <div className="app-surface min-h-[100dvh] h-[100dvh] w-full overflow-hidden flex flex-col lg:flex-row safe-pad">
       {/* ============ VERSE ============ */}
-      <main className="flex-1 min-h-0 flex flex-col items-center justify-center gap-4 px-5 py-4 lg:px-10 text-center overflow-y-auto">
-        <div className="flex items-center gap-2.5">
-          <img
-            src={logo}
-            alt="Thirukkural app logo"
-            className="h-9 w-9 rounded-lg object-contain"
-            loading="eager"
-          />
-          <div className="text-left leading-tight">
-            <p className="font-tamil text-sm font-bold text-foreground">திருக்குறள்</p>
-            <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              Thirukkural
-            </p>
+      <main className="flex-1 min-h-0 px-5 py-4 lg:px-10 text-center overflow-y-auto">
+        <div className="min-h-full flex flex-col items-center justify-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={logo}
+              alt="Thirukkural app logo"
+              className="h-9 w-9 rounded-lg object-contain"
+              loading="eager"
+            />
+            <div className="text-left leading-tight">
+              <p className="font-tamil text-sm font-bold text-foreground">திருக்குறள்</p>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                Thirukkural
+              </p>
+            </div>
           </div>
-        </div>
 
-        <VerseDisplay
-          kural={p.current}
-          isFavourite={p.isFavourite}
-          onToggleFavourite={p.toggleFavourite}
-        />
+          <VerseDisplay
+            kural={p.current}
+            isFavourite={p.isFavourite}
+            onToggleFavourite={p.toggleFavourite}
+          />
+        </div>
       </main>
 
       {/* ============ CONTROLS ============ */}
