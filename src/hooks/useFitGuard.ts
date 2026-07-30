@@ -135,6 +135,7 @@ export function useFitGuard(enabled = true) {
       settle = window.setTimeout(() => converge(), 250);
     };
 
+    apply(scaleRef.current);
     schedule();
 
     window.addEventListener("resize", schedule);
