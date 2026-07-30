@@ -13,6 +13,12 @@ export default {
       },
     },
     extend: {
+      screens: {
+        /* Short viewports: phones/tablets in landscape, small laptops */
+        short: { raw: "(max-height: 700px)" },
+        /* Wide + short => side-by-side player layout */
+        wide: { raw: "(orientation: landscape) and (min-width: 640px)" },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
