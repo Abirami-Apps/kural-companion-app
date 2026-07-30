@@ -21,9 +21,9 @@ const Index = () => {
       {/* ============ VERSE ============ */}
       <section
         aria-label="Kural verse"
-        className="flex-1 min-h-0 px-5 py-3 short:py-2 sm:py-6 lg:px-10 text-center overflow-y-auto"
+        className="flex-1 min-h-0 px-5 py-3 short:py-2 sm:py-5 lg:px-10 text-center overflow-hidden"
       >
-        <div className="min-h-full flex flex-col items-center justify-center gap-4">
+        <div className="h-full min-h-0 flex flex-col items-center justify-center">
           <VerseDisplay
             kural={p.current}
             isFavourite={p.isFavourite}
@@ -31,6 +31,7 @@ const Index = () => {
           />
         </div>
       </section>
+
 
       {/* ============ CONTROLS ============ */}
       <aside
