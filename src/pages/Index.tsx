@@ -17,11 +17,11 @@ const Index = () => {
   const display = p.entry ? p.entry.padStart(4, "0") : pad4(p.current.number);
 
   return (
-    <div id="player" className="flex min-h-0 flex-1 flex-col lg:flex-row">
+    <div id="player" className="flex min-h-0 flex-1 flex-col wide:flex-row lg:flex-row">
       {/* ============ VERSE ============ */}
       <section
         aria-label="Kural verse"
-        className="flex-1 min-h-0 px-5 py-6 lg:px-10 text-center overflow-y-auto"
+        className="flex-1 min-h-0 px-5 py-3 short:py-2 sm:py-6 lg:px-10 text-center overflow-y-auto"
       >
         <div className="min-h-full flex flex-col items-center justify-center gap-4">
           <VerseDisplay
@@ -35,11 +35,11 @@ const Index = () => {
       {/* ============ CONTROLS ============ */}
       <aside
         aria-label="Player controls"
-        className="control-rail bg-secondary text-secondary-foreground w-full lg:w-[380px] shrink-0 flex flex-col justify-center gap-3.5 px-4 py-5 lg:px-7 lg:py-8"
+        className="control-rail bg-secondary text-secondary-foreground w-full wide:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 short:gap-1.5 sm:gap-3.5 px-4 py-3 short:py-2 sm:py-5 lg:px-7 lg:py-8"
       >
         {/* Readout */}
         <div className="w-full max-w-[380px] mx-auto flex items-center gap-2">
-          <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2.5 flex items-center justify-between gap-2">
+          <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2 sm:py-2.5 flex items-center justify-between gap-2">
             <span className="lcd shrink-0" aria-hidden="true">
               <span className="lcd-ghost digital-display text-[clamp(1.5rem,7vw,2rem)] font-bold">8888</span>
               <span className="digital-display relative text-[clamp(1.5rem,7vw,2rem)] font-bold text-primary">
