@@ -325,6 +325,9 @@ export function useKuralPlayer() {
   return {
     audioRef,
     audioHandlers,
+    shortcutsOpen,
+    setShortcutsOpen,
+
     current,
     entry,
     pending,
