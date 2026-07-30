@@ -57,12 +57,8 @@ export function VerseDisplay({
             </span>
             <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-11">
               {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
-                  Never re-wrap — each line is nowrap and auto-scaled to fit its container. */}
-              <p className="font-tamil font-semibold text-card-foreground">
-                {kural.tamil.split(/\r?\n/).map((line, i) => (
-                  <FitLine key={i} text={line} />
-                ))}
-              </p>
+                  Never re-wrap — both lines are nowrap and share one auto-fitted size. */}
+              <VerseLines text={kural.tamil} />
             </div>
           </div>
 
