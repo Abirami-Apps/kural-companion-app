@@ -55,20 +55,16 @@ export function VerseDisplay({
             <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
               {kural.number}
             </span>
-            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-8 sm:px-10 sm:py-11">
+            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-11">
               {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
-                  Never re-wrap — each line is nowrap and auto-scaled to fit its container. */}
-              <p className="font-tamil font-semibold text-card-foreground">
-                {kural.tamil.split(/\r?\n/).map((line, i) => (
-                  <FitLine key={i} text={line} />
-                ))}
-              </p>
+                  Never re-wrap — both lines are nowrap and share one auto-fitted size. */}
+              <VerseLines text={kural.tamil} />
             </div>
           </div>
 
 
           {kural.meaning && (
-            <div className="mt-5 pt-4 border-t border-border max-h-28 overflow-y-auto">
+            <div className="mt-4 pt-3 border-t border-border max-h-[16vh] overflow-y-auto">
               <p className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed">
                 {kural.meaning}
               </p>
@@ -115,32 +111,33 @@ export function VerseDisplay({
 }
 
 /**
- * Renders one source line of a kural on a single visual line.
- * The word count per line (4 then 3) comes from the source data and must never
- * be re-wrapped, so the line is nowrap and scaled down to fit narrow screens
- * and large font scales.
+ * Renders the kural's source lines (4 words, then 3) on exactly one visual line
+ * each. The word split comes from the source data and must never be re-wrapped,
+ * so both lines are nowrap and share a single font size — the largest size at
+ * which the widest line still fits its container.
  */
-function FitLine({ text }: { text: string }) {
-  const wrapRef = useRef<HTMLSpanElement>(null);
-  const innerRef = useRef<HTMLSpanElement>(null);
-  const [size, setSize] = useState<number | null>(null);
+function VerseLines({ text }: { text: string }) {
+  const lines = text.split(/\r?\n/);
+  const wrapRef = useRef<HTMLParagraphElement>(null);
+  const lineRefs = useRef<(HTMLSpanElement | null)[]>([]);
 
   useLayoutEffect(() => {
     const wrap = wrapRef.current;
-    const inner = innerRef.current;
-    if (!wrap || !inner) return;
+    if (!wrap) return;
 
     const fit = () => {
       const available = wrap.clientWidth;
-      if (!available) return;
-      // Reset to the CSS-defined size, measure, then shrink font-size to fit.
-      inner.style.fontSize = "";
-      const base = parseFloat(getComputedStyle(inner).fontSize);
-      const natural = inner.scrollWidth;
-      if (!natural) return;
-      const next = natural > available ? Math.max(11, (base * available) / natural) : base;
-      inner.style.fontSize = `${next}px`;
-      setSize(next);
+      const els = lineRefs.current.filter(Boolean) as HTMLSpanElement[];
+      if (!available || !els.length) return;
+
+      // Reset to the CSS-defined size, measure every line, then apply one
+      // shared size so the two lines stay visually balanced.
+      els.forEach((el) => (el.style.fontSize = ""));
+      const base = parseFloat(getComputedStyle(els[0]).fontSize);
+      const widest = Math.max(...els.map((el) => el.scrollWidth));
+      if (!widest) return;
+      const next = widest > available ? Math.max(11, (base * available) / widest) : base;
+      els.forEach((el) => (el.style.fontSize = `${next}px`));
     };
 
     fit();
@@ -151,16 +148,20 @@ function FitLine({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <span ref={wrapRef} className="block w-full overflow-hidden text-center">
-      <span
-        ref={innerRef}
-        className="inline-block whitespace-nowrap text-[1.35rem] sm:text-[1.7rem] leading-[2.1]"
-        style={size ? { fontSize: `${size}px` } : undefined}
-      >
-        {text}
-      </span>
-    </span>
+    <p ref={wrapRef} className="font-tamil font-semibold text-card-foreground">
+      {lines.map((line, i) => (
+        <span key={i} className="block w-full overflow-hidden text-center">
+          <span
+            ref={(el) => (lineRefs.current[i] = el)}
+            className="inline-block whitespace-nowrap text-[clamp(1rem,min(5vw,3.6vh),1.7rem)] leading-[1.9]"
+          >
+            {line}
+          </span>
+        </span>
+      ))}
+    </p>
   );
 }
+
 
 

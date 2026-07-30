@@ -17,11 +17,11 @@ const Index = () => {
   const display = p.entry ? p.entry.padStart(4, "0") : pad4(p.current.number);
 
   return (
-    <div id="player" className="flex min-h-0 flex-1 flex-col lg:flex-row">
+    <div id="player" className="flex min-h-0 flex-1 flex-col wide:flex-row lg:flex-row">
       {/* ============ VERSE ============ */}
       <section
         aria-label="Kural verse"
-        className="flex-1 min-h-0 px-5 py-6 lg:px-10 text-center overflow-y-auto"
+        className="flex-1 min-h-0 px-5 py-3 short:py-2 sm:py-6 lg:px-10 text-center overflow-y-auto"
       >
         <div className="min-h-full flex flex-col items-center justify-center gap-4">
           <VerseDisplay
@@ -35,14 +35,14 @@ const Index = () => {
       {/* ============ CONTROLS ============ */}
       <aside
         aria-label="Player controls"
-        className="control-rail bg-secondary text-secondary-foreground w-full lg:w-[380px] shrink-0 flex flex-col justify-center gap-3.5 px-4 py-5 lg:px-7 lg:py-8"
+        className="control-rail bg-secondary text-secondary-foreground w-full wide:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 short:gap-1.5 sm:gap-3.5 px-4 py-3 short:py-2 sm:py-5 lg:px-7 lg:py-8"
       >
         {/* Readout */}
         <div className="w-full max-w-[380px] mx-auto flex items-center gap-2">
-          <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2.5 flex items-center justify-between gap-2">
+          <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2 sm:py-2.5 flex items-center justify-between gap-2">
             <span className="lcd shrink-0" aria-hidden="true">
-              <span className="lcd-ghost digital-display text-[clamp(1.5rem,7vw,2rem)] font-bold">8888</span>
-              <span className="digital-display relative text-[clamp(1.5rem,7vw,2rem)] font-bold text-primary">
+              <span className="lcd-ghost digital-display text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold">8888</span>
+              <span className="digital-display relative text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold text-primary">
                 {display}
               </span>
             </span>
@@ -67,7 +67,7 @@ const Index = () => {
             type="button"
             onClick={p.backspace}
             aria-label="Delete last digit"
-            className="h-12 w-12 shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="h-[clamp(40px,7vh,48px)] w-[clamp(40px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Delete className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -75,14 +75,14 @@ const Index = () => {
             type="button"
             onClick={() => p.setShortcutsOpen(true)}
             aria-label="Show keyboard shortcuts"
-            className="hidden sm:flex h-12 w-12 shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="hidden sm:flex h-[clamp(40px,7vh,48px)] w-[clamp(40px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Keyboard className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
         <p
-          className="text-[0.7rem] text-center text-secondary-foreground/60 tracking-wide min-h-[14px]"
+          className="text-[0.7rem] text-center text-secondary-foreground/60 tracking-wide min-h-[14px] short:hidden"
           role="status"
         >
           {p.audioState === "error"
@@ -94,9 +94,10 @@ const Index = () => {
                 : ""}
         </p>
 
+
         {/* Recents */}
         {p.recents.length > 1 && (
-          <nav aria-label="Recently played" className="flex items-center justify-center gap-1.5 flex-wrap">
+          <nav aria-label="Recently played" className="hidden tall:flex items-center justify-center gap-1.5 flex-wrap">
             {p.recents.map((n) => (
               <button
                 key={n}
