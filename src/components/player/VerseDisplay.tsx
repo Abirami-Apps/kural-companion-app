@@ -132,7 +132,7 @@ function FitLine({ text }: { text: string }) {
 
     const fit = () => {
       const available = wrap.clientWidth;
-      const natural = inner.scrollWidth;
+      const natural = inner.offsetWidth;
       if (!available || !natural) return;
       setScale(Math.min(1, available / natural));
     };
