@@ -36,14 +36,14 @@ const Index = () => {
       {/* ============ CONTROLS ============ */}
       <aside
         aria-label="Player controls"
-        className="control-rail bg-secondary text-secondary-foreground w-full wide:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 short:gap-1.5 sm:gap-3.5 px-4 py-3 short:py-2 sm:py-5 lg:px-7 lg:py-8"
+        className="control-rail fit-tighten bg-secondary text-secondary-foreground w-full wide:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 short:gap-1.5 sm:gap-3.5 px-4 py-3 short:py-2 sm:py-5 lg:px-7 lg:py-8"
       >
         {/* Readout */}
         <div className="w-full max-w-[380px] mx-auto flex items-center gap-2">
           <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2 sm:py-2.5 flex items-center justify-between gap-2">
             <span className="lcd shrink-0" aria-hidden="true">
               <span className="lcd-ghost digital-display text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold">8888</span>
-              <span className="digital-display relative text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold text-primary">
+              <span data-fit-probe="lcd" className="digital-display relative text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold text-primary">
                 {display}
               </span>
             </span>
