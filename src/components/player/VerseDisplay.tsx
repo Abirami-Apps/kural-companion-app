@@ -34,7 +34,7 @@ export function VerseDisplay({
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto" aria-live="polite">
+    <div className="w-full max-w-2xl mx-auto flex min-h-0 flex-col overflow-hidden" aria-live="polite">
       <AnimatePresence mode="wait">
         <motion.article
           key={kural.number}
@@ -43,19 +43,20 @@ export function VerseDisplay({
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
+          className="flex min-h-0 flex-col"
         >
-          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground mb-1.5 font-tamil">
+          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-tamil short:hidden">
             {kural.section}
           </p>
-          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-5">
+          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-3 short:mb-2">
             {kural.chapterNumber}. {kural.chapter}
           </h1>
 
-          <div className="relative pt-4">
+          <div className="relative pt-4 shrink-0">
             <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
               {kural.number}
             </span>
-            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-11">
+            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-9">
               {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
                   Never re-wrap — both lines are nowrap and share one auto-fitted size. */}
               <VerseLines text={kural.tamil} />
@@ -64,12 +65,13 @@ export function VerseDisplay({
 
 
           {kural.meaning && (
-            <div className="mt-4 pt-3 border-t border-border max-h-[16vh] overflow-y-auto">
-              <p className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed">
+            <div className="mt-3 pt-2 border-t border-border min-h-0 overflow-hidden">
+              <p className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 short:line-clamp-1 tall:line-clamp-4">
                 {kural.meaning}
               </p>
             </div>
           )}
+
 
           <div className="mt-4 flex items-center justify-center gap-2">
             <button
