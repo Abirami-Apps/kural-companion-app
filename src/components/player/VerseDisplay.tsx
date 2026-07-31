@@ -64,13 +64,8 @@ export function VerseDisplay({
           </div>
 
 
-          {kural.meaning && (
-            <div className="mt-3 pt-2 border-t border-border min-h-0 overflow-hidden">
-              <p className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed line-clamp-2 short:line-clamp-1 tall:line-clamp-4">
-                {kural.meaning}
-              </p>
-            </div>
-          )}
+          {kural.meaning && <Meaning text={kural.meaning} />}
+
 
 
           <div className="mt-4 flex items-center justify-center gap-2">
