@@ -43,7 +43,7 @@ export function VerseDisplay({
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
           aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
-          className="flex min-h-0 flex-col"
+          className="flex h-full min-h-0 flex-col justify-center"
         >
           <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-tamil short:hidden">
             {kural.section}
