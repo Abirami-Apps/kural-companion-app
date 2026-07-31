@@ -21,7 +21,7 @@ const Index = () => {
       {/* ============ VERSE ============ */}
       <section
         aria-label="Kural verse"
-        className="flex-1 min-h-0 basis-[46%] split:basis-auto px-5 py-3 short:py-2 sm:py-5 lg:px-10 text-center overflow-hidden"
+        className="flex-1 min-h-0 basis-[50%] split:basis-auto px-5 py-3 short:py-2 sm:py-5 lg:px-10 text-center overflow-hidden"
       >
         <div className="h-full min-h-0 flex flex-col items-center justify-center">
           <VerseDisplay
@@ -36,12 +36,12 @@ const Index = () => {
       {/* ============ CONTROLS ============ */}
       <aside
         aria-label="Player controls"
-        className="control-rail fit-tighten bg-secondary text-secondary-foreground w-full max-h-[54vh] split:max-h-none wide:w-[340px] split:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 short:gap-1 sm:gap-3.5 px-4 py-3 short:py-1.5 sm:py-5 lg:px-7 lg:py-8"
+        className="control-rail fit-tighten bg-secondary text-secondary-foreground w-full max-h-[50vh] split:max-h-none wide:w-[340px] split:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 short:gap-1 sm:gap-3.5 px-4 py-3 short:py-1.5 sm:py-5 lg:px-7 lg:py-8"
       >
 
         {/* Readout */}
         <div className="w-full max-w-[380px] mx-auto flex items-center gap-2">
-          <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2 sm:py-2.5 flex items-center justify-between gap-2">
+          <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2 short:py-1 sm:py-2.5 flex items-center justify-between gap-2">
             <span className="lcd shrink-0" aria-hidden="true">
               <span className="lcd-ghost digital-display text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold">8888</span>
               <span data-fit-probe="lcd" className="digital-display relative text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold text-primary">
@@ -69,7 +69,7 @@ const Index = () => {
             type="button"
             onClick={p.backspace}
             aria-label="Delete last digit"
-            className="h-[clamp(40px,7vh,48px)] w-[clamp(40px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="h-[clamp(34px,7vh,48px)] w-[clamp(34px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 flex items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Delete className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -77,7 +77,7 @@ const Index = () => {
             type="button"
             onClick={() => p.setShortcutsOpen(true)}
             aria-label="Show keyboard shortcuts"
-            className="hidden sm:flex h-[clamp(40px,7vh,48px)] w-[clamp(40px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="hidden sm:flex h-[clamp(34px,7vh,48px)] w-[clamp(34px,7vh,48px)] shrink-0 rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/10 items-center justify-center hover:bg-secondary-foreground/[0.12] active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           >
             <Keyboard className="w-5 h-5" aria-hidden="true" />
           </button>

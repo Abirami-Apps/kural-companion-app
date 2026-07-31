@@ -27,7 +27,7 @@ export function Transport({
   const loading = audioState === "loading" && !isPlaying;
 
   return (
-    <div className="flex items-center justify-center gap-3 sm:gap-4" role="group" aria-label="Playback controls">
+    <div className="flex items-center justify-center gap-3 short:gap-2 sm:gap-4" role="group" aria-label="Playback controls">
       <button
         type="button"
         onClick={onPrev}
@@ -43,7 +43,7 @@ export function Transport({
         onClick={onToggle}
         aria-label={isPlaying ? "Pause audio" : "Play audio"}
         aria-pressed={isPlaying}
-        className="w-[clamp(46px,8vh,68px)] h-[clamp(46px,8vh,68px)] rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_12px_30px_-12px_hsl(var(--gold)/0.9)] hover:brightness-110 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2"
+        className="w-[clamp(40px,8vh,68px)] h-[clamp(40px,8vh,68px)] rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_12px_30px_-12px_hsl(var(--gold)/0.9)] hover:brightness-110 active:scale-95 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2"
       >
         {loading ? (
           <Loader2 className="w-7 h-7 animate-spin" aria-hidden="true" />
