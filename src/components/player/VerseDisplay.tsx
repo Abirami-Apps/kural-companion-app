@@ -34,7 +34,7 @@ export function VerseDisplay({
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex min-h-0 flex-col overflow-hidden" aria-live="polite">
+    <div className="w-full max-w-2xl mx-auto flex h-full min-h-0 flex-col overflow-hidden" aria-live="polite">
       <AnimatePresence mode="wait">
         <motion.article
           key={kural.number}
