@@ -20,7 +20,10 @@ export default {
         tall: { raw: "(min-height: 760px)" },
         /* Wide + landscape => side-by-side player layout */
         wide: { raw: "(orientation: landscape) and (min-width: 640px)" },
+        /* Any viewport roomy enough for the two-column player (tablets incl. portrait) */
+        split: { raw: "(min-width: 700px)" },
       },
+
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
