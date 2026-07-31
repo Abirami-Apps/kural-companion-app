@@ -68,7 +68,7 @@ export function VerseDisplay({
 
 
 
-          <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="mt-3 shrink-0 flex items-center justify-center gap-2">
             <button
               type="button"
               onClick={onToggleFavourite}
