@@ -188,7 +188,9 @@ function Meaning({ text }: { text: string }) {
   return (
     <div
       ref={boxRef}
-      className="mt-3 pt-2 border-t border-border flex-1 min-h-0 overflow-hidden"
+      className={`flex-1 min-h-0 overflow-hidden ${
+        lines === 0 ? "" : "mt-3 pt-2 border-t border-border"
+      }`}
       aria-hidden={lines === 0 ? true : undefined}
     >
       <p
@@ -204,6 +206,7 @@ function Meaning({ text }: { text: string }) {
       </p>
     </div>
   );
+
 }
 
 
