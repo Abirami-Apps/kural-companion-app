@@ -36,7 +36,7 @@ const Index = () => {
       {/* ============ CONTROLS ============ */}
       <aside
         aria-label="Player controls"
-        className="control-rail fit-tighten bg-secondary text-secondary-foreground w-full max-h-[46vh] split:max-h-none wide:w-[340px] split:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 short:gap-1 sm:gap-3.5 px-4 py-3 short:py-1.5 sm:py-5 lg:px-7 lg:py-8"
+        className="control-rail fit-tighten bg-secondary text-secondary-foreground w-full max-h-[46vh] split:max-h-none wide:w-[340px] split:w-[340px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 sm:gap-3.5 short:!gap-1 px-4 py-3 sm:py-5 short:!py-1.5 lg:px-7 lg:py-8"
       >
 
         {/* Readout */}

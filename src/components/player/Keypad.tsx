@@ -13,7 +13,7 @@ const DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 export function Keypad({ onDigit, onClear, onShuffle }: KeypadProps) {
   return (
     <div
-      className="grid grid-cols-3 gap-1.5 short:gap-1 sm:gap-2.5 w-full max-w-[300px] split:max-w-[320px] mx-auto"
+      className="grid grid-cols-3 gap-1.5 sm:gap-2.5 short:!gap-1 w-full max-w-[300px] split:max-w-[320px] mx-auto"
       role="group"
       aria-label="Kural number keypad"
     >
