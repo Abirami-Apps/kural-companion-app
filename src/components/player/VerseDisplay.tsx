@@ -108,6 +108,61 @@ export function VerseDisplay({
 }
 
 /**
+ * Meaning paragraph that fits the space left over instead of being cropped:
+ * it measures its own available height and shows only as many whole lines as
+ * fit, adding an ellipsis via line-clamp so text is never half-cut.
+ */
+function Meaning({ text }: { text: string }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [lines, setLines] = useState(2);
+
+  useLayoutEffect(() => {
+    const box = boxRef.current;
+    if (!box) return;
+    const measure = () => {
+      const p = box.firstElementChild as HTMLElement | null;
+      if (!p) return;
+      const lh = parseFloat(getComputedStyle(p).lineHeight) || 18;
+      const available = box.clientHeight;
+      const fit = Math.max(0, Math.floor(available / lh));
+      setLines(Math.min(6, fit));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(box);
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, [text]);
+
+  return (
+    <div
+      ref={boxRef}
+      className="mt-3 pt-2 border-t border-border flex-1 min-h-0 overflow-hidden"
+      aria-hidden={lines === 0 ? true : undefined}
+    >
+      <p
+        className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed overflow-hidden"
+        style={{
+          display: "-webkit-box",
+          WebkitBoxOrient: "vertical",
+          WebkitLineClamp: Math.max(1, lines),
+          visibility: lines === 0 ? "hidden" : undefined,
+        }}
+      >
+        {text}
+      </p>
+    </div>
+  );
+}
+
+
+
+/**
  * Renders the kural's source lines (4 words, then 3) on exactly one visual line
  * each. The word split comes from the source data and must never be re-wrapped,
  * so both lines are nowrap and share a single font size — the largest size at
