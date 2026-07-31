@@ -21,7 +21,7 @@ export default {
         /* Wide + landscape => side-by-side player layout */
         wide: { raw: "(orientation: landscape) and (min-width: 640px)" },
         /* Any viewport roomy enough for the two-column player (tablets incl. portrait) */
-        split: { raw: "(min-width: 700px)" },
+        split: { raw: "(min-width: 900px)" },
       },
 
       colors: {

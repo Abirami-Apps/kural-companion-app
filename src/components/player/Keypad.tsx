@@ -13,7 +13,7 @@ const DIGITS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 export function Keypad({ onDigit, onClear, onShuffle }: KeypadProps) {
   return (
     <div
-      className="grid grid-cols-3 gap-1.5 sm:gap-2.5 w-full max-w-[300px] split:max-w-[320px] mx-auto"
+      className="grid grid-cols-3 gap-1.5 short:gap-1 sm:gap-2.5 w-full max-w-[300px] split:max-w-[320px] mx-auto"
       role="group"
       aria-label="Kural number keypad"
     >
@@ -63,7 +63,7 @@ function Key({
       whileTap={reduce ? undefined : { scale: 0.94 }}
       transition={{ type: "spring", stiffness: 600, damping: 30 }}
       onClick={onClick}
-      className={`h-[clamp(30px,4.6vh,52px)] rounded-2xl text-[clamp(0.9rem,2.1vh,1.25rem)] font-semibold tabular-nums border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${styles}`}
+      className={`h-[clamp(26px,4.6vh,52px)] rounded-2xl text-[clamp(0.9rem,2.1vh,1.25rem)] font-semibold tabular-nums border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 ${styles}`}
     >
       {label}
     </motion.button>
