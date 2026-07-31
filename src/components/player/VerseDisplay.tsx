@@ -133,7 +133,7 @@ function VerseLines({ text }: { text: string }) {
       const base = parseFloat(getComputedStyle(els[0]).fontSize);
       const widest = Math.max(...els.map((el) => el.scrollWidth));
       if (!widest) return;
-      const next = widest > available ? Math.max(11, (base * available) / widest) : base;
+      const next = widest > available ? Math.max(14, (base * available) / widest) : base;
       els.forEach((el) => (el.style.fontSize = `${next}px`));
     };
 
