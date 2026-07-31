@@ -38,7 +38,6 @@ export function VerseDisplay({
         if (root.scrollHeight - root.clientHeight <= 2) break;
         factor = Math.max(0.6, factor - 0.07);
         root.style.setProperty("--vfit", String(factor));
-        root.dispatchEvent(new Event("vfit"));
       }
     };
     const schedule = () => {
@@ -228,7 +227,7 @@ function VerseLines({ text }: { text: string }) {
       const widest = Math.max(...els.map((el) => el.scrollWidth));
       if (!widest) return;
       const next = widest > available ? Math.max(14, (base * available) / widest) : base;
-      els.forEach((el) => (el.style.fontSize = `${next}px`));
+      els.forEach((el) => (el.style.fontSize = `calc(${next}px * var(--vfit, 1))`));
     };
 
     // Instant reflow: measure on every layout-affecting signal, and once more
