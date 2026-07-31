@@ -167,9 +167,11 @@ function Meaning({ text }: { text: string }) {
       const p = box.firstElementChild as HTMLElement | null;
       if (!p) return;
       const lh = parseFloat(getComputedStyle(p).lineHeight) || 18;
-      const available = box.clientHeight;
+      const pad = parseFloat(getComputedStyle(box).paddingTop) || 0;
+      const available = box.clientHeight - pad;
       const fit = Math.max(0, Math.floor(available / lh));
       setLines(Math.min(6, fit));
+
     };
     measure();
     const ro = new ResizeObserver(measure);
