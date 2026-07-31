@@ -27,7 +27,7 @@ export function Transport({
   const loading = audioState === "loading" && !isPlaying;
 
   return (
-    <div className="flex items-center justify-center gap-4" role="group" aria-label="Playback controls">
+    <div className="flex items-center justify-center gap-3 sm:gap-4" role="group" aria-label="Playback controls">
       <button
         type="button"
         onClick={onPrev}
