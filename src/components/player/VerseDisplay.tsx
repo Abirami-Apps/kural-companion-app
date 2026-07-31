@@ -19,6 +19,44 @@ export function VerseDisplay({
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
   const [copied, setCopied] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Height guard: the width fitter keeps each source line unwrapped, but a
+   * short column can still be too small for the whole block. Shrink the shared
+   * verse scale (--vfit) until the verse, meaning and actions all fit — never
+   * crop them.
+   */
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    let raf = 0;
+    const fitHeight = () => {
+      let factor = 1;
+      root.style.setProperty("--vfit", "1");
+      for (let i = 0; i < 10; i++) {
+        if (root.scrollHeight - root.clientHeight <= 2) break;
+        factor = Math.max(0.6, factor - 0.07);
+        root.style.setProperty("--vfit", String(factor));
+        root.dispatchEvent(new Event("vfit"));
+      }
+    };
+    const schedule = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(fitHeight);
+    };
+    schedule();
+    const ro = new ResizeObserver(schedule);
+    ro.observe(root);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("orientationchange", schedule);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("orientationchange", schedule);
+    };
+  }, [kural.number]);
 
   const share = async () => {
     const url = `${window.location.origin}/?k=${kural.number}`;
@@ -34,7 +72,8 @@ export function VerseDisplay({
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex h-full min-h-0 flex-col overflow-hidden" aria-live="polite">
+    <div ref={rootRef} className="w-full max-w-2xl mx-auto flex h-full min-h-0 flex-col overflow-hidden" aria-live="polite">
+
       <AnimatePresence mode="wait">
         <motion.article
           key={kural.number}
