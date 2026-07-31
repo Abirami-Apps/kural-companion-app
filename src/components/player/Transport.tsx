@@ -33,9 +33,9 @@ export function Transport({
         onClick={onPrev}
         disabled={!canPrev}
         aria-label="Previous kural"
-        className="min-h-11 min-w-11 p-2.5 rounded-full text-secondary-foreground/80 disabled:opacity-30 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        className="min-h-11 min-w-11 short:min-h-9 short:min-w-9 p-2.5 short:p-1.5 rounded-full text-secondary-foreground/80 disabled:opacity-30 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
       >
-        <SkipBack className="w-6 h-6 mx-auto" aria-hidden="true" />
+        <SkipBack className="w-6 h-6 short:w-5 short:h-5 mx-auto" aria-hidden="true" />
       </button>
 
       <button
@@ -59,9 +59,9 @@ export function Transport({
         onClick={onNext}
         disabled={!canNext}
         aria-label="Next kural"
-        className="min-h-11 min-w-11 p-2.5 rounded-full text-secondary-foreground/80 disabled:opacity-30 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        className="min-h-11 min-w-11 short:min-h-9 short:min-w-9 p-2.5 short:p-1.5 rounded-full text-secondary-foreground/80 disabled:opacity-30 hover:text-primary transition active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
       >
-        <SkipForward className="w-6 h-6 mx-auto" aria-hidden="true" />
+        <SkipForward className="w-6 h-6 short:w-5 short:h-5 mx-auto" aria-hidden="true" />
       </button>
 
       <button
