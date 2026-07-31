@@ -36,15 +36,21 @@ export function VerseDisplay({
       root.style.setProperty("--vfit", "1");
       for (let i = 0; i < 10; i++) {
         if (root.scrollHeight - root.clientHeight <= 2) break;
-        factor = Math.max(0.6, factor - 0.07);
+        factor = Math.max(0.7, factor - 0.06);
         root.style.setProperty("--vfit", String(factor));
       }
     };
+    let settle = 0;
     const schedule = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(fitHeight);
+      // Re-run once the browser has settled fonts / rotation, so an early
+      // measurement can never leave the verse permanently shrunken.
+      window.clearTimeout(settle);
+      settle = window.setTimeout(fitHeight, 300);
     };
     schedule();
+
     const ro = new ResizeObserver(schedule);
     ro.observe(root);
     window.addEventListener("resize", schedule);
