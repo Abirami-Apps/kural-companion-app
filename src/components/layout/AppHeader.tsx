@@ -28,11 +28,11 @@ export function AppHeader() {
         <Link
           to="/"
           className="flex items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          aria-label="Thirukkural home"
+          aria-label="Kural Companion home"
         >
           <img
             src={logo}
-            alt="Thirukkural app logo"
+            alt="Kural Companion logo"
             className="h-10 w-10 short:h-8 short:w-8 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-xl object-contain"
             loading="eager"
           />
@@ -41,7 +41,7 @@ export function AppHeader() {
               திருக்குறள்
             </span>
             <span className="block text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground short:hidden">
-              Thirukkural
+              Kural Companion
             </span>
           </span>
         </Link>
