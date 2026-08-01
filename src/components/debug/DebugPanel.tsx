@@ -11,7 +11,7 @@ export function DebugPanel() {
   const [open, setOpen] = useState(
     () => new URLSearchParams(window.location.search).get("debug") === "1",
   );
-  const m = useFitGuard(true);
+  const m = useFitGuard(true, false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

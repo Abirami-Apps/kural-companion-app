@@ -33,7 +33,6 @@ const plans = [
 const features = [
   "All 1,330 Kurals with audio",
   "Tamil verse & meaning",
-  "English translation",
   "Offline listening (coming soon)",
 ];
 
@@ -68,10 +67,11 @@ const Subscribe = () => {
           <Crown className="w-7 h-7 text-primary" />
         </div>
         <h1 className="text-2xl font-semibold text-foreground mb-2">
-          Unlock All Kurals
+          Kural Companion plans
         </h1>
         <p className="text-sm text-muted-foreground">
-          First 10 kurals are free. Subscribe to access all 1,330.
+          All 1,330 kurals are free to play right now. Checkout is not connected
+          until a payment provider is configured, so these plans are a preview.
         </p>
       </motion.div>
 
@@ -94,10 +94,7 @@ const Subscribe = () => {
                   ? "border-primary bg-primary/5 shadow-sm"
                   : "border-border bg-card hover:border-primary/30"
               }`}
-              onClick={() => {
-                // TODO: Stripe checkout
-                navigate("/login");
-              }}
+              onClick={() => navigate("/login")}
             >
               <div className="flex items-center justify-between">
                 <div>

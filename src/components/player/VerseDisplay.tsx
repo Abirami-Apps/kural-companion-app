@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Heart, Share2 } from "lucide-react";
+import { Check, Heart, Lock, Share2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import type { Kural } from "@/data/sample-kurals";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -8,12 +9,14 @@ interface VerseDisplayProps {
   kural: Kural;
   isFavourite: boolean;
   onToggleFavourite: () => void;
+  locked?: boolean;
 }
 
 export function VerseDisplay({
   kural,
   isFavourite,
   onToggleFavourite,
+  locked = false,
 }: VerseDisplayProps) {
   const systemReduce = useReducedMotion();
   const { reducedMotion } = useTheme();
@@ -57,6 +60,7 @@ export function VerseDisplay({
     window.addEventListener("orientationchange", schedule);
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(settle);
       ro.disconnect();
       window.removeEventListener("resize", schedule);
       window.removeEventListener("orientationchange", schedule);
@@ -64,7 +68,7 @@ export function VerseDisplay({
   }, [kural.number]);
 
   const share = async () => {
-    const url = `${window.location.origin}/?k=${kural.number}`;
+    const url = `${window.location.origin}/kural/${kural.number}`;
     const text = `குறள் ${kural.number}\n${kural.tamil}\n\n${url}`;
     try {
       if (navigator.share) await navigator.share({ title: `குறள் ${kural.number}`, text, url });
@@ -77,22 +81,24 @@ export function VerseDisplay({
   };
 
   return (
-    <div ref={rootRef} className="w-full max-w-2xl mx-auto flex h-full min-h-0 flex-col overflow-hidden" aria-live="polite">
-
+    <div
+      ref={rootRef}
+      className="w-full max-w-[46rem] mx-auto flex h-full min-h-0 flex-col overflow-hidden"
+    >
       <AnimatePresence mode="wait">
         <motion.article
           key={kural.number}
           initial={reduce ? false : { opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
-          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: reduce ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
           aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
-          className="flex h-full min-h-0 flex-col justify-center"
+          className="flex h-full min-h-0 flex-col justify-center gap-1"
         >
-          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground mb-1 font-tamil short:hidden">
+          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground font-tamil short:hidden">
             {kural.section}
           </p>
-          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-3 short:mb-2">
+          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-2">
             {kural.chapterNumber}. {kural.chapter}
           </h1>
 
@@ -100,18 +106,33 @@ export function VerseDisplay({
             <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
               {kural.number}
             </span>
-            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-9">
-              {/* The source text carries a hard line break: 4 words on line 1, 3 on line 2.
-                  Never re-wrap — both lines are nowrap and share one auto-fitted size. */}
+            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-8">
+              {/* The source text carries a hard line break. Never re-wrap:
+                  both source lines stay nowrap and share one auto-fitted size. */}
               <VerseLines text={kural.tamil} />
             </div>
           </div>
 
+          {locked ? (
+            <div
+              className="mt-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-center"
+              lang="en"
+            >
+              <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-foreground">
+                <Lock className="h-3.5 w-3.5" aria-hidden="true" /> Subscribers only
+              </p>
+              <Link
+                to="/subscribe"
+                className="mt-1 inline-block text-xs text-primary underline underline-offset-4"
+              >
+                See subscription options
+              </Link>
+            </div>
+          ) : (
+            kural.meaning && <Meaning text={kural.meaning} />
+          )}
 
-          {kural.meaning && <Meaning text={kural.meaning} />}
-
-
-
+          {/* Actions sit directly under the meaning so the reading group stays together. */}
           <div className="mt-3 shrink-0 flex items-center justify-center gap-2">
             <button
               type="button"
@@ -171,7 +192,6 @@ function Meaning({ text }: { text: string }) {
       const available = box.clientHeight - pad;
       const fit = Math.max(0, Math.floor(available / lh));
       setLines(Math.min(6, fit));
-
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -194,7 +214,7 @@ function Meaning({ text }: { text: string }) {
       aria-hidden={lines === 0 ? true : undefined}
     >
       <p
-        className="font-tamil text-[0.82rem] sm:text-sm text-muted-foreground leading-relaxed overflow-hidden"
+        className="font-tamil text-[0.9rem] sm:text-[0.95rem] text-foreground/80 leading-relaxed overflow-hidden"
         style={{
           display: "-webkit-box",
           WebkitBoxOrient: "vertical",
@@ -206,15 +226,12 @@ function Meaning({ text }: { text: string }) {
       </p>
     </div>
   );
-
 }
 
-
-
 /**
- * Renders the kural's source lines (4 words, then 3) on exactly one visual line
- * each. The word split comes from the source data and must never be re-wrapped,
- * so both lines are nowrap and share a single font size — the largest size at
+ * Renders the kural's stored source lines on exactly one visual line each.
+ * The line break comes from the source data and must never be re-wrapped, so
+ * both lines are nowrap and share a single font size — the largest size at
  * which the widest line still fits its container.
  */
 function VerseLines({ text }: { text: string }) {
@@ -231,8 +248,6 @@ function VerseLines({ text }: { text: string }) {
       const els = lineRefs.current.filter(Boolean) as HTMLSpanElement[];
       if (!available || !els.length) return;
 
-      // Reset to the CSS-defined size, measure every line, then apply one
-      // shared size so the two lines stay visually balanced.
       els.forEach((el) => (el.style.fontSize = ""));
       const base = parseFloat(getComputedStyle(els[0]).fontSize);
       const widest = Math.max(...els.map((el) => el.scrollWidth));
@@ -243,10 +258,12 @@ function VerseLines({ text }: { text: string }) {
 
     // Instant reflow: measure on every layout-affecting signal, and once more
     // after the browser settles a rotation (mobile reports stale sizes first).
+    let settle = 0;
     const reflow = () => {
       fit();
       requestAnimationFrame(fit);
-      window.setTimeout(fit, 250);
+      window.clearTimeout(settle);
+      settle = window.setTimeout(fit, 250);
     };
 
     fit();
@@ -259,6 +276,7 @@ function VerseLines({ text }: { text: string }) {
     mq.addEventListener("change", reflow);
     if (document.fonts?.ready) document.fonts.ready.then(fit).catch(() => {});
     return () => {
+      window.clearTimeout(settle);
       ro.disconnect();
       window.removeEventListener("orientationchange", reflow);
       window.removeEventListener("resize", fit);
@@ -283,6 +301,3 @@ function VerseLines({ text }: { text: string }) {
     </p>
   );
 }
-
-
-
