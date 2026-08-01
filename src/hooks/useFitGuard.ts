@@ -49,7 +49,7 @@ function measureFonts(): Record<string, string> {
  * tightens a global `--fit-scale` until the app fits in one screen again.
  * The scale is released back toward 1 as soon as there is spare room.
  */
-export function useFitGuard(enabled = true) {
+export function useFitGuard(enabled = true, applyScale = true) {
   const scaleRef = useRef(1);
   const [metrics, setMetrics] = useState<FitMetrics>({
     vw: 0,
