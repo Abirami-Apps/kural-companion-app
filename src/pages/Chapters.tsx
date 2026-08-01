@@ -66,7 +66,7 @@ const Chapters = () => {
         {visible.map((c) => (
           <li key={c.number}>
             <Link
-              to={`/?k=${c.first}`}
+              to={`/kural/${c.first}`}
               className="flex h-full items-center gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="digital-display text-xs text-primary tabular-nums">
