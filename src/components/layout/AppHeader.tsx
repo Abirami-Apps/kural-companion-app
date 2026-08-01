@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { AppearancePanel } from "@/components/theme/AppearancePanel";
 
-export const NAV_ITEMS = [
+const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, end: true },
   { to: "/favourites", label: "Favourites", icon: Heart },
   { to: "/chapters", label: "Chapters", icon: BookOpen },
@@ -27,7 +27,7 @@ export function AppHeader() {
       <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-2 short:py-1 sm:px-6">
         <Link
           to="/"
-          className="flex items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex min-h-11 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Kural Companion home"
         >
           <img
@@ -47,7 +47,7 @@ export function AppHeader() {
         </Link>
 
 
-        <nav aria-label="Main" className="ml-auto hidden md:flex items-center gap-1">
+        <nav aria-label="Main" className="ml-auto hidden xl:flex items-center gap-1">
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
               <item.icon className="h-4 w-4" aria-hidden="true" />
@@ -56,7 +56,7 @@ export function AppHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto md:ml-2 flex items-center gap-1.5">
+        <div className="ml-auto xl:ml-2 flex items-center gap-1.5">
           <Button asChild variant="default" className="hidden sm:inline-flex min-h-11 rounded-full">
             <Link to="/subscribe">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
@@ -73,7 +73,7 @@ export function AppHeader() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11 md:hidden" aria-label="Open menu">
+              <Button variant="ghost" size="icon" className="h-11 w-11 xl:hidden" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>

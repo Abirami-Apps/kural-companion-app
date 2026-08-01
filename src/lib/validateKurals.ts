@@ -44,6 +44,19 @@ export function validateKurals(data: Kural[] = getAllKurals()): KuralDataReport 
     else if (!k.audioUrl.startsWith("https://"))
       errors.push(`Kural ${id}: audio URL is not HTTPS`);
 
+    const expectedChapter = Math.ceil(id / 10);
+    if (k.chapterNumber !== expectedChapter) {
+      errors.push(`Kural ${id}: expected chapter ${expectedChapter}, found ${k.chapterNumber}`);
+    }
+    const expectedSection = id <= 380
+      ? "அறத்துப்பால்"
+      : id <= 1080
+        ? "பொருட்பால்"
+        : "காமத்துப்பால்";
+    if (k.section !== expectedSection) {
+      errors.push(`Kural ${id}: expected section ${expectedSection}, found ${k.section}`);
+    }
+
     const lines = (k.tamil ?? "").split(/\r?\n/);
     if (lines.length !== 2) {
       errors.push(`Kural ${id}: expected exactly 2 source lines, found ${lines.length}`);

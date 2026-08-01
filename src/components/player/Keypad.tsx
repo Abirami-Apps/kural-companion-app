@@ -53,7 +53,7 @@ function Key({
     ghost:
       "bg-transparent text-secondary-foreground/70 border-secondary-foreground/10 hover:bg-secondary-foreground/[0.08]",
     accent:
-      "bg-primary/12 text-primary border-primary/25 hover:bg-primary/20",
+      "bg-gold-light/10 text-gold-light border-gold-light/30 hover:bg-gold-light/20",
   }[variant];
 
   return (

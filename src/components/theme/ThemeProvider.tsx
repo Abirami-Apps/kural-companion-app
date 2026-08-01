@@ -65,6 +65,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.dataset.theme = state.theme;
     root.dataset.contrast = state.highContrast ? "high" : "normal";
     root.dataset.motion = state.reducedMotion ? "reduced" : "full";
+    root.dataset.fontStep = String(state.fontStep);
     const scale = FONT_STEPS[state.fontStep]?.scale ?? 1;
     root.style.setProperty("--font-scale", String(scale));
     try {

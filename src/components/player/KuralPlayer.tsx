@@ -39,7 +39,7 @@ export function KuralPlayer() {
       {/* ============ VERSE ============ */}
       <section
         aria-label="Kural verse"
-        className="flex-1 min-h-0 basis-[54%] wide:basis-auto split:basis-auto px-5 py-3 short:py-2 sm:py-5 lg:px-10 text-center overflow-hidden"
+        className="flex-1 min-h-0 basis-[54%] wide:basis-auto split:basis-auto px-5 py-3 short:!py-2 sm:py-5 lg:px-10 text-center overflow-hidden"
       >
         <div className="h-full min-h-0 flex flex-col items-center justify-center">
           <VerseDisplay
@@ -54,14 +54,14 @@ export function KuralPlayer() {
       {/* ============ CONTROLS ============ */}
       <aside
         aria-label="Player controls"
-        className="control-rail fit-tighten bg-secondary text-secondary-foreground w-full max-h-[52vh] wide:max-h-none split:max-h-none wide:w-[350px] split:w-[350px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 sm:gap-3.5 short:!gap-1.5 px-4 py-3 sm:py-5 short:!py-2 lg:px-7 lg:py-8 overflow-y-auto"
+        className="control-rail fit-tighten bg-secondary text-secondary-foreground w-full max-h-[45vh] wide:max-h-none split:max-h-none wide:w-[clamp(300px,42vw,350px)] split:w-[350px] lg:w-[380px] shrink-0 flex flex-col justify-center gap-2 sm:gap-3.5 short:!gap-1.5 px-4 py-3 sm:py-5 short:!py-2 lg:px-7 lg:py-8 overflow-y-auto"
       >
         {/* Readout */}
         <div className="w-full max-w-[380px] mx-auto flex items-center gap-2">
           <div className="relative flex-1 min-w-0 overflow-hidden rounded-2xl bg-secondary-foreground/[0.06] border border-secondary-foreground/15 px-3 py-2 short:py-1.5 sm:py-2.5 flex items-center justify-between gap-2">
             <span className="lcd shrink-0" aria-hidden="true">
               <span className="lcd-ghost digital-display text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold">8888</span>
-              <span data-fit-probe="lcd" className="digital-display relative text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold text-primary">
+              <span data-fit-probe="lcd" className="digital-display relative text-[clamp(1.25rem,min(7vw,4.6vh),2rem)] font-bold text-gold-light">
                 {display}
               </span>
             </span>
@@ -71,7 +71,7 @@ export function KuralPlayer() {
             {p.pending && (
               <span
                 key={p.entry}
-                className="absolute left-0 bottom-0 h-[3px] bg-primary countdown-bar"
+                className="absolute left-0 bottom-0 h-[3px] bg-gold-light countdown-bar"
                 style={{ animationDuration: `${p.softDelay}ms` }}
               />
             )}
@@ -110,7 +110,7 @@ export function KuralPlayer() {
               <button
                 type="button"
                 onClick={p.retry}
-                className="inline-flex items-center gap-1 rounded-full border border-secondary-foreground/25 px-2 py-0.5 text-secondary-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                className="inline-flex min-h-11 items-center gap-1 rounded-full border border-secondary-foreground/25 px-3 text-secondary-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               >
                 <RotateCcw className="h-3 w-3" aria-hidden="true" /> Retry
               </button>
@@ -132,7 +132,7 @@ export function KuralPlayer() {
                 onClick={() => p.load(n, true)}
                 aria-current={n === p.number ? "true" : undefined}
                 aria-label={`Play kural ${n}`}
-                className={`px-3 py-1.5 rounded-full text-[0.7rem] tabular-nums border transition ${
+                className={`min-h-11 px-3 rounded-full text-[0.7rem] tabular-nums border transition ${
                   n === p.number
                     ? "border-primary/60 text-primary bg-primary/10"
                     : "border-secondary-foreground/15 text-secondary-foreground/70 hover:text-secondary-foreground"
@@ -157,7 +157,7 @@ export function KuralPlayer() {
             onChange={(e) => p.seek(Number(e.target.value))}
             aria-label="Seek audio position"
             aria-valuetext={`${formatTime(p.progress)} of ${formatTime(p.duration)}`}
-            className="flex-1 h-1 accent-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+            className="flex-1 h-11 accent-primary cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           />
           <span className="tabular-nums w-8 text-right">{formatTime(p.duration)}</span>
         </div>
@@ -179,7 +179,7 @@ export function KuralPlayer() {
 
         {p.locked && (
           <p className="text-center text-[0.7rem] text-secondary-foreground/75" lang="en">
-            <Link to="/subscribe" className="underline underline-offset-4 hover:text-primary">
+            <Link to="/subscribe" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-primary">
               See subscription options
             </Link>
           </p>

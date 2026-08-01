@@ -22,50 +22,6 @@ export function VerseDisplay({
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
   const [copied, setCopied] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * Height guard: the width fitter keeps each source line unwrapped, but a
-   * short column can still be too small for the whole block. Shrink the shared
-   * verse scale (--vfit) until the verse, meaning and actions all fit — never
-   * crop them.
-   */
-  useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    let raf = 0;
-    const fitHeight = () => {
-      let factor = 1;
-      root.style.setProperty("--vfit", "1");
-      for (let i = 0; i < 10; i++) {
-        if (root.scrollHeight - root.clientHeight <= 2) break;
-        factor = Math.max(0.7, factor - 0.06);
-        root.style.setProperty("--vfit", String(factor));
-      }
-    };
-    let settle = 0;
-    const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(fitHeight);
-      // Re-run once the browser has settled fonts / rotation, so an early
-      // measurement can never leave the verse permanently shrunken.
-      window.clearTimeout(settle);
-      settle = window.setTimeout(fitHeight, 300);
-    };
-    schedule();
-
-    const ro = new ResizeObserver(schedule);
-    ro.observe(root);
-    window.addEventListener("resize", schedule);
-    window.addEventListener("orientationchange", schedule);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(settle);
-      ro.disconnect();
-      window.removeEventListener("resize", schedule);
-      window.removeEventListener("orientationchange", schedule);
-    };
-  }, [kural.number]);
 
   const share = async () => {
     const url = `${window.location.origin}/kural/${kural.number}`;
@@ -81,10 +37,7 @@ export function VerseDisplay({
   };
 
   return (
-    <div
-      ref={rootRef}
-      className="w-full max-w-[46rem] mx-auto flex h-full min-h-0 flex-col overflow-hidden"
-    >
+    <div className="w-full max-w-[46rem] mx-auto flex h-full min-h-0 flex-col overflow-hidden">
       <AnimatePresence mode="wait">
         <motion.article
           key={kural.number}
@@ -95,10 +48,10 @@ export function VerseDisplay({
           aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
           className="flex h-full min-h-0 flex-col justify-center gap-1"
         >
-          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground font-tamil short:hidden">
+          <p className="hidden text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground font-tamil sm:block short:hidden">
             {kural.section}
           </p>
-          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-2">
+          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-2 short:hidden wide:block">
             {kural.chapterNumber}. {kural.chapter}
           </h1>
 
@@ -106,7 +59,7 @@ export function VerseDisplay({
             <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
               {kural.number}
             </span>
-            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-8">
+            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-3 short:!py-3 sm:px-10 sm:py-5 wide:px-5 split:px-8 lg:px-10 lg:py-8">
               {/* The source text carries a hard line break. Never re-wrap:
                   both source lines stay nowrap and share one auto-fitted size. */}
               <VerseLines text={kural.tamil} />
@@ -123,7 +76,7 @@ export function VerseDisplay({
               </p>
               <Link
                 to="/subscribe"
-                className="mt-1 inline-block text-xs text-primary underline underline-offset-4"
+                className="mt-1 inline-flex min-h-11 items-center text-xs text-primary underline underline-offset-4"
               >
                 See subscription options
               </Link>
@@ -172,54 +125,16 @@ export function VerseDisplay({
   );
 }
 
-/**
- * Meaning paragraph that fits the space left over instead of being cropped:
- * it measures its own available height and shows only as many whole lines as
- * fit, adding an ellipsis via line-clamp so text is never half-cut.
- */
 function Meaning({ text }: { text: string }) {
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [lines, setLines] = useState(2);
-
-  useLayoutEffect(() => {
-    const box = boxRef.current;
-    if (!box) return;
-    const measure = () => {
-      const p = box.firstElementChild as HTMLElement | null;
-      if (!p) return;
-      const lh = parseFloat(getComputedStyle(p).lineHeight) || 18;
-      const pad = parseFloat(getComputedStyle(box).paddingTop) || 0;
-      const available = box.clientHeight - pad;
-      const fit = Math.max(0, Math.floor(available / lh));
-      setLines(Math.min(6, fit));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(box);
-    window.addEventListener("resize", measure);
-    window.addEventListener("orientationchange", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("orientationchange", measure);
-    };
-  }, [text]);
-
   return (
-    <div
-      ref={boxRef}
-      className={`flex-1 min-h-0 overflow-hidden ${
-        lines === 0 ? "" : "mt-3 pt-2 border-t border-border"
-      }`}
-      aria-hidden={lines === 0 ? true : undefined}
-    >
+    <div className="meaning-box mt-3 min-h-0 flex-1 overflow-hidden border-t border-border pt-1">
       <p
-        className="font-tamil text-[0.9rem] sm:text-[0.95rem] text-foreground/80 leading-relaxed overflow-hidden"
+        data-fit-probe="meaning"
+        className="font-tamil text-[0.9rem] sm:text-[0.95rem] text-foreground/80 leading-snug overflow-hidden"
         style={{
           display: "-webkit-box",
           WebkitBoxOrient: "vertical",
-          WebkitLineClamp: Math.max(1, lines),
-          visibility: lines === 0 ? "hidden" : undefined,
+          WebkitLineClamp: 2,
         }}
       >
         {text}
@@ -253,7 +168,7 @@ function VerseLines({ text }: { text: string }) {
       const widest = Math.max(...els.map((el) => el.scrollWidth));
       if (!widest) return;
       const next = widest > available ? Math.max(14, (base * available) / widest) : base;
-      els.forEach((el) => (el.style.fontSize = `calc(${next}px * var(--vfit, 1))`));
+      els.forEach((el) => (el.style.fontSize = `${next}px`));
     };
 
     // Instant reflow: measure on every layout-affecting signal, and once more

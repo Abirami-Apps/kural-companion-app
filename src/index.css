@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap');
-
 /* Seven-segment digital readout face */
 @font-face {
   font-family: 'DSEG7 Classic';
@@ -25,7 +23,7 @@
     --popover: 35 35% 96%;
     --popover-foreground: 220 20% 12%;
 
-    --primary: 30 65% 45%;
+    --primary: 30 70% 34%;
     --primary-foreground: 35 30% 95%;
 
     --secondary: 228 35% 18%;
@@ -42,14 +40,14 @@
 
     --border: 30 25% 75%;
     --input: 30 25% 75%;
-    --ring: 30 65% 40%;
+    --ring: 30 70% 30%;
 
     --radius: 0.75rem;
 
     --navy: 228 35% 18%;
     --navy-light: 228 30% 25%;
     --cream: 35 30% 92%;
-    --gold: 30 65% 45%;
+    --gold: 30 70% 34%;
     --gold-light: 35 55% 70%;
 
     --font-scale: 1;
@@ -314,6 +312,27 @@
 
 .control-rail {
   box-shadow: 0 -20px 50px -40px hsl(var(--navy));
+}
+
+/* On very short landscape screens the verse and controls share the width;
+   omit the secondary meaning preview so the complete verse actions stay visible. */
+@media (orientation: landscape) and (max-height: 700px) {
+  .meaning-box {
+    display: none;
+  }
+}
+
+/* Extra-large text uses one guaranteed whole meaning line when a narrow
+   portrait pane cannot hold the normal two-line preview. */
+@media (max-width: 379px), (min-width: 640px) and (max-width: 899px) {
+  [data-font-step='3'] .meaning-box {
+    flex: 0 0 auto;
+    min-height: calc(1.375em + 0.25rem);
+  }
+
+  [data-font-step='3'] .meaning-box [data-fit-probe='meaning'] {
+    -webkit-line-clamp: 1 !important;
+  }
 }
 
 /* Auto-play countdown indicator */

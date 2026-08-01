@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Check, Crown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/theme/ThemeProvider";
+import { checkoutEnabled } from "@/lib/features";
 
 const plans = [
   {
@@ -38,18 +39,22 @@ const features = [
 
 const Subscribe = () => {
   const navigate = useNavigate();
+  const systemReduce = useReducedMotion();
+  const { reducedMotion } = useTheme();
+  const reduce = systemReduce || reducedMotion;
 
   return (
-    <div className="min-h-screen px-4 py-6 max-w-lg mx-auto">
+    <div className="min-h-full px-4 py-6 max-w-lg mx-auto">
       {/* Back */}
       <motion.div
-        initial={{ opacity: 0, x: -12 }}
+        initial={reduce ? false : { opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
         <button
+          type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm"
+          className="flex min-h-11 items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -58,7 +63,7 @@ const Subscribe = () => {
 
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -16 }}
+        initial={reduce ? false : { opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="text-center mt-8 mb-10"
@@ -80,7 +85,7 @@ const Subscribe = () => {
         {plans.map((plan, i) => (
           <motion.div
             key={plan.id}
-            initial={{ opacity: 0, y: 12 }}
+            initial={reduce ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
               duration: 0.5,
@@ -89,12 +94,17 @@ const Subscribe = () => {
             }}
           >
             <button
+              type="button"
+              disabled={!checkoutEnabled}
+              aria-describedby={!checkoutEnabled ? "checkout-status" : undefined}
               className={`w-full text-left rounded-xl p-5 border transition-all duration-150 active:scale-[0.98] ${
                 plan.popular
                   ? "border-primary bg-primary/5 shadow-sm"
                   : "border-border bg-card hover:border-primary/30"
-              }`}
-              onClick={() => navigate("/login")}
+              } disabled:cursor-not-allowed disabled:active:scale-100`}
+              onClick={() => {
+                if (checkoutEnabled) navigate("/login");
+              }}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -126,9 +136,15 @@ const Subscribe = () => {
         ))}
       </div>
 
+      {!checkoutEnabled && (
+        <p id="checkout-status" className="mb-6 text-center text-xs text-muted-foreground">
+          Plan selection is disabled until secure checkout is connected.
+        </p>
+      )}
+
       {/* Features */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={reduce ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.4 }}
         className="space-y-3 px-2"

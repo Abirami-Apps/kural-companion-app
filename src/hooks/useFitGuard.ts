@@ -164,7 +164,7 @@ export function useFitGuard(enabled = true, applyScale = true) {
       ro.disconnect();
       mo.disconnect();
     };
-  }, [enabled]);
+  }, [applyScale, enabled]);
 
   return metrics;
 }

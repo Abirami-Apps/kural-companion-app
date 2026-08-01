@@ -27,9 +27,7 @@ export function canAccessKuralWith(
  * must go through this, so gating can never diverge between screens.
  */
 export function useEntitlements(): Entitlements {
-  const { signedIn } = useAuth();
-  // Without a payment backend nobody can be subscribed.
-  const subscribed = subscriptionsEnabled ? signedIn : false;
+  const { subscribed } = useAuth();
 
   const canAccessKural = useCallback(
     (n: number) =>
