@@ -1,145 +1,206 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { getKural, getRandomKural, TOTAL_KURALS, type Kural } from "@/data/sample-kurals";
 import {
-  getKural,
-  getRandomKural,
-  TOTAL_KURALS,
-  type Kural,
-} from "@/data/sample-kurals";
+  FAVS_KEY,
+  HINT_KEY,
+  RECENTS_KEY,
+  canGrow,
+  isValidKuralNumber,
+  nextNumber,
+  parseKuralNumber,
+  prevNumber,
+  readNumberList,
+  writeNumberList,
+} from "@/lib/player-utils";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import artwork from "@/assets/logo.png";
 
 const SOFT_DELAY = 1000;
-const RECENTS_KEY = "kural:recents";
-const FAVS_KEY = "kural:favs";
-const HINT_KEY = "kural:hint-seen";
 
-const readList = (key: string): number[] => {
-  try {
-    const raw = localStorage.getItem(key);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((n) => typeof n === "number") : [];
-  } catch {
-    return [];
-  }
-};
+export type AudioState = "idle" | "loading" | "playing" | "paused" | "error";
 
-const initialNumber = () => {
-  if (typeof window === "undefined") return 1;
-  const fromUrl = Number(new URLSearchParams(window.location.search).get("k"));
-  return fromUrl >= 1 && fromUrl <= TOTAL_KURALS ? fromUrl : 1;
-};
+function isTypingTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el || !el.tagName) return false;
+  if (["INPUT", "TEXTAREA", "SELECT", "OPTION"].includes(el.tagName)) return true;
+  if (el.isContentEditable) return true;
+  return !!el.closest?.('[role="dialog"], [contenteditable="true"]');
+}
 
-/** Can this entry still grow into another valid kural number? */
-const canGrow = (value: string) => {
-  if (value.length >= 4) return false;
-  return Number(value + "0") <= TOTAL_KURALS;
-};
+function dialogOpen(): boolean {
+  return !!document.querySelector('[role="dialog"][data-state="open"]');
+}
 
-export type AudioState = "idle" | "loading" | "playing" | "error";
-
+/**
+ * The single player hook. URL is the source of truth for which kural is shown,
+ * so `/?k=123`, `/kural/123`, deep links and browser Back/Forward all agree.
+ */
 export function useKuralPlayer() {
+  const params = useParams<{ number?: string }>();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const routeStyle: "path" | "query" = params.number !== undefined ? "path" : "query";
+  const rawTarget = params.number ?? searchParams.get("k");
+  const parsedTarget = parseKuralNumber(rawTarget);
+  const hasTarget = rawTarget !== null && rawTarget !== undefined && rawTarget !== "";
+  const invalidTarget = hasTarget && parsedTarget === null;
+  const number = parsedTarget ?? 1;
+  const current = getKural(number) as Kural;
+
   const audioRef = useRef<HTMLAudioElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const settleRef = useRef<ReturnType<typeof setTimeout>>();
   const shouldPlayRef = useRef(false);
+  const playTokenRef = useRef(0);
+
+  const { canAccessKural, gatingActive } = useEntitlements();
+  const locked = !canAccessKural(number);
 
   const [entry, setEntry] = useState("");
   const [pending, setPending] = useState(false);
-  const [current, setCurrent] = useState<Kural>(() => getKural(initialNumber())!);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioState, setAudioState] = useState<AudioState>("idle");
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [continuous, setContinuous] = useState(false);
-  const [recents, setRecents] = useState<number[]>(() => readList(RECENTS_KEY));
-  const [favourites, setFavourites] = useState<number[]>(() => readList(FAVS_KEY));
+  const [recents, setRecents] = useState<number[]>(() => readNumberList(RECENTS_KEY));
+  const [favourites, setFavourites] = useState<number[]>(() => readNumberList(FAVS_KEY));
   const [hintSeen, setHintSeen] = useState(
     () => typeof window !== "undefined" && !!localStorage.getItem(HINT_KEY),
   );
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
-
-  const isFavourite = favourites.includes(current.number);
+  const isFavourite = favourites.includes(number);
+  const canPrev = prevNumber(number) !== null;
+  const canNext = nextNumber(number) !== null;
 
   const toggleFavourite = useCallback(() => {
     setFavourites((prev) => {
-      const next = prev.includes(current.number)
-        ? prev.filter((n) => n !== current.number)
-        : [current.number, ...prev].slice(0, 50);
-      localStorage.setItem(FAVS_KEY, JSON.stringify(next));
+      const next = prev.includes(number)
+        ? prev.filter((n) => n !== number)
+        : [number, ...prev].slice(0, 100);
+      writeNumberList(FAVS_KEY, next);
       return next;
     });
-  }, [current.number]);
+  }, [number]);
 
-  const load = useCallback((num: number, play = false) => {
-    if (num < 1 || num > TOTAL_KURALS) return;
-    const k = getKural(num);
-    if (!k) return;
-    clearTimeout(timerRef.current);
-    shouldPlayRef.current = play;
-    setPending(false);
-    setEntry("");
+  /** Navigate to a kural. URL change drives the actual load. */
+  const load = useCallback(
+    (num: number, play = false) => {
+      if (!isValidKuralNumber(num)) return;
+      clearTimeout(timerRef.current);
+      shouldPlayRef.current = play && canAccessKural(num);
+      setPending(false);
+      setEntry("");
+      if (num === number) {
+        // Same kural: re-trigger playback intent without a history entry.
+        if (shouldPlayRef.current) {
+          const el = audioRef.current;
+          if (el) void el.play().catch(() => undefined);
+        }
+        return;
+      }
+      const to =
+        routeStyle === "path"
+          ? `/kural/${num}`
+          : `/?k=${num}${location.hash ?? ""}`;
+      navigate(to);
+    },
+    [canAccessKural, location.hash, navigate, number, routeStyle],
+  );
+
+  // Track recents whenever the displayed kural changes.
+  useEffect(() => {
+    if (!isValidKuralNumber(number)) return;
+    setRecents((prev) => {
+      const next = [number, ...prev.filter((n) => n !== number)].slice(0, 5);
+      writeNumberList(RECENTS_KEY, next);
+      return next;
+    });
+  }, [number]);
+
+  // Reset + load audio whenever the kural changes (including Back/Forward).
+  useEffect(() => {
     setProgress(0);
     setDuration(0);
-    setAudioState(play ? "loading" : "idle");
-    setIsPlaying(play);
-    setCurrent(k);
-    setRecents((prev) => {
-      const next = [num, ...prev.filter((n) => n !== num)].slice(0, 5);
-      localStorage.setItem(RECENTS_KEY, JSON.stringify(next));
-      return next;
-    });
-    const url = new URL(window.location.href);
-    url.searchParams.set("k", String(num));
-    window.history.replaceState({}, "", url);
-  }, []);
-
-  // Load audio whenever the kural changes
-  useEffect(() => {
+    setIsPlaying(false);
     const el = audioRef.current;
-    if (!el) return;
+    if (!el || locked) {
+      setAudioState("idle");
+      return;
+    }
+    const token = ++playTokenRef.current;
     el.load();
     if (shouldPlayRef.current) {
-      el.play().catch(() => {
+      setAudioState("loading");
+      void el.play().catch(() => {
+        if (token !== playTokenRef.current) return;
         setIsPlaying(false);
-        setAudioState("idle");
+        setAudioState("error");
       });
+    } else {
+      setAudioState("idle");
     }
-  }, [current.number]);
+  }, [number, locked]);
+
+  const retry = useCallback(() => {
+    const el = audioRef.current;
+    if (!el || locked) return;
+    const token = ++playTokenRef.current;
+    setAudioState("loading");
+    el.load();
+    void el.play().catch(() => {
+      if (token !== playTokenRef.current) return;
+      setIsPlaying(false);
+      setAudioState("error");
+    });
+  }, [locked]);
+
+  const commit = useCallback(
+    (value: string) => {
+      const num = parseKuralNumber(value);
+      setPending(false);
+      if (num !== null) load(num, true);
+    },
+    [load],
+  );
 
   const togglePlay = useCallback(() => {
+    if (locked) return;
     const el = audioRef.current;
-    if (!el) return;
     clearTimeout(timerRef.current);
     if (pending && entry) {
-      const num = parseInt(entry, 10);
+      const num = parseKuralNumber(entry);
       setPending(false);
-      if (num >= 1 && num <= TOTAL_KURALS) {
+      if (num !== null) {
         load(num, true);
         return;
       }
     }
+    if (!el) return;
+    if (audioState === "error") {
+      retry();
+      return;
+    }
     if (el.paused) {
+      const token = ++playTokenRef.current;
       shouldPlayRef.current = true;
       setAudioState("loading");
-      el.play()
-        .then(() => setIsPlaying(true))
-        .catch(() => {
-          setIsPlaying(false);
-          setAudioState("error");
-        });
+      void el.play().catch(() => {
+        if (token !== playTokenRef.current) return;
+        setIsPlaying(false);
+        setAudioState("error");
+      });
     } else {
+      shouldPlayRef.current = false;
       el.pause();
       setIsPlaying(false);
-      setAudioState("idle");
+      setAudioState("paused");
     }
-  }, [entry, load, pending]);
-
-  const commit = useCallback(
-    (value: string) => {
-      const num = parseInt(value || "0", 10);
-      if (num >= 1 && num <= TOTAL_KURALS) load(num, true);
-      else setPending(false);
-    },
-    [load],
-  );
+  }, [audioState, entry, load, locked, pending, retry]);
 
   const schedule = useCallback(
     (value: string) => {
@@ -149,7 +210,6 @@ export function useKuralPlayer() {
         return;
       }
       if (!canGrow(value)) {
-        setPending(false);
         commit(value);
         return;
       }
@@ -161,7 +221,13 @@ export function useKuralPlayer() {
 
   const markHintSeen = useCallback(() => {
     setHintSeen((seen) => {
-      if (!seen) localStorage.setItem(HINT_KEY, "1");
+      if (!seen) {
+        try {
+          localStorage.setItem(HINT_KEY, "1");
+        } catch {
+          /* ignore */
+        }
+      }
       return true;
     });
   }, []);
@@ -171,7 +237,7 @@ export function useKuralPlayer() {
       markHintSeen();
       setEntry((prev) => {
         const next = (prev + d).replace(/^0+/, "").slice(0, 4);
-        if (parseInt(next || "0", 10) > TOTAL_KURALS) return prev;
+        if (Number(next || "0") > TOTAL_KURALS) return prev;
         schedule(next);
         return next;
       });
@@ -197,23 +263,38 @@ export function useKuralPlayer() {
   }, []);
 
   const seek = useCallback((v: number) => {
-    if (audioRef.current) audioRef.current.currentTime = v;
-    setProgress(v);
+    const el = audioRef.current;
+    if (!el || !Number.isFinite(el.duration) || el.duration <= 0) return;
+    el.currentTime = Math.min(Math.max(0, v), el.duration);
+    setProgress(el.currentTime);
   }, []);
 
   const shuffle = useCallback(() => load(getRandomKural().number, true), [load]);
 
-  useEffect(() => () => clearTimeout(timerRef.current), []);
+  const goNext = useCallback(() => {
+    const n = nextNumber(number);
+    if (n !== null) load(n, isPlaying || shouldPlayRef.current);
+  }, [isPlaying, load, number]);
 
-  // Physical keyboard support
+  const goPrev = useCallback(() => {
+    const p = prevNumber(number);
+    if (p !== null) load(p, isPlaying || shouldPlayRef.current);
+  }, [isPlaying, load, number]);
+
+  // Cleanup every pending timer on unmount.
+  useEffect(
+    () => () => {
+      clearTimeout(timerRef.current);
+      clearTimeout(settleRef.current);
+      playTokenRef.current++;
+    },
+    [],
+  );
+
+  // Physical keyboard support — never while typing or with a dialog open.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable)
-      )
-        return;
+      if (isTypingTarget(e.target) || dialogOpen()) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (/^[0-9]$/.test(e.key)) {
         e.preventDefault();
@@ -223,11 +304,8 @@ export function useKuralPlayer() {
         backspace();
       } else if (e.key === "Enter") {
         e.preventDefault();
-        setEntry((v) => {
-          clearTimeout(timerRef.current);
-          commit(v);
-          return v;
-        });
+        clearTimeout(timerRef.current);
+        if (entry) commit(entry);
       } else if (e.key === " ") {
         e.preventDefault();
         togglePlay();
@@ -235,22 +313,16 @@ export function useKuralPlayer() {
         clearEntry();
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        load(current.number + 1, isPlaying);
+        goNext();
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        load(current.number - 1, isPlaying);
-      } else if (e.key === "ArrowRight") {
+        goPrev();
+      } else if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
         e.preventDefault();
         const a = audioRef.current;
-        if (a) {
-          a.currentTime = Math.min(a.duration || 0, a.currentTime + 5);
-          setProgress(a.currentTime);
-        }
-      } else if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        const a = audioRef.current;
-        if (a) {
-          a.currentTime = Math.max(0, a.currentTime - 5);
+        if (a && Number.isFinite(a.duration) && a.duration > 0) {
+          const delta = e.key === "ArrowRight" ? 5 : -5;
+          a.currentTime = Math.min(a.duration, Math.max(0, a.currentTime + delta));
           setProgress(a.currentTime);
         }
       } else if (e.key === "?") {
@@ -260,57 +332,70 @@ export function useKuralPlayer() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [
-    backspace,
-    clearEntry,
-    commit,
-    current.number,
-    isPlaying,
-    load,
-    pressDigit,
-    togglePlay,
-  ]);
+  }, [backspace, clearEntry, commit, entry, goNext, goPrev, pressDigit, togglePlay]);
 
-
-  // Media Session (lock screen / headphone controls)
+  // Media Session (lock screen / headphone controls) — respects boundaries.
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: `குறள் ${current.number}`,
-      artist: current.chapter,
-      album: current.section,
-      artwork: [{ src: "/icon.svg", sizes: "512x512", type: "image/svg+xml" }],
+    const session = navigator.mediaSession;
+    try {
+      session.metadata = new MediaMetadata({
+        title: `குறள் ${number}`,
+        artist: current.chapter,
+        album: current.section,
+        artwork: [{ src: artwork, sizes: "512x512", type: "image/png" }],
+      });
+    } catch {
+      /* MediaMetadata unavailable */
+    }
+    const handlers: [MediaSessionAction, (() => void) | null][] = [
+      ["play", togglePlay],
+      ["pause", togglePlay],
+      ["previoustrack", canPrev ? goPrev : null],
+      ["nexttrack", canNext ? goNext : null],
+    ];
+    handlers.forEach(([action, handler]) => {
+      try {
+        session.setActionHandler(action, handler);
+      } catch {
+        /* unsupported action */
+      }
     });
-    navigator.mediaSession.setActionHandler("play", togglePlay);
-    navigator.mediaSession.setActionHandler("pause", togglePlay);
-    navigator.mediaSession.setActionHandler("previoustrack", () =>
-      load(current.number - 1, true),
-    );
-    navigator.mediaSession.setActionHandler("nexttrack", () =>
-      load(current.number + 1, true),
-    );
-  }, [current, load, togglePlay]);
+    return () => {
+      handlers.forEach(([action]) => {
+        try {
+          session.setActionHandler(action, null);
+        } catch {
+          /* ignore */
+        }
+      });
+    };
+  }, [canNext, canPrev, current.chapter, current.section, goNext, goPrev, number, togglePlay]);
 
-  // Prefetch neighbouring audio for instant skips
-  const neighbours = useMemo(
-    () =>
-      [current.number - 1, current.number + 1]
-        .map((n) => getKural(n)?.audioUrl)
-        .filter(Boolean) as string[],
-    [current.number],
-  );
+  // Prefetch only real neighbours (never 0 or 1331).
+  const neighbours = useMemo(() => {
+    const ns = [prevNumber(number), nextNumber(number)].filter(
+      (n): n is number => n !== null,
+    );
+    return ns.map((n) => getKural(n)?.audioUrl).filter(Boolean) as string[];
+  }, [number]);
 
   const audioHandlers = {
-    onLoadedMetadata: (e: React.SyntheticEvent<HTMLAudioElement>) =>
-      setDuration(e.currentTarget.duration),
+    onLoadedMetadata: (e: React.SyntheticEvent<HTMLAudioElement>) => {
+      const d = e.currentTarget.duration;
+      setDuration(Number.isFinite(d) ? d : 0);
+    },
     onTimeUpdate: (e: React.SyntheticEvent<HTMLAudioElement>) =>
       setProgress(e.currentTarget.currentTime),
-    onWaiting: () => setAudioState("loading"),
+    onWaiting: () => setAudioState((s) => (s === "playing" ? "loading" : s)),
     onPlaying: () => {
       setAudioState("playing");
       setIsPlaying(true);
     },
-    onPause: () => setIsPlaying(false),
+    onPause: () => {
+      setIsPlaying(false);
+      setAudioState((s) => (s === "error" ? s : "paused"));
+    },
     onError: () => {
       setAudioState("error");
       setIsPlaying(false);
@@ -318,7 +403,9 @@ export function useKuralPlayer() {
     onEnded: () => {
       setIsPlaying(false);
       setAudioState("idle");
-      if (continuous) load(current.number + 1, true);
+      const n = nextNumber(number);
+      if (continuous && n !== null) load(n, true);
+      else shouldPlayRef.current = false;
     },
   };
 
@@ -328,7 +415,12 @@ export function useKuralPlayer() {
     shortcutsOpen,
     setShortcutsOpen,
 
+    number,
     current,
+    invalidTarget,
+    locked,
+    gatingActive,
+
     entry,
     pending,
     isPlaying,
@@ -343,8 +435,13 @@ export function useKuralPlayer() {
     toggleFavourite,
     hintSeen,
     neighbours,
+    canPrev,
+    canNext,
     load,
+    goNext,
+    goPrev,
     togglePlay,
+    retry,
     pressDigit,
     backspace,
     clearEntry,
