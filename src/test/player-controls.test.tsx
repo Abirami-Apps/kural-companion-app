@@ -10,14 +10,14 @@ describe("player controls", () => {
   it("provides accessible labels and 44px keypad targets", () => {
     render(
       <ThemeProvider>
-        <Keypad onDigit={noop} onClear={noop} onShuffle={noop} />
+        <Keypad onDigit={noop} onClear={noop} onSubmit={noop} />
       </ThemeProvider>,
     );
     const keys = screen.getAllByRole("button");
     expect(keys).toHaveLength(12);
     expect(screen.getByRole("button", { name: "Digit 1" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Clear entry" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Play a random kural" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Go to entered kural" })).toBeInTheDocument();
     keys.forEach((key) => expect(key.className).toContain("min-h-11"));
   });
 

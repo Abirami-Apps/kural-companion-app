@@ -262,6 +262,11 @@ export function useKuralPlayer() {
     setEntry("");
   }, []);
 
+  const submitEntry = useCallback(() => {
+    clearTimeout(timerRef.current);
+    if (entry) commit(entry);
+  }, [commit, entry]);
+
   const seek = useCallback((v: number) => {
     const el = audioRef.current;
     if (!el || !Number.isFinite(el.duration) || el.duration <= 0) return;
@@ -445,6 +450,7 @@ export function useKuralPlayer() {
     pressDigit,
     backspace,
     clearEntry,
+    submitEntry,
     seek,
     shuffle,
     softDelay: SOFT_DELAY,

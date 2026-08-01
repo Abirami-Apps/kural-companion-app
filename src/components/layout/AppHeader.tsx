@@ -5,6 +5,7 @@ import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { AppearancePanel } from "@/components/theme/AppearancePanel";
+import { checkoutEnabled } from "@/lib/features";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, end: true },
@@ -23,8 +24,8 @@ export function AppHeader() {
     }`;
 
   return (
-    <header className="shrink-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-2 short:py-1 sm:px-6">
+    <header className="z-40 shrink-0 border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      <div className="mx-auto flex min-h-[64px] w-full max-w-[1280px] items-center gap-3 px-4 py-1.5 sm:px-6 nav:px-8">
         <Link
           to="/"
           className="flex min-h-11 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -33,21 +34,21 @@ export function AppHeader() {
           <img
             src={logo}
             alt="Kural Companion logo"
-            className="h-10 w-10 short:h-8 short:w-8 sm:h-12 sm:w-12 lg:h-14 lg:w-14 rounded-xl object-contain"
+            className="h-10 w-10 rounded-xl object-contain sm:h-12 sm:w-12"
             loading="eager"
           />
           <span className="leading-tight text-left">
-            <span className="block font-tamil text-sm sm:text-base lg:text-lg font-bold text-foreground">
+            <span className="block font-tamil text-sm font-bold text-foreground sm:text-base nav:text-lg">
               திருக்குறள்
             </span>
-            <span className="block text-[10px] sm:text-[11px] uppercase tracking-[0.22em] text-muted-foreground short:hidden">
+            <span className="hidden text-[10px] uppercase tracking-[0.22em] text-muted-foreground brand:block sm:text-[11px]">
               Kural Companion
             </span>
           </span>
         </Link>
 
 
-        <nav aria-label="Main" className="ml-auto hidden xl:flex items-center gap-1">
+        <nav aria-label="Main" className="ml-auto hidden items-center gap-1 nav:flex">
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
               <item.icon className="h-4 w-4" aria-hidden="true" />
@@ -56,24 +57,35 @@ export function AppHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto xl:ml-2 flex items-center gap-1.5">
-          <Button asChild variant="default" className="hidden sm:inline-flex min-h-11 rounded-full">
-            <Link to="/subscribe">
-              <Sparkles className="h-4 w-4" aria-hidden="true" />
-              <span>Subscribe</span>
-            </Link>
-          </Button>
-          <Button asChild variant="ghost" size="icon" className="h-11 w-11 hidden sm:inline-flex">
+        <div className="ml-auto flex items-center gap-1 nav:ml-2">
+          {checkoutEnabled && (
+            <Button asChild variant="default" className="hidden min-h-11 rounded-full nav:inline-flex">
+              <Link to="/subscribe">
+                <Sparkles className="h-4 w-4" aria-hidden="true" />
+                <span>Subscribe</span>
+              </Link>
+            </Button>
+          )}
+          <Button asChild variant="ghost" className="hidden min-h-11 gap-2 rounded-full px-3 nav:inline-flex">
             <Link to="/login" aria-label="Log in to your account">
-              <LogIn className="h-5 w-5" />
+              <LogIn className="h-4 w-4" aria-hidden="true" />
+              <span>Log in</span>
             </Link>
           </Button>
 
-          <AppearancePanel />
+          <span className="hidden nav:inline-flex">
+            <AppearancePanel />
+          </span>
+
+          <Button asChild variant="ghost" size="icon" className="h-11 w-11 nav:hidden">
+            <Link to="/favourites" aria-label="Open favourites">
+              <Heart className="h-5 w-5" aria-hidden="true" />
+            </Link>
+          </Button>
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11 xl:hidden" aria-label="Open menu">
+              <Button variant="ghost" size="icon" className="h-11 w-11 nav:hidden" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
@@ -96,13 +108,15 @@ export function AppHeader() {
                     {item.label}
                   </NavLink>
                 ))}
-                <NavLink
-                  to="/subscribe"
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-xl px-3 min-h-11 text-sm font-medium text-foreground hover:bg-muted"
-                >
-                  <Sparkles className="h-4 w-4" aria-hidden="true" /> Pricing
-                </NavLink>
+                {checkoutEnabled && (
+                  <NavLink
+                    to="/subscribe"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <Sparkles className="h-4 w-4" aria-hidden="true" /> Pricing
+                  </NavLink>
+                )}
                 <NavLink
                   to="/login"
                   onClick={() => setOpen(false)}

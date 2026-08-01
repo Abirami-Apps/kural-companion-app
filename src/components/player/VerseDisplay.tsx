@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Heart, Lock, Share2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Heart, Lock, Share2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Kural } from "@/data/sample-kurals";
@@ -9,6 +9,10 @@ interface VerseDisplayProps {
   kural: Kural;
   isFavourite: boolean;
   onToggleFavourite: () => void;
+  canPrev: boolean;
+  canNext: boolean;
+  onPrev: () => void;
+  onNext: () => void;
   locked?: boolean;
 }
 
@@ -16,6 +20,10 @@ export function VerseDisplay({
   kural,
   isFavourite,
   onToggleFavourite,
+  canPrev,
+  canNext,
+  onPrev,
+  onNext,
   locked = false,
 }: VerseDisplayProps) {
   const systemReduce = useReducedMotion();
@@ -37,7 +45,7 @@ export function VerseDisplay({
   };
 
   return (
-    <div className="w-full max-w-[46rem] mx-auto flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex h-full w-full min-w-0 flex-col">
       <AnimatePresence mode="wait">
         <motion.article
           key={kural.number}
@@ -46,29 +54,34 @@ export function VerseDisplay({
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: reduce ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
           aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
-          className="flex h-full min-h-0 flex-col justify-center gap-1"
+          className="flex h-full min-w-0 flex-col"
         >
-          <p className="hidden text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground font-tamil sm:block short:hidden">
-            {kural.section}
-          </p>
-          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-2 short:hidden wide:block">
-            {kural.chapterNumber}. {kural.chapter}
-          </h1>
-
-          <div className="relative pt-4 shrink-0">
-            <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
-              {kural.number}
-            </span>
-            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-3 short:!py-3 sm:px-10 sm:py-5 wide:px-5 split:px-8 lg:px-10 lg:py-8">
-              {/* The source text carries a hard line break. Never re-wrap:
-                  both source lines stay nowrap and share one auto-fitted size. */}
-              <VerseLines text={kural.tamil} />
+          <div className="flex flex-col items-center text-center">
+            <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 font-tamil text-xs text-muted-foreground sm:text-sm">
+              <span>{kural.section}</span>
+              <span className="h-4 w-px bg-border" aria-hidden="true" />
+              <h1 className="font-semibold text-primary">
+                {kural.chapterNumber}. {kural.chapter}
+              </h1>
             </div>
+            <span className="mt-4 inline-flex min-h-9 items-center rounded-full bg-primary px-4 py-1.5 font-tamil text-sm font-semibold text-primary-foreground shadow-sm">
+              குறள் {kural.number}
+            </span>
           </div>
+
+          <div className="reading-divider my-5" aria-hidden="true" />
+
+          <div className="flex min-h-[8rem] flex-1 items-center px-1 py-2 sm:min-h-[10rem] sm:px-5">
+            {/* The source text carries a hard line break. Never re-wrap:
+                both source lines stay nowrap and share one auto-fitted size. */}
+            <VerseLines text={kural.tamil} />
+          </div>
+
+          <div className="reading-divider my-5" aria-hidden="true" />
 
           {locked ? (
             <div
-              className="mt-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-center"
+              className="rounded-2xl border border-border bg-muted/40 px-4 py-4 text-center"
               lang="en"
             >
               <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-foreground">
@@ -85,8 +98,17 @@ export function VerseDisplay({
             kural.meaning && <Meaning text={kural.meaning} />
           )}
 
-          {/* Actions sit directly under the meaning so the reading group stays together. */}
-          <div className="mt-3 shrink-0 flex items-center justify-center gap-2">
+          <div className="mt-5 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] items-center gap-2 border-t border-border/70 pt-4">
+            <button
+              type="button"
+              onClick={onPrev}
+              disabled={!canPrev}
+              aria-label="Read earlier kural"
+              className="inline-flex min-h-12 min-w-0 items-center justify-self-start gap-2 rounded-xl border border-border bg-background/35 px-3 text-sm font-medium text-foreground transition hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-4"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="hidden brand:inline">Previous</span>
+            </button>
             <button
               type="button"
               onClick={onToggleFavourite}
@@ -96,10 +118,10 @@ export function VerseDisplay({
                   ? `Remove kural ${kural.number} from favourites`
                   : `Add kural ${kural.number} to favourites`
               }
-              className="h-11 w-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Heart
-                className={`w-4 h-4 ${isFavourite ? "fill-primary text-primary" : ""}`}
+                className={`h-5 w-5 ${isFavourite ? "fill-primary text-primary" : ""}`}
                 aria-hidden="true"
               />
             </button>
@@ -107,13 +129,23 @@ export function VerseDisplay({
               type="button"
               onClick={share}
               aria-label={`Share kural ${kural.number}`}
-              className="h-11 w-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {copied ? (
-                <Check className="w-4 h-4 text-primary" aria-hidden="true" />
+                <Check className="h-5 w-5 text-primary" aria-hidden="true" />
               ) : (
-                <Share2 className="w-4 h-4" aria-hidden="true" />
+                <Share2 className="h-5 w-5" aria-hidden="true" />
               )}
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!canNext}
+              aria-label="Read next kural"
+              className="inline-flex min-h-12 min-w-0 items-center justify-self-end gap-2 rounded-xl border border-border bg-background/35 px-3 text-sm font-medium text-foreground transition hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-4"
+            >
+              <span className="hidden brand:inline">Next</span>
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
             </button>
             <span className="sr-only" role="status">
               {copied ? "Kural copied to clipboard" : ""}
@@ -127,15 +159,10 @@ export function VerseDisplay({
 
 function Meaning({ text }: { text: string }) {
   return (
-    <div className="meaning-box mt-3 min-h-0 flex-1 overflow-hidden border-t border-border pt-1">
+    <div className="meaning-box rounded-2xl border border-border/80 bg-background/45 px-4 py-4 text-center sm:px-6 sm:py-5">
       <p
         data-fit-probe="meaning"
-        className="font-tamil text-[0.9rem] sm:text-[0.95rem] text-foreground/80 leading-snug overflow-hidden"
-        style={{
-          display: "-webkit-box",
-          WebkitBoxOrient: "vertical",
-          WebkitLineClamp: 2,
-        }}
+        className="font-tamil text-sm leading-relaxed text-foreground/80 sm:text-[0.95rem]"
       >
         {text}
       </p>
@@ -201,13 +228,13 @@ function VerseLines({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <p ref={wrapRef} className="font-tamil font-semibold text-card-foreground">
+    <p ref={wrapRef} className="w-full font-tamil font-semibold text-card-foreground">
       {lines.map((line, i) => (
         <span key={i} className="block w-full overflow-hidden text-center">
           <span
             ref={(el) => (lineRefs.current[i] = el)}
             data-fit-probe="verse-line"
-            className="inline-block whitespace-nowrap text-[clamp(1rem,min(5vw,3.6vh),1.7rem)] leading-[1.9]"
+            className="inline-block whitespace-nowrap text-[clamp(1.05rem,2.35vw,2rem)] leading-[1.95]"
           >
             {line}
           </span>

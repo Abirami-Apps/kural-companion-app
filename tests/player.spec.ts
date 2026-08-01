@@ -34,6 +34,27 @@ test("keypad entry updates the URL and browser history remains authoritative", a
   await waitForKural(page, 1329);
 });
 
+test("compact layouts open an accessible keypad sheet", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/kural/1");
+  await waitForKural(page, 1);
+
+  await page.getByRole("button", { name: "Choose a Kural number, currently 1" }).click();
+  const sheet = page.getByRole("dialog", { name: "Go to a Kural" });
+  await expect(sheet).toBeVisible();
+  await page.screenshot({ path: "artifacts/screenshots/390x844-keypad.png" });
+
+  await sheet.getByRole("button", { name: "Clear entry" }).click();
+  for (const digit of ["1", "0", "0"]) {
+    await sheet.getByRole("button", { name: `Digit ${digit}` }).click();
+  }
+  await sheet.getByRole("button", { name: "Go to entered kural" }).click();
+
+  await expect(page).toHaveURL(/\/kural\/100$/);
+  await waitForKural(page, 100);
+  await expect(sheet).toBeHidden();
+});
+
 test("invalid kural links recover safely", async ({ page }) => {
   await page.goto("/kural/1331");
   await expect(page.getByRole("heading", { name: "That kural does not exist" })).toBeVisible();

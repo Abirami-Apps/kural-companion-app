@@ -275,24 +275,32 @@
   display: none;
 }
 
-/* Soft app background */
+/* Quiet page surface: the content cards provide the visual hierarchy. */
 .app-surface {
-  background:
-    radial-gradient(1200px 600px at 15% -10%, hsl(var(--gold) / 0.10), transparent 60%),
-    radial-gradient(900px 500px at 100% 110%, hsl(var(--navy) / 0.10), transparent 60%),
-    hsl(var(--background));
+  background: hsl(var(--background));
 }
 
-.verse-card {
-  border: 1px solid hsl(var(--gold) / 0.32);
-  box-shadow:
-    0 1px 0 hsl(var(--gold) / 0.12) inset,
-    0 30px 60px -40px hsl(var(--navy) / 0.6);
+.reading-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: hsl(var(--primary) / 0.55);
 }
 
-[data-contrast='high'] .verse-card {
-  border: 2px solid hsl(var(--border));
-  box-shadow: none;
+.reading-divider::before,
+.reading-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: hsl(var(--border) / 0.75);
+}
+
+.reading-divider::before {
+  margin-left: 12%;
+}
+
+.reading-divider::after {
+  margin-right: 12%;
 }
 
 /* Safe areas for notches / home indicator (Capacitor) */
@@ -310,28 +318,20 @@
   padding-bottom: 0.25rem;
 }
 
-.control-rail {
-  box-shadow: 0 -20px 50px -40px hsl(var(--navy));
-}
+@media (max-width: 420px) {
+  .reading-divider::before {
+    margin-left: 4%;
+  }
 
-/* On very short landscape screens the verse and controls share the width;
-   omit the secondary meaning preview so the complete verse actions stay visible. */
-@media (orientation: landscape) and (max-height: 700px) {
-  .meaning-box {
-    display: none;
+  .reading-divider::after {
+    margin-right: 4%;
   }
 }
 
-/* Extra-large text uses one guaranteed whole meaning line when a narrow
-   portrait pane cannot hold the normal two-line preview. */
-@media (max-width: 379px), (min-width: 640px) and (max-width: 899px) {
-  [data-font-step='3'] .meaning-box {
-    flex: 0 0 auto;
-    min-height: calc(1.375em + 0.25rem);
-  }
-
-  [data-font-step='3'] .meaning-box [data-fit-probe='meaning'] {
-    -webkit-line-clamp: 1 !important;
+@media (min-width: 1180px) {
+  .reading-panel,
+  .control-card {
+    min-height: clamp(592px, calc(100dvh - 176px), 720px);
   }
 }
 

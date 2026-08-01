@@ -15,6 +15,11 @@ export default {
     },
     extend: {
       screens: {
+        /* Named width breakpoints are required because min-* variants cannot
+           be mixed with the object-based orientation/height screens below. */
+        brand: "350px",
+        nav: "1100px",
+        studio: "1180px",
         /* Short viewports: phones/tablets in landscape, small laptops */
         short: { raw: "(max-height: 700px)" },
         /* Tall viewports: room for optional secondary UI */
