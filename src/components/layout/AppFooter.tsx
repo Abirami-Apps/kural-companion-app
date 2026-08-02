@@ -6,6 +6,9 @@ export function AppFooter() {
       <div className="mx-auto flex min-h-12 w-full max-w-[1280px] items-center justify-between gap-4 px-8">
         <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Kural Companion</p>
         <nav aria-label="Footer" className="flex items-center gap-4 text-xs">
+          <Link to="/hourly" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-primary">
+            Hourly Kural
+          </Link>
           <Link to="/chapters" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-primary">
             Chapters
           </Link>

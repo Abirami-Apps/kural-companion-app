@@ -10,12 +10,26 @@ accessibility preferences work without an account.
 - Production-ready responsive web SPA
 - All 1,330 bundled Kurals and HTTPS audio links
 - Device-local favourites, recent items, and appearance settings
+- Hourly Kural scheduling with Tamil or English time announcements, configurable
+  active hours, Kural selection, and an optional spoken Tamil meaning
 - Authentication, subscriptions, checkout, offline listening, and native
   iOS/Android packages are not connected in this repository yet
 - Paid gating is off, so every valid Kural is accessible
 
 The sign-in and plan screens deliberately disclose those limitations and do not
 submit credentials or allow plan selection in the default build.
+
+## Hourly Kural
+
+Open `/hourly` to configure the premium Hourly Kural experience. Until paid
+subscriptions are connected, this feature is available as a clearly labelled
+premium preview. When subscription gating is enabled, access automatically
+requires an active entitlement.
+
+Web browsers allow scheduled voice and audio while the app remains active. When
+the page is in the background, the app uses an approved browser notification as
+the reminder instead of promising unattended playback. Reliable hourly playback
+with the app fully closed belongs in the future native iOS and Android packages.
 
 ## Local development
 

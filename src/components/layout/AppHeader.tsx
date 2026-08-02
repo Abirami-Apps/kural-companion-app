@@ -1,20 +1,23 @@
 import { useState } from "react";
-import { BookOpen, Heart, Home, LogIn, Menu, Settings2, Sparkles } from "lucide-react";
+import { BookOpen, Clock3, Heart, Home, LogIn, Menu, Settings2, Sparkles } from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { AppearancePanel } from "@/components/theme/AppearancePanel";
 import { checkoutEnabled } from "@/lib/features";
+import { useHourlyKural } from "@/hooks/useHourlyKural";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, end: true },
   { to: "/favourites", label: "Favourites", icon: Heart },
   { to: "/chapters", label: "Chapters", icon: BookOpen },
+  { to: "/hourly", label: "Hourly", icon: Clock3 },
 ];
 
 export function AppHeader() {
   const [open, setOpen] = useState(false);
+  const { settings: hourlySettings } = useHourlyKural();
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `inline-flex items-center gap-2 rounded-full px-3 min-h-11 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
@@ -53,6 +56,9 @@ export function AppHeader() {
             <NavLink key={item.to} to={item.to} end={item.end} className={linkClass}>
               <item.icon className="h-4 w-4" aria-hidden="true" />
               {item.label}
+              {item.to === "/hourly" && hourlySettings.enabled && (
+                <span className="h-2 w-2 rounded-full bg-primary" aria-label="Hourly schedule active" />
+              )}
             </NavLink>
           ))}
         </nav>
@@ -106,6 +112,9 @@ export function AppHeader() {
                   >
                     <item.icon className="h-4 w-4" aria-hidden="true" />
                     {item.label}
+                    {item.to === "/hourly" && hourlySettings.enabled && (
+                      <span className="ml-auto h-2 w-2 rounded-full bg-primary" aria-label="Hourly schedule active" />
+                    )}
                   </NavLink>
                 ))}
                 {checkoutEnabled && (

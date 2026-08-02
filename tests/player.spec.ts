@@ -96,6 +96,20 @@ test("appearance preferences survive reload", async ({ page }) => {
   await expect(page.locator("html")).toHaveCSS("--font-scale", "1.15");
 });
 
+test("Hourly Kural premium preview saves its schedule", async ({ page }) => {
+  await page.goto("/hourly");
+  await expect(page.getByRole("heading", { name: "மணிக்குறள்" })).toBeVisible();
+  await expect(page.getByText("Premium preview", { exact: true })).toBeVisible();
+
+  await page.getByRole("switch", { name: "Enable Hourly Kural schedule" }).click();
+  await page.getByRole("button", { name: "English" }).click();
+  await expect(page.getByText("Schedule active")).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByRole("switch", { name: "Enable Hourly Kural schedule" })).toBeChecked();
+  await expect(page.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
+});
+
 test("player shortcuts never hijack typing in the sign-in form", async ({ page }) => {
   await page.goto("/login");
   const email = page.getByLabel("Email address");
@@ -136,7 +150,7 @@ test("core routes emit no uncaught runtime errors", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/login", "/subscribe"]) {
+  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/subscribe"]) {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();
   }

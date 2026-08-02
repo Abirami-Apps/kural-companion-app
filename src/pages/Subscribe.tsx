@@ -32,9 +32,9 @@ const plans = [
 ];
 
 const features = [
-  "All 1,330 Kurals with audio",
-  "Tamil verse & meaning",
-  "Offline listening (coming soon)",
+  "Hourly Kural clock and reminders",
+  "Cross-device favourites, notes and progress (coming soon)",
+  "Offline listening in the native apps (coming soon)",
 ];
 
 const Subscribe = () => {
