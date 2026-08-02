@@ -11,6 +11,8 @@ export interface AuthState {
   user: AuthUser | null;
   loading: boolean;
   signedIn: boolean;
+  /** Paid access must come from the backend, never merely from sign-in. */
+  subscribed: boolean;
 }
 
 /**
@@ -27,5 +29,6 @@ export function useAuth(): AuthState {
     user: null,
     loading: false,
     signedIn: false,
+    subscribed: false,
   };
 }

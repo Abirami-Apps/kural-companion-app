@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Info } from "lucide-react";
 import { useId, useState } from "react";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PRODUCT_NAME, authEnabled } from "@/lib/features";
+import { useTheme } from "@/components/theme/ThemeProvider";
 
 const emailSchema = z.object({
   email: z.string().trim().min(1, "Enter your email address").email("Enter a valid email address"),
@@ -22,6 +23,9 @@ const phoneSchema = z.object({
 
 const Login = () => {
   const navigate = useNavigate();
+  const systemReduce = useReducedMotion();
+  const { reducedMotion } = useTheme();
+  const reduce = systemReduce || reducedMotion;
   const [mode, setMode] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,7 +66,7 @@ const Login = () => {
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col px-4 py-6" lang="en">
       <motion.div
-        initial={{ opacity: 0, x: -12 }}
+        initial={reduce ? false : { opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       >
@@ -208,7 +212,7 @@ const Login = () => {
         </form>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          <Link to="/" className="text-primary underline underline-offset-4">
+          <Link to="/" className="inline-flex min-h-11 items-center text-primary underline underline-offset-4">
             Continue without an account
           </Link>
         </p>

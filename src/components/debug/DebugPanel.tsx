@@ -41,7 +41,7 @@ export function DebugPanel() {
         onClick={() => setOpen((o) => !o)}
         aria-pressed={open}
         aria-label="Toggle layout debug panel"
-        className="fixed bottom-2 left-2 z-[60] h-8 w-8 rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur flex items-center justify-center opacity-40 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="fixed bottom-2 left-2 z-[60] h-11 w-11 rounded-full border border-border bg-background/80 text-muted-foreground backdrop-blur flex items-center justify-center opacity-40 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         style={{ marginBottom: "var(--safe-bottom)", marginLeft: "var(--safe-left)" }}
       >
         <Bug className="h-4 w-4" aria-hidden="true" />
@@ -50,7 +50,7 @@ export function DebugPanel() {
       {open && (
         <aside
           aria-label="Layout diagnostics"
-          className="fixed bottom-12 left-2 z-[60] w-[min(17rem,80vw)] rounded-xl border border-border bg-popover/95 p-3 text-popover-foreground shadow-lg backdrop-blur"
+          className="fixed bottom-14 left-2 z-[60] w-[min(17rem,80vw)] rounded-xl border border-border bg-popover/95 p-3 text-popover-foreground shadow-lg backdrop-blur"
           style={{ marginBottom: "var(--safe-bottom)", marginLeft: "var(--safe-left)" }}
         >
           <div className="mb-2 flex items-center justify-between">
@@ -59,7 +59,7 @@ export function DebugPanel() {
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Close debug panel"
-              className="rounded p-1 text-muted-foreground hover:text-foreground"
+              className="flex h-11 w-11 items-center justify-center rounded text-muted-foreground hover:text-foreground"
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </button>

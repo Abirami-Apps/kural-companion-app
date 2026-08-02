@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Heart, Lock, Share2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Heart, Lock, Share2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Kural } from "@/data/sample-kurals";
@@ -9,6 +9,10 @@ interface VerseDisplayProps {
   kural: Kural;
   isFavourite: boolean;
   onToggleFavourite: () => void;
+  canPrev: boolean;
+  canNext: boolean;
+  onPrev: () => void;
+  onNext: () => void;
   locked?: boolean;
 }
 
@@ -16,56 +20,16 @@ export function VerseDisplay({
   kural,
   isFavourite,
   onToggleFavourite,
+  canPrev,
+  canNext,
+  onPrev,
+  onNext,
   locked = false,
 }: VerseDisplayProps) {
   const systemReduce = useReducedMotion();
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
   const [copied, setCopied] = useState(false);
-  const rootRef = useRef<HTMLDivElement>(null);
-
-  /**
-   * Height guard: the width fitter keeps each source line unwrapped, but a
-   * short column can still be too small for the whole block. Shrink the shared
-   * verse scale (--vfit) until the verse, meaning and actions all fit — never
-   * crop them.
-   */
-  useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    let raf = 0;
-    const fitHeight = () => {
-      let factor = 1;
-      root.style.setProperty("--vfit", "1");
-      for (let i = 0; i < 10; i++) {
-        if (root.scrollHeight - root.clientHeight <= 2) break;
-        factor = Math.max(0.7, factor - 0.06);
-        root.style.setProperty("--vfit", String(factor));
-      }
-    };
-    let settle = 0;
-    const schedule = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(fitHeight);
-      // Re-run once the browser has settled fonts / rotation, so an early
-      // measurement can never leave the verse permanently shrunken.
-      window.clearTimeout(settle);
-      settle = window.setTimeout(fitHeight, 300);
-    };
-    schedule();
-
-    const ro = new ResizeObserver(schedule);
-    ro.observe(root);
-    window.addEventListener("resize", schedule);
-    window.addEventListener("orientationchange", schedule);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(settle);
-      ro.disconnect();
-      window.removeEventListener("resize", schedule);
-      window.removeEventListener("orientationchange", schedule);
-    };
-  }, [kural.number]);
 
   const share = async () => {
     const url = `${window.location.origin}/kural/${kural.number}`;
@@ -81,10 +45,7 @@ export function VerseDisplay({
   };
 
   return (
-    <div
-      ref={rootRef}
-      className="w-full max-w-[46rem] mx-auto flex h-full min-h-0 flex-col overflow-hidden"
-    >
+    <div className="flex h-full w-full min-w-0 flex-col">
       <AnimatePresence mode="wait">
         <motion.article
           key={kural.number}
@@ -93,29 +54,34 @@ export function VerseDisplay({
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: reduce ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
           aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
-          className="flex h-full min-h-0 flex-col justify-center gap-1"
+          className="flex h-full min-w-0 flex-col"
         >
-          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-muted-foreground font-tamil short:hidden">
-            {kural.section}
-          </p>
-          <h1 className="font-tamil text-sm sm:text-base font-semibold text-primary mb-2">
-            {kural.chapterNumber}. {kural.chapter}
-          </h1>
-
-          <div className="relative pt-4 shrink-0">
-            <span className="absolute left-6 sm:left-10 top-0 z-10 digital-display text-[0.7rem] leading-none px-2.5 py-1.5 rounded-full bg-card border border-primary/40 text-primary shadow-sm">
-              {kural.number}
-            </span>
-            <div className="verse-card rounded-[1.75rem] bg-card px-5 py-5 short:py-4 sm:px-10 sm:py-8">
-              {/* The source text carries a hard line break. Never re-wrap:
-                  both source lines stay nowrap and share one auto-fitted size. */}
-              <VerseLines text={kural.tamil} />
+          <div className="flex flex-col items-center text-center">
+            <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 font-tamil text-xs text-muted-foreground sm:text-sm">
+              <span>{kural.section}</span>
+              <span className="h-4 w-px bg-border" aria-hidden="true" />
+              <h1 className="font-semibold text-primary">
+                {kural.chapterNumber}. {kural.chapter}
+              </h1>
             </div>
+            <span className="mt-4 inline-flex min-h-9 items-center rounded-full bg-primary px-4 py-1.5 font-tamil text-sm font-semibold text-primary-foreground shadow-sm">
+              குறள் {kural.number}
+            </span>
           </div>
+
+          <div className="reading-divider my-5" aria-hidden="true" />
+
+          <div className="flex min-h-[8rem] flex-1 items-center px-1 py-2 sm:min-h-[10rem] sm:px-5">
+            {/* The source text carries a hard line break. Never re-wrap:
+                both source lines stay nowrap and share one auto-fitted size. */}
+            <VerseLines text={kural.tamil} />
+          </div>
+
+          <div className="reading-divider my-5" aria-hidden="true" />
 
           {locked ? (
             <div
-              className="mt-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 text-center"
+              className="rounded-2xl border border-border bg-muted/40 px-4 py-4 text-center"
               lang="en"
             >
               <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-foreground">
@@ -123,7 +89,7 @@ export function VerseDisplay({
               </p>
               <Link
                 to="/subscribe"
-                className="mt-1 inline-block text-xs text-primary underline underline-offset-4"
+                className="mt-1 inline-flex min-h-11 items-center text-xs text-primary underline underline-offset-4"
               >
                 See subscription options
               </Link>
@@ -132,8 +98,17 @@ export function VerseDisplay({
             kural.meaning && <Meaning text={kural.meaning} />
           )}
 
-          {/* Actions sit directly under the meaning so the reading group stays together. */}
-          <div className="mt-3 shrink-0 flex items-center justify-center gap-2">
+          <div className="mt-5 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] items-center gap-2 border-t border-border/70 pt-4">
+            <button
+              type="button"
+              onClick={onPrev}
+              disabled={!canPrev}
+              aria-label="Read earlier kural"
+              className="inline-flex min-h-12 min-w-0 items-center justify-self-start gap-2 rounded-xl border border-border bg-background/35 px-3 text-sm font-medium text-foreground transition hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-4"
+            >
+              <ArrowLeft className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span className="hidden brand:inline">Previous</span>
+            </button>
             <button
               type="button"
               onClick={onToggleFavourite}
@@ -143,10 +118,10 @@ export function VerseDisplay({
                   ? `Remove kural ${kural.number} from favourites`
                   : `Add kural ${kural.number} to favourites`
               }
-              className="h-11 w-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Heart
-                className={`w-4 h-4 ${isFavourite ? "fill-primary text-primary" : ""}`}
+                className={`h-5 w-5 ${isFavourite ? "fill-primary text-primary" : ""}`}
                 aria-hidden="true"
               />
             </button>
@@ -154,13 +129,23 @@ export function VerseDisplay({
               type="button"
               onClick={share}
               aria-label={`Share kural ${kural.number}`}
-              className="h-11 w-11 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-primary/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {copied ? (
-                <Check className="w-4 h-4 text-primary" aria-hidden="true" />
+                <Check className="h-5 w-5 text-primary" aria-hidden="true" />
               ) : (
-                <Share2 className="w-4 h-4" aria-hidden="true" />
+                <Share2 className="h-5 w-5" aria-hidden="true" />
               )}
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={!canNext}
+              aria-label="Read next kural"
+              className="inline-flex min-h-12 min-w-0 items-center justify-self-end gap-2 rounded-xl border border-border bg-background/35 px-3 text-sm font-medium text-foreground transition hover:border-primary/50 hover:text-primary disabled:cursor-not-allowed disabled:opacity-35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:px-4"
+            >
+              <span className="hidden brand:inline">Next</span>
+              <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
             </button>
             <span className="sr-only" role="status">
               {copied ? "Kural copied to clipboard" : ""}
@@ -172,55 +157,12 @@ export function VerseDisplay({
   );
 }
 
-/**
- * Meaning paragraph that fits the space left over instead of being cropped:
- * it measures its own available height and shows only as many whole lines as
- * fit, adding an ellipsis via line-clamp so text is never half-cut.
- */
 function Meaning({ text }: { text: string }) {
-  const boxRef = useRef<HTMLDivElement>(null);
-  const [lines, setLines] = useState(2);
-
-  useLayoutEffect(() => {
-    const box = boxRef.current;
-    if (!box) return;
-    const measure = () => {
-      const p = box.firstElementChild as HTMLElement | null;
-      if (!p) return;
-      const lh = parseFloat(getComputedStyle(p).lineHeight) || 18;
-      const pad = parseFloat(getComputedStyle(box).paddingTop) || 0;
-      const available = box.clientHeight - pad;
-      const fit = Math.max(0, Math.floor(available / lh));
-      setLines(Math.min(6, fit));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(box);
-    window.addEventListener("resize", measure);
-    window.addEventListener("orientationchange", measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("orientationchange", measure);
-    };
-  }, [text]);
-
   return (
-    <div
-      ref={boxRef}
-      className={`flex-1 min-h-0 overflow-hidden ${
-        lines === 0 ? "" : "mt-3 pt-2 border-t border-border"
-      }`}
-      aria-hidden={lines === 0 ? true : undefined}
-    >
+    <div className="meaning-box rounded-2xl border border-border/80 bg-background/45 px-4 py-4 text-center sm:px-6 sm:py-5">
       <p
-        className="font-tamil text-[0.9rem] sm:text-[0.95rem] text-foreground/80 leading-relaxed overflow-hidden"
-        style={{
-          display: "-webkit-box",
-          WebkitBoxOrient: "vertical",
-          WebkitLineClamp: Math.max(1, lines),
-          visibility: lines === 0 ? "hidden" : undefined,
-        }}
+        data-fit-probe="meaning"
+        className="font-tamil text-sm leading-relaxed text-foreground/80 sm:text-[0.95rem]"
       >
         {text}
       </p>
@@ -253,7 +195,7 @@ function VerseLines({ text }: { text: string }) {
       const widest = Math.max(...els.map((el) => el.scrollWidth));
       if (!widest) return;
       const next = widest > available ? Math.max(14, (base * available) / widest) : base;
-      els.forEach((el) => (el.style.fontSize = `calc(${next}px * var(--vfit, 1))`));
+      els.forEach((el) => (el.style.fontSize = `${next}px`));
     };
 
     // Instant reflow: measure on every layout-affecting signal, and once more
@@ -286,13 +228,13 @@ function VerseLines({ text }: { text: string }) {
   }, [text]);
 
   return (
-    <p ref={wrapRef} className="font-tamil font-semibold text-card-foreground">
+    <p ref={wrapRef} className="w-full font-tamil font-semibold text-card-foreground">
       {lines.map((line, i) => (
         <span key={i} className="block w-full overflow-hidden text-center">
           <span
             ref={(el) => (lineRefs.current[i] = el)}
             data-fit-probe="verse-line"
-            className="inline-block whitespace-nowrap text-[clamp(1rem,min(5vw,3.6vh),1.7rem)] leading-[1.9]"
+            className="inline-block whitespace-nowrap text-[clamp(1.05rem,2.35vw,2rem)] leading-[1.95]"
           >
             {line}
           </span>

@@ -11,8 +11,9 @@ const showDebug =
     new URLSearchParams(window.location.search).get("debug") === "1");
 
 export function AppLayout() {
-  // Production layout hook: the no-scroll guard runs regardless of debug UI.
-  useFitGuard(true);
+  // The redesigned main region scrolls naturally on compact/landscape screens.
+  // Keep live overflow diagnostics without shrinking 44px touch targets.
+  useFitGuard(true, false);
 
   return (
     <div id="app-root" className="app-surface flex h-[100dvh] flex-col overflow-hidden safe-pad">
@@ -23,7 +24,7 @@ export function AppLayout() {
         Skip to main content
       </a>
       <AppHeader />
-      <main id="main" className="flex-1 min-h-0 flex flex-col overflow-y-auto">
+      <main id="main" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <Outlet />
       </main>
       <AppFooter />

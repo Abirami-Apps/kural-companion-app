@@ -9,6 +9,16 @@ export interface Entitlements {
   freeLimit: number;
   canAccessKural: (n: number) => boolean;
   isLocked: (n: number) => boolean;
+  /** Premium features are open for preview until paid gating is configured. */
+  premiumAccess: boolean;
+  premiumPreview: boolean;
+}
+
+export function canUsePremiumFeaturesWith(opts: {
+  subscriptionsEnabled: boolean;
+  subscribed: boolean;
+}): boolean {
+  return !opts.subscriptionsEnabled || opts.subscribed;
 }
 
 /** Pure rule so it can be unit-tested without React. */
@@ -27,9 +37,11 @@ export function canAccessKuralWith(
  * must go through this, so gating can never diverge between screens.
  */
 export function useEntitlements(): Entitlements {
-  const { signedIn } = useAuth();
-  // Without a payment backend nobody can be subscribed.
-  const subscribed = subscriptionsEnabled ? signedIn : false;
+  const { subscribed } = useAuth();
+  const premiumAccess = canUsePremiumFeaturesWith({
+    subscriptionsEnabled,
+    subscribed,
+  });
 
   const canAccessKural = useCallback(
     (n: number) =>
@@ -47,7 +59,9 @@ export function useEntitlements(): Entitlements {
       freeLimit: FREE_LIMIT,
       canAccessKural,
       isLocked: (n: number) => !canAccessKural(n),
+      premiumAccess,
+      premiumPreview: !subscriptionsEnabled,
     }),
-    [canAccessKural],
+    [canAccessKural, premiumAccess],
   );
 }

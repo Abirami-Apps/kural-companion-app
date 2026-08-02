@@ -22,6 +22,27 @@ interface RawKural {
 
 const rawData = kuralsJson as Record<string, RawKural>;
 
+const canonicalSection = (number: number) => {
+  if (number <= 380) return "அறத்துப்பால்";
+  if (number <= 1080) return "பொருட்பால்";
+  return "காமத்துப்பால்";
+};
+
+/**
+ * The legacy export's metadata contains one extra heading ("ஊழியல்") at
+ * chapter 38 and omits "பிரிவாற்றாமை" at chapter 116. Its verse, meaning and
+ * audio records are correctly numbered, so repair only the presentation
+ * metadata here and leave the source JSON untouched.
+ */
+const canonicalChapter = (raw: RawKural) => {
+  if (raw.adikaramno === 116) return "பிரிவாற்றாமை";
+  if (raw.adikaramno >= 38 && raw.adikaramno <= 115) {
+    const nextChapter = rawData[String(raw.adikaramno * 10 + 1)];
+    return nextChapter?.Adikaram ?? raw.Adikaram;
+  }
+  return raw.Adikaram;
+};
+
 const kuralsMap = new Map<number, Kural>();
 const allKurals: Kural[] = [];
 
@@ -30,9 +51,9 @@ Object.values(rawData).forEach((raw) => {
     number: raw.kuralno,
     tamil: raw.Kural,
     meaning: raw.Porul,
-    chapter: raw.Adikaram,
+    chapter: canonicalChapter(raw),
     chapterNumber: raw.adikaramno,
-    section: raw.pirivu,
+    section: canonicalSection(raw.kuralno),
     audioUrl: raw.audiolink,
   };
   kuralsMap.set(raw.kuralno, kural);
@@ -58,6 +79,8 @@ export function getAllKurals(): Kural[] {
   return allKurals;
 }
 
-export const SECTIONS = ["அறத்துப்பால்", "பொருட்பால்", "இன்பத்துப்பால்"] as const;
+// Canonical section names. Some editions call the third division
+// "இன்பத்துப்பால்"; this app uses "காமத்துப்பால்" consistently.
+export const SECTIONS = ["அறத்துப்பால்", "பொருட்பால்", "காமத்துப்பால்"] as const;
 export const TOTAL_KURALS = 1330;
 export const FREE_LIMIT = 10;

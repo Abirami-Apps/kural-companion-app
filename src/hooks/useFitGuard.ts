@@ -44,10 +44,9 @@ function measureFonts(): Record<string, string> {
 /**
  * Runtime no-scroll guard.
  *
- * Measures document overflow after every layout-affecting event (resize,
- * orientation change, font-scale change, DOM mutation) and progressively
- * tightens a global `--fit-scale` until the app fits in one screen again.
- * The scale is released back toward 1 as soon as there is spare room.
+ * Measures shell overflow after every layout-affecting event. The main region
+ * is intentionally allowed to scroll on compact screens, while the document
+ * shell must always remain locked to the viewport without horizontal spill.
  */
 export function useFitGuard(enabled = true, applyScale = true) {
   const scaleRef = useRef(1);
@@ -83,14 +82,16 @@ export function useFitGuard(enabled = true, applyScale = true) {
     };
 
     const overflow = () => {
-      const targets = [
-        document.getElementById("main"),
+      const shellTargets = [
         document.getElementById("app-root"),
         root,
         document.body,
       ].filter(Boolean) as HTMLElement[];
-      const y = Math.max(...targets.map((el) => el.scrollHeight - el.clientHeight));
-      const x = Math.max(...targets.map((el) => el.scrollWidth - el.clientWidth));
+      const widthTargets = [document.getElementById("main"), ...shellTargets].filter(
+        Boolean,
+      ) as HTMLElement[];
+      const y = Math.max(...shellTargets.map((el) => el.scrollHeight - el.clientHeight));
+      const x = Math.max(...widthTargets.map((el) => el.scrollWidth - el.clientWidth));
       return { y, x };
     };
 
@@ -164,7 +165,7 @@ export function useFitGuard(enabled = true, applyScale = true) {
       ro.disconnect();
       mo.disconnect();
     };
-  }, [enabled]);
+  }, [applyScale, enabled]);
 
   return metrics;
 }

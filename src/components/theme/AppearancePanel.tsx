@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { FONT_STEPS, THEMES, useTheme } from "./ThemeProvider";
 
-export function ThemeSwatches({ compact = false }: { compact?: boolean }) {
+export function ThemeSwatches({ compact: _compact = false }: { compact?: boolean }) {
   const { theme, setTheme } = useTheme();
   return (
     <div className="flex items-center gap-2" role="radiogroup" aria-label="Colour theme">
@@ -25,9 +25,9 @@ export function ThemeSwatches({ compact = false }: { compact?: boolean }) {
           aria-label={`${t.label} theme`}
           title={t.label}
           onClick={() => setTheme(t.id)}
-          className={`relative rounded-full border-2 overflow-hidden transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-            compact ? "h-7 w-7" : "h-9 w-9"
-          } ${theme === t.id ? "border-primary scale-110" : "border-border hover:border-primary/50"}`}
+          className={`relative h-11 w-11 rounded-full border-2 overflow-hidden transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+            theme === t.id ? "border-primary scale-110" : "border-border hover:border-primary/50"
+          }`}
         >
           <span className="absolute inset-0 flex">
             {t.swatch.map((c) => (
@@ -40,15 +40,14 @@ export function ThemeSwatches({ compact = false }: { compact?: boolean }) {
   );
 }
 
-export function FontStepper({ compact = false }: { compact?: boolean }) {
+export function FontStepper({ compact: _compact = false }: { compact?: boolean }) {
   const { fontStep, increaseFont, decreaseFont } = useTheme();
-  const size = compact ? "h-8 w-8" : "h-11 w-11";
   return (
     <div className="flex items-center gap-2">
       <Button
         variant="outline"
         size="icon"
-        className={size}
+        className="h-11 w-11"
         onClick={decreaseFont}
         disabled={fontStep === 0}
         aria-label="Decrease text size"
@@ -61,7 +60,7 @@ export function FontStepper({ compact = false }: { compact?: boolean }) {
       <Button
         variant="outline"
         size="icon"
-        className={size}
+        className="h-11 w-11"
         onClick={increaseFont}
         disabled={fontStep === FONT_STEPS.length - 1}
         aria-label="Increase text size"
