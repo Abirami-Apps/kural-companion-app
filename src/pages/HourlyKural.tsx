@@ -61,7 +61,8 @@ export default function HourlyKural() {
   const statusLabel = {
     idle: hourly.settings.enabled ? "Schedule active" : "Schedule paused",
     announcing: "Announcing the time…",
-    playing: "Playing the Hourly Kural…",
+    loading: "Opening the main player…",
+    playing: "Playing in the main Kural player…",
     error: "Playback needs attention",
   }[hourly.status];
 
@@ -230,7 +231,11 @@ export default function HourlyKural() {
               <Button
                 type="button"
                 onClick={() => void hourly.testNow()}
-                disabled={hourly.status === "announcing" || hourly.status === "playing"}
+                disabled={
+                  hourly.status === "announcing" ||
+                  hourly.status === "loading" ||
+                  hourly.status === "playing"
+                }
                 className="min-h-12 rounded-xl"
               >
                 <Play className="h-4 w-4" aria-hidden="true" /> Test now

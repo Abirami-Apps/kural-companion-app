@@ -1,4 +1,4 @@
-import { Delete, Grid3X3, Keyboard, Lock, RotateCcw, Shuffle } from "lucide-react";
+import { Clock3, Delete, Grid3X3, Keyboard, Lock, RotateCcw, Shuffle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { TOTAL_KURALS } from "@/data/sample-kurals";
@@ -54,6 +54,10 @@ export function KuralPlayer() {
     </>
   ) : p.pending ? (
     <span>Loading kural…</span>
+  ) : p.hourlyPlayback ? (
+    <span className="inline-flex items-center gap-1.5">
+      <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> Hourly Kural
+    </span>
   ) : !p.hintSeen ? (
     <span>Enter a number from 1 to {TOTAL_KURALS}</span>
   ) : null;

@@ -28,6 +28,32 @@ export async function installMediaMock(page: Page) {
     const currentTimes = new WeakMap<HTMLMediaElement, number>();
     const playing = new WeakSet<HTMLMediaElement>();
 
+    class MockSpeechSynthesisUtterance {
+      text: string;
+      lang = "";
+      rate = 1;
+      onend: ((event: SpeechSynthesisEvent) => unknown) | null = null;
+      onerror: ((event: SpeechSynthesisErrorEvent) => unknown) | null = null;
+
+      constructor(text: string) {
+        this.text = text;
+      }
+    }
+
+    Object.defineProperty(window, "SpeechSynthesisUtterance", {
+      configurable: true,
+      value: MockSpeechSynthesisUtterance,
+    });
+    Object.defineProperty(window, "speechSynthesis", {
+      configurable: true,
+      value: {
+        cancel() {},
+        speak(utterance: MockSpeechSynthesisUtterance) {
+          queueMicrotask(() => utterance.onend?.(new Event("end") as SpeechSynthesisEvent));
+        },
+      },
+    });
+
     Object.defineProperties(HTMLMediaElement.prototype, {
       paused: {
         configurable: true,

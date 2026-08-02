@@ -21,10 +21,10 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <TooltipProvider>
-        <HourlyKuralProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <BrowserRouter>
+          <HourlyKuralProvider>
+            <Toaster />
+            <Sonner />
             <Suspense
               fallback={
                 <div className="flex min-h-screen items-center justify-center" role="status">
@@ -45,8 +45,8 @@ const App = () => (
                 </Route>
               </Routes>
             </Suspense>
-          </BrowserRouter>
-        </HourlyKuralProvider>
+          </HourlyKuralProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>

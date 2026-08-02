@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getKural } from "@/data/sample-kurals";
-import { HourlyKuralContext, type HourlyKuralContextValue, type HourlyNotificationPermission, type HourlyPlaybackStatus } from "@/contexts/HourlyKuralContext";
+import {
+  HourlyKuralContext,
+  type HourlyKuralContextValue,
+  type HourlyNotificationPermission,
+  type HourlyPlaybackRequest,
+  type HourlyPlaybackStatus,
+} from "@/contexts/HourlyKuralContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { FAVS_KEY, readNumberList } from "@/lib/player-utils";
 import {
@@ -26,18 +33,19 @@ const readNotificationPermission = (): HourlyNotificationPermission =>
   typeof Notification === "undefined" ? "unsupported" : Notification.permission;
 
 export function HourlyKuralProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const { premiumAccess, premiumPreview } = useEntitlements();
   const [settings, setSettings] = useState<HourlyKuralSettings>(readHourlySettings);
   const [status, setStatus] = useState<HourlyPlaybackStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [nextRun, setNextRun] = useState<Date | null>(null);
   const [lastKuralNumber, setLastKuralNumber] = useState<number | null>(readLastKural);
+  const [playbackRequest, setPlaybackRequest] = useState<HourlyPlaybackRequest | null>(null);
   const [notificationPermission, setNotificationPermission] =
     useState<HourlyNotificationPermission>(readNotificationPermission);
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const meaningRef = useRef<string | null>(null);
-  const includeMeaningRef = useRef(false);
+  const playbackRequestRef = useRef<HourlyPlaybackRequest | null>(null);
+  const requestIdRef = useRef(0);
+  const handoffTokenRef = useRef(0);
 
   useEffect(() => {
     try {
@@ -56,13 +64,10 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const stopPlayback = useCallback(() => {
+    handoffTokenRef.current += 1;
     window.speechSynthesis?.cancel();
-    const audio = audioRef.current;
-    if (audio) {
-      audio.pause();
-      audio.currentTime = 0;
-    }
-    meaningRef.current = null;
+    playbackRequestRef.current = null;
+    setPlaybackRequest(null);
     setStatus("idle");
   }, []);
 
@@ -72,6 +77,7 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
     }
     return new Promise<void>((resolve) => {
       let settled = false;
+      let timeout = 0;
       const done = () => {
         if (settled) return;
         settled = true;
@@ -83,10 +89,9 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       utterance.rate = 0.88;
       utterance.onend = done;
       utterance.onerror = done;
-      utteranceRef.current = utterance;
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
-      const timeout = window.setTimeout(done, 12_000);
+      timeout = window.setTimeout(done, 12_000);
     });
   }, []);
 
@@ -109,9 +114,57 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
     [lastKuralNumber, settings.selection],
   );
 
+  const handoffToMainPlayer = useCallback(
+    (number: number, includeMeaning: boolean) => {
+      handoffTokenRef.current += 1;
+      const request: HourlyPlaybackRequest = {
+        id: ++requestIdRef.current,
+        number,
+        includeMeaning,
+      };
+      playbackRequestRef.current = request;
+      setPlaybackRequest(request);
+      setStatus("loading");
+      navigate(`/kural/${number}`);
+    },
+    [navigate],
+  );
+
+  const markPlayerPlaybackStarted = useCallback((requestId: number) => {
+    if (playbackRequestRef.current?.id !== requestId) return;
+    setStatus("playing");
+  }, []);
+
+  const reportPlayerPlaybackError = useCallback((requestId: number, message: string) => {
+    if (playbackRequestRef.current?.id !== requestId) return;
+    playbackRequestRef.current = null;
+    setPlaybackRequest(null);
+    setStatus("error");
+    setErrorMessage(message);
+  }, []);
+
+  const completePlayerPlayback = useCallback(
+    async (requestId: number, meaning: string) => {
+      const request = playbackRequestRef.current;
+      if (!request || request.id !== requestId) return;
+
+      playbackRequestRef.current = null;
+      setPlaybackRequest(null);
+      if (request.includeMeaning && meaning) {
+        const completionToken = handoffTokenRef.current;
+        setStatus("announcing");
+        await speak(meaning, "ta");
+        if (handoffTokenRef.current !== completionToken) return;
+      }
+      setStatus("idle");
+    },
+    [speak],
+  );
+
   const playHourlyKural = useCallback(
     async (date: Date) => {
       if (!premiumAccess) return;
+      const handoffToken = ++handoffTokenRef.current;
       const number = chooseNumber();
       const kural = getKural(number);
       if (!kural?.audioUrl) {
@@ -121,29 +174,22 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       }
 
       setErrorMessage(null);
-      document.querySelectorAll("audio").forEach((audio) => {
-        if (audio !== audioRef.current) audio.pause();
-      });
       rememberKural(number);
-      meaningRef.current = kural.meaning ?? null;
-      includeMeaningRef.current = settings.includeMeaning;
 
       setStatus("announcing");
       await speak(timeAnnouncement(date, settings.language), settings.language);
-
-      const audio = audioRef.current;
-      if (!audio) return;
-      audio.src = kural.audioUrl;
-      audio.load();
-      try {
-        await audio.play();
-        setStatus("playing");
-      } catch {
-        setStatus("error");
-        setErrorMessage("Playback was blocked. Keep this page open and tap “Test now” once to allow sound.");
-      }
+      if (handoffTokenRef.current !== handoffToken) return;
+      handoffToMainPlayer(number, settings.includeMeaning);
     },
-    [chooseNumber, premiumAccess, rememberKural, settings.includeMeaning, settings.language, speak],
+    [
+      chooseNumber,
+      handoffToMainPlayer,
+      premiumAccess,
+      rememberKural,
+      settings.includeMeaning,
+      settings.language,
+      speak,
+    ],
   );
 
   const showNotification = useCallback(
@@ -163,11 +209,11 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       );
       notification.onclick = () => {
         window.focus();
-        window.location.assign(`/kural/${number}`);
+        handoffToMainPlayer(number, settings.includeMeaning);
         notification.close();
       };
     },
-    [chooseNumber, rememberKural, settings.language],
+    [chooseNumber, handoffToMainPlayer, rememberKural, settings.includeMeaning, settings.language],
   );
 
   const runScheduled = useCallback(
@@ -223,7 +269,6 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   useEffect(
     () => () => {
       window.speechSynthesis?.cancel();
-      audioRef.current?.pause();
     },
     [],
   );
@@ -256,18 +301,26 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       errorMessage,
       nextRun,
       lastKuralNumber,
+      playbackRequest,
       notificationPermission,
       requestNotificationPermission,
       testNow,
       stopPlayback,
+      markPlayerPlaybackStarted,
+      completePlayerPlayback,
+      reportPlayerPlaybackError,
     }),
     [
       errorMessage,
+      completePlayerPlayback,
       lastKuralNumber,
+      markPlayerPlaybackStarted,
       nextRun,
       notificationPermission,
+      playbackRequest,
       premiumAccess,
       premiumPreview,
+      reportPlayerPlaybackError,
       requestNotificationPermission,
       setEnabled,
       settings,
@@ -281,21 +334,6 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   return (
     <HourlyKuralContext.Provider value={value}>
       {children}
-      <audio
-        ref={audioRef}
-        preload="none"
-        onEnded={async () => {
-          if (includeMeaningRef.current && meaningRef.current) {
-            setStatus("announcing");
-            await speak(meaningRef.current, "ta");
-          }
-          setStatus("idle");
-        }}
-        onError={() => {
-          setStatus("error");
-          setErrorMessage("The Hourly Kural audio could not be loaded.");
-        }}
-      />
     </HourlyKuralContext.Provider>
   );
 }

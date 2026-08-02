@@ -14,6 +14,8 @@ import {
   writeNumberList,
 } from "@/lib/player-utils";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { useHourlyKural } from "@/hooks/useHourlyKural";
+import type { HourlyPlaybackRequest } from "@/contexts/HourlyKuralContext";
 import artwork from "@/assets/logo.png";
 
 const SOFT_DELAY = 1000;
@@ -55,8 +57,15 @@ export function useKuralPlayer() {
   const settleRef = useRef<ReturnType<typeof setTimeout>>();
   const shouldPlayRef = useRef(false);
   const playTokenRef = useRef(0);
+  const activeHourlyRequestRef = useRef<HourlyPlaybackRequest | null>(null);
 
   const { canAccessKural, gatingActive } = useEntitlements();
+  const {
+    playbackRequest: hourlyPlaybackRequest,
+    markPlayerPlaybackStarted,
+    completePlayerPlayback,
+    reportPlayerPlaybackError,
+  } = useHourlyKural();
   const locked = !canAccessKural(number);
 
   const [entry, setEntry] = useState("");
@@ -124,6 +133,11 @@ export function useKuralPlayer() {
 
   // Reset + load audio whenever the kural changes (including Back/Forward).
   useEffect(() => {
+    const activeHourlyRequest = activeHourlyRequestRef.current;
+    if (activeHourlyRequest && activeHourlyRequest.number !== number) {
+      activeHourlyRequestRef.current = null;
+      void completePlayerPlayback(activeHourlyRequest.id, "");
+    }
     setProgress(0);
     setDuration(0);
     setIsPlaying(false);
@@ -144,7 +158,37 @@ export function useKuralPlayer() {
     } else {
       setAudioState("idle");
     }
-  }, [number, locked]);
+  }, [completePlayerPlayback, number, locked]);
+
+  // Hourly Kural hands playback to this one shared player after its time announcement.
+  useEffect(() => {
+    const request = hourlyPlaybackRequest;
+    if (!request || request.number !== number || activeHourlyRequestRef.current?.id === request.id) {
+      return;
+    }
+
+    const el = audioRef.current;
+    if (!el || locked) {
+      reportPlayerPlaybackError(request.id, "The selected Hourly Kural cannot be played.");
+      return;
+    }
+
+    activeHourlyRequestRef.current = request;
+    shouldPlayRef.current = true;
+    const token = ++playTokenRef.current;
+    setAudioState("loading");
+    el.load();
+    void el.play().catch(() => {
+      if (token !== playTokenRef.current) return;
+      activeHourlyRequestRef.current = null;
+      setIsPlaying(false);
+      setAudioState("error");
+      reportPlayerPlaybackError(
+        request.id,
+        "Playback was blocked. Tap the main player’s play button once to allow sound.",
+      );
+    });
+  }, [hourlyPlaybackRequest, locked, number, reportPlayerPlaybackError]);
 
   const retry = useCallback(() => {
     const el = audioRef.current;
@@ -196,11 +240,16 @@ export function useKuralPlayer() {
       });
     } else {
       shouldPlayRef.current = false;
+      const activeHourlyRequest = activeHourlyRequestRef.current;
+      if (activeHourlyRequest) {
+        activeHourlyRequestRef.current = null;
+        void completePlayerPlayback(activeHourlyRequest.id, "");
+      }
       el.pause();
       setIsPlaying(false);
       setAudioState("paused");
     }
-  }, [audioState, entry, load, locked, pending, retry]);
+  }, [audioState, completePlayerPlayback, entry, load, locked, pending, retry]);
 
   const schedule = useCallback(
     (value: string) => {
@@ -292,8 +341,13 @@ export function useKuralPlayer() {
       clearTimeout(timerRef.current);
       clearTimeout(settleRef.current);
       playTokenRef.current++;
+      const activeHourlyRequest = activeHourlyRequestRef.current;
+      if (activeHourlyRequest) {
+        activeHourlyRequestRef.current = null;
+        void completePlayerPlayback(activeHourlyRequest.id, "");
+      }
     },
-    [],
+    [completePlayerPlayback],
   );
 
   // Physical keyboard support — never while typing or with a dialog open.
@@ -396,6 +450,8 @@ export function useKuralPlayer() {
     onPlaying: () => {
       setAudioState("playing");
       setIsPlaying(true);
+      const activeHourlyRequest = activeHourlyRequestRef.current;
+      if (activeHourlyRequest) markPlayerPlaybackStarted(activeHourlyRequest.id);
     },
     onPause: () => {
       setIsPlaying(false);
@@ -404,10 +460,25 @@ export function useKuralPlayer() {
     onError: () => {
       setAudioState("error");
       setIsPlaying(false);
+      const activeHourlyRequest = activeHourlyRequestRef.current;
+      if (activeHourlyRequest) {
+        activeHourlyRequestRef.current = null;
+        reportPlayerPlaybackError(
+          activeHourlyRequest.id,
+          "The Hourly Kural audio could not be loaded in the main player.",
+        );
+      }
     },
     onEnded: () => {
       setIsPlaying(false);
       setAudioState("idle");
+      const activeHourlyRequest = activeHourlyRequestRef.current;
+      if (activeHourlyRequest) {
+        activeHourlyRequestRef.current = null;
+        shouldPlayRef.current = false;
+        void completePlayerPlayback(activeHourlyRequest.id, current.meaning ?? "");
+        return;
+      }
       const n = nextNumber(number);
       if (continuous && n !== null) load(n, true);
       else shouldPlayRef.current = false;
@@ -425,6 +496,7 @@ export function useKuralPlayer() {
     invalidTarget,
     locked,
     gatingActive,
+    hourlyPlayback: hourlyPlaybackRequest?.number === number,
 
     entry,
     pending,

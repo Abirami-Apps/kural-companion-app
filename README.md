@@ -27,9 +27,12 @@ premium preview. When subscription gating is enabled, access automatically
 requires an active entitlement.
 
 Web browsers allow scheduled voice and audio while the app remains active. When
-the page is in the background, the app uses an approved browser notification as
-the reminder instead of promising unattended playback. Reliable hourly playback
-with the app fully closed belongs in the future native iOS and Android packages.
+the hour arrives, the selected verse opens and plays through the same main Kural
+player, keeping its URL, verse, controls, favourites, and sharing state aligned.
+When the page is in the background, the app uses an approved browser notification
+as the reminder instead of promising unattended playback. Reliable hourly
+playback with the app fully closed belongs in the future native iOS and Android
+packages.
 
 ## Local development
 
