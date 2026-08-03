@@ -1,12 +1,12 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Info, Loader2, LogOut, MailCheck, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Crown, Info, Loader2, LogOut, MailCheck, RefreshCw, ShieldCheck } from "lucide-react";
 import { useId, useState } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PRODUCT_NAME } from "@/lib/features";
+import { PRODUCT_NAME, subscriptionsEnabled } from "@/lib/features";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
@@ -25,7 +25,20 @@ const Login = () => {
   const systemReduce = useReducedMotion();
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
-  const { enabled, user, loading, signIn, signUp, signOut, requestPasswordReset } = useAuth();
+  const {
+    enabled,
+    user,
+    loading,
+    subscribed,
+    premiumEntitlement,
+    entitlementStatus,
+    entitlementError,
+    refreshEntitlement,
+    signIn,
+    signUp,
+    signOut,
+    requestPasswordReset,
+  } = useAuth();
   const { syncStatus, syncError, retrySync } = useUserData();
   const [mode, setMode] = useState<FormMode>("sign-in");
   const [email, setEmail] = useState("");
@@ -142,6 +155,63 @@ const Login = () => {
               </p>
             )}
             <p className="mt-2 break-all text-sm text-muted-foreground">{user.email}</p>
+            {subscriptionsEnabled && (
+              <div className="mt-5 rounded-xl border border-border bg-background/70 p-4 text-left">
+                <div className="flex items-start gap-3">
+                  <Crown className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {entitlementStatus === "loading"
+                        ? "Verifying premium access…"
+                        : subscribed
+                          ? "Kural Companion Plus is active"
+                          : entitlementStatus === "error"
+                            ? "Premium access could not be verified"
+                            : "Free plan"}
+                    </p>
+                    {subscribed && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {premiumEntitlement.planKey
+                          ? `${premiumEntitlement.planKey} plan`
+                          : "Premium entitlement"}
+                        {premiumEntitlement.expiresAt
+                          ? ` · Access through ${new Intl.DateTimeFormat("en-IN", {
+                              dateStyle: "medium",
+                            }).format(new Date(premiumEntitlement.expiresAt))}`
+                          : ""}
+                      </p>
+                    )}
+                    {!subscribed && entitlementStatus === "ready" && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Premium features require an active server-verified entitlement.
+                      </p>
+                    )}
+                    {entitlementError && (
+                      <p className="mt-1 text-xs text-destructive" role="alert">
+                        {entitlementError}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button asChild variant="outline" size="sm" className="min-h-11 rounded-lg">
+                    <Link to="/subscribe">{subscribed ? "View subscription" : "View plans"}</Link>
+                  </Button>
+                  {entitlementStatus === "error" && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="min-h-11 rounded-lg"
+                      onClick={() => void refreshEntitlement()}
+                    >
+                      <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                      Retry verification
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
             <p className="mt-3 text-xs text-muted-foreground" role="status">
               {syncStatus === "synced"
                 ? "Favourites and settings are synced across your devices."
