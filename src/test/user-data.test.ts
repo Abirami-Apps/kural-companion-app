@@ -4,16 +4,26 @@ import { FAVS_KEY } from "@/lib/player-utils";
 import {
   APPEARANCE_KEY,
   CLEAN_USER_DATA,
+  EMPTY_USER_DATA_OUTBOX,
+  applyUserDataOutbox,
+  clearOutboxCategory,
   clearImportedGuestUserData,
   defaultUserData,
   mergeGuestImport,
+  queueAppearanceChange,
+  queueFavouriteChange,
+  queueHourlyChange,
+  queueLastHourlyKuralChange,
   readCachedUserData,
   readGuestUserData,
+  readUserDataOutbox,
   reconcileFavouriteNumbers,
   scopedDeviceKey,
   userDataCacheKey,
+  userDataOutboxKey,
   writeCachedUserData,
   writeGuestUserData,
+  writeUserDataOutbox,
 } from "@/lib/user-data";
 
 describe("user data storage and migration", () => {
@@ -146,5 +156,87 @@ describe("user data storage and migration", () => {
     expect(localStorage.getItem(APPEARANCE_KEY)).toBeNull();
     expect(localStorage.getItem(HOURLY_SETTINGS_KEY)).toBeNull();
     expect(localStorage.getItem("unrelated")).toBe("keep");
+  });
+
+  it("merges offline favourite operations without erasing another device's additions", () => {
+    let deviceBOutbox = queueFavouriteChange(EMPTY_USER_DATA_OUTBOX, 30, true);
+    const remoteAfterDeviceA = { ...defaultUserData(), favourites: [20, 10] };
+
+    expect(applyUserDataOutbox(remoteAfterDeviceA, deviceBOutbox).favourites).toEqual([
+      30,
+      20,
+      10,
+    ]);
+
+    deviceBOutbox = queueFavouriteChange(deviceBOutbox, 10, false);
+    expect(applyUserDataOutbox(remoteAfterDeviceA, deviceBOutbox).favourites).toEqual([
+      30,
+      20,
+    ]);
+  });
+
+  it("cancels opposite pending favourite operations before reconnect", () => {
+    const added = queueFavouriteChange(EMPTY_USER_DATA_OUTBOX, 770, true);
+    const removedAgain = queueFavouriteChange(added, 770, false);
+
+    expect(removedAgain.favouriteAdds).toEqual([]);
+    expect(removedAgain.favouriteRemoves).toEqual([770]);
+
+    const restored = queueFavouriteChange(removedAgain, 770, true);
+    expect(restored.favouriteAdds).toEqual([770]);
+    expect(restored.favouriteRemoves).toEqual([]);
+  });
+
+  it("merges only locally edited preference and Hourly fields over newer remote data", () => {
+    const remote = {
+      ...defaultUserData(),
+      appearance: {
+        theme: "palm" as const,
+        fontStep: 3,
+        highContrast: false,
+        reducedMotion: true,
+      },
+      hourlySettings: {
+        ...DEFAULT_HOURLY_SETTINGS,
+        enabled: true,
+        language: "en" as const,
+      },
+      lastHourlyKural: 500,
+    };
+    let outbox = queueAppearanceChange(EMPTY_USER_DATA_OUTBOX, { highContrast: true });
+    outbox = queueHourlyChange(outbox, { startHour: 9 });
+    outbox = queueLastHourlyKuralChange(outbox, 501);
+
+    const merged = applyUserDataOutbox(remote, outbox);
+    expect(merged.appearance).toEqual({ ...remote.appearance, highContrast: true });
+    expect(merged.hourlySettings).toEqual({ ...remote.hourlySettings, startHour: 9 });
+    expect(merged.lastHourlyKural).toBe(501);
+  });
+
+  it("persists retry operations independently for each account", () => {
+    const accountA = queueFavouriteChange(EMPTY_USER_DATA_OUTBOX, 100, true);
+    const accountB = queueAppearanceChange(EMPTY_USER_DATA_OUTBOX, { theme: "sepia" });
+    writeUserDataOutbox("account-a", accountA);
+    writeUserDataOutbox("account-b", accountB);
+
+    expect(readUserDataOutbox("account-a")).toMatchObject({
+      favouriteAdds: [100],
+      appearance: {},
+    });
+    expect(readUserDataOutbox("account-b")).toMatchObject({
+      favouriteAdds: [],
+      appearance: { theme: "sepia" },
+    });
+    expect(userDataOutboxKey("account-a")).not.toBe(userDataOutboxKey("account-b"));
+  });
+
+  it("clears only the successfully synchronized outbox category", () => {
+    let outbox = queueFavouriteChange(EMPTY_USER_DATA_OUTBOX, 42, true);
+    outbox = queueAppearanceChange(outbox, { fontStep: 2 });
+
+    expect(clearOutboxCategory(outbox, "favourites")).toMatchObject({
+      favouriteAdds: [],
+      appearance: { fontStep: 2 },
+    });
   });
 });

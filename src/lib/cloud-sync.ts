@@ -157,6 +157,29 @@ export async function syncCloudFavourites(
   }
 }
 
+export async function syncCloudFavouriteOperations(
+  client: SupabaseClient,
+  userId: string,
+  additions: number[],
+  removals: number[],
+): Promise<void> {
+  if (removals.length) {
+    const result = await client
+      .from("favourites")
+      .delete()
+      .eq("user_id", userId)
+      .in("kural_number", removals);
+    if (result.error) throw new Error(result.error.message);
+  }
+  if (additions.length) {
+    const result = await client.from("favourites").upsert(
+      additions.map((kuralNumber) => ({ user_id: userId, kural_number: kuralNumber })),
+      { onConflict: "user_id,kural_number", ignoreDuplicates: true },
+    );
+    if (result.error) throw new Error(result.error.message);
+  }
+}
+
 export async function syncCloudAppearance(
   client: SupabaseClient,
   userId: string,
@@ -171,6 +194,22 @@ export async function syncCloudAppearance(
       reduced_motion: appearance.reducedMotion,
     })
     .eq("user_id", userId);
+  if (result.error) throw new Error(result.error.message);
+}
+
+export async function syncCloudAppearancePatch(
+  client: SupabaseClient,
+  userId: string,
+  appearance: Partial<AppearancePreferences>,
+): Promise<void> {
+  const payload: Record<string, string | number | boolean> = {};
+  if (appearance.theme !== undefined) payload.theme = appearance.theme;
+  if (appearance.fontStep !== undefined) payload.font_step = appearance.fontStep;
+  if (appearance.highContrast !== undefined) payload.high_contrast = appearance.highContrast;
+  if (appearance.reducedMotion !== undefined) payload.reduced_motion = appearance.reducedMotion;
+  if (!Object.keys(payload).length) return;
+
+  const result = await client.from("user_preferences").update(payload).eq("user_id", userId);
   if (result.error) throw new Error(result.error.message);
 }
 
@@ -193,6 +232,31 @@ export async function syncCloudHourly(
       time_zone: timeZone,
       last_kural_number: lastHourlyKural,
     })
+    .eq("user_id", userId);
+  if (result.error) throw new Error(result.error.message);
+}
+
+export async function syncCloudHourlyPatch(
+  client: SupabaseClient,
+  userId: string,
+  settings: Partial<HourlyKuralSettings>,
+  lastHourlyKural: { pending: boolean; value: number | null },
+  timeZone: string | null,
+): Promise<void> {
+  const payload: Record<string, string | number | boolean | null> = {};
+  if (settings.enabled !== undefined) payload.enabled = settings.enabled;
+  if (settings.startHour !== undefined) payload.start_hour = settings.startHour;
+  if (settings.endHour !== undefined) payload.end_hour = settings.endHour;
+  if (settings.language !== undefined) payload.language = settings.language;
+  if (settings.selection !== undefined) payload.selection_mode = settings.selection;
+  if (settings.includeMeaning !== undefined) payload.include_meaning = settings.includeMeaning;
+  if (lastHourlyKural.pending) payload.last_kural_number = lastHourlyKural.value;
+  if (timeZone !== null) payload.time_zone = timeZone;
+  if (!Object.keys(payload).length) return;
+
+  const result = await client
+    .from("hourly_kural_settings")
+    .update(payload)
     .eq("user_id", userId);
   if (result.error) throw new Error(result.error.message);
 }
