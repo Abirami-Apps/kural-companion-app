@@ -37,6 +37,13 @@ marked as pending and retried after connectivity returns; the Favourites and
 Account screens disclose the current sync state and provide a manual retry.
 Recent-player history and the current hourly run marker remain device-only.
 
+Pending favourites are stored as explicit add/remove operations, and preference
+updates contain only the fields the user changed. Reconnecting therefore merges
+unrelated edits from multiple devices instead of replacing an entire stale
+record or favourite list. If two devices change the same scalar setting, the
+last successful write wins. The app refreshes clean account data on focus and
+rejects late responses after an account switch.
+
 ## Hourly Kural
 
 Open `/hourly` to configure the premium Hourly Kural experience. Until paid

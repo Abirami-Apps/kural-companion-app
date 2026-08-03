@@ -37,9 +37,19 @@ export interface CachedUserData {
   dirty: DirtyUserData;
 }
 
+export interface UserDataOutbox {
+  favouriteAdds: number[];
+  favouriteRemoves: number[];
+  appearance: Partial<AppearancePreferences>;
+  hourlySettings: Partial<HourlyKuralSettings>;
+  lastHourlyKural: { pending: boolean; value: number | null };
+  timeZone: string | null;
+}
+
 export const APPEARANCE_KEY = "kural:appearance";
 const CACHE_PREFIX = "kural:account-data:v1";
 const MIGRATION_PREFIX = "kural:guest-imported:v1";
+const OUTBOX_PREFIX = "kural:sync-outbox:v1";
 
 export const DEFAULT_APPEARANCE: AppearancePreferences = {
   theme: "classic",
@@ -53,6 +63,26 @@ export const CLEAN_USER_DATA: DirtyUserData = {
   appearance: false,
   hourly: false,
 };
+
+export const EMPTY_USER_DATA_OUTBOX: UserDataOutbox = {
+  favouriteAdds: [],
+  favouriteRemoves: [],
+  appearance: {},
+  hourlySettings: {},
+  lastHourlyKural: { pending: false, value: null },
+  timeZone: null,
+};
+
+export function emptyUserDataOutbox(): UserDataOutbox {
+  return {
+    favouriteAdds: [],
+    favouriteRemoves: [],
+    appearance: {},
+    hourlySettings: {},
+    lastHourlyKural: { pending: false, value: null },
+    timeZone: null,
+  };
+}
 
 const validTheme = (value: unknown): value is ThemeName =>
   value === "classic" || value === "palm" || value === "midnight" || value === "sepia";
@@ -159,6 +189,10 @@ export function userDataCacheKey(userId: string): string {
   return `${CACHE_PREFIX}:${userId}`;
 }
 
+export function userDataOutboxKey(userId: string): string {
+  return `${OUTBOX_PREFIX}:${userId}`;
+}
+
 export function guestMigrationKey(userId: string): string {
   return `${MIGRATION_PREFIX}:${userId}`;
 }
@@ -204,6 +238,168 @@ export function writeCachedUserData(
   dirty: DirtyUserData,
 ): void {
   writeJson(userDataCacheKey(userId), { version: 1, snapshot, dirty } satisfies CachedUserData);
+}
+
+export function readUserDataOutbox(userId: string): UserDataOutbox {
+  const value = readJson(userDataOutboxKey(userId));
+  if (!value || typeof value !== "object") return emptyUserDataOutbox();
+  const input = value as Partial<UserDataOutbox>;
+  const adds = Array.isArray(input.favouriteAdds)
+    ? input.favouriteAdds.filter(validKural)
+    : [];
+  const removes = Array.isArray(input.favouriteRemoves)
+    ? input.favouriteRemoves.filter(validKural)
+    : [];
+  const appearanceInput = input.appearance ?? {};
+  const hourlyInput = input.hourlySettings ?? {};
+  const lastInput = input.lastHourlyKural;
+  const appearance: Partial<AppearancePreferences> = {};
+  const hourlySettings: Partial<HourlyKuralSettings> = {};
+
+  if (validTheme(appearanceInput.theme)) appearance.theme = appearanceInput.theme;
+  if (
+    typeof appearanceInput.fontStep === "number" &&
+    Number.isInteger(appearanceInput.fontStep)
+  ) {
+    appearance.fontStep = Math.min(3, Math.max(0, appearanceInput.fontStep));
+  }
+  if (typeof appearanceInput.highContrast === "boolean") {
+    appearance.highContrast = appearanceInput.highContrast;
+  }
+  if (typeof appearanceInput.reducedMotion === "boolean") {
+    appearance.reducedMotion = appearanceInput.reducedMotion;
+  }
+
+  const parsedHourly = parseHourlySettings(hourlyInput);
+  if (typeof hourlyInput.enabled === "boolean") hourlySettings.enabled = parsedHourly.enabled;
+  if (typeof hourlyInput.startHour === "number") hourlySettings.startHour = parsedHourly.startHour;
+  if (typeof hourlyInput.endHour === "number") hourlySettings.endHour = parsedHourly.endHour;
+  if (hourlyInput.language === "ta" || hourlyInput.language === "en") {
+    hourlySettings.language = hourlyInput.language;
+  }
+  if (
+    hourlyInput.selection === "random" ||
+    hourlyInput.selection === "sequential" ||
+    hourlyInput.selection === "favourites"
+  ) {
+    hourlySettings.selection = hourlyInput.selection;
+  }
+  if (typeof hourlyInput.includeMeaning === "boolean") {
+    hourlySettings.includeMeaning = hourlyInput.includeMeaning;
+  }
+
+  return {
+    favouriteAdds: [...new Set(adds.filter((number) => !removes.includes(number)))],
+    favouriteRemoves: [...new Set(removes.filter((number) => !adds.includes(number)))],
+    appearance,
+    hourlySettings,
+    lastHourlyKural: {
+      pending: lastInput?.pending === true,
+      value:
+        lastInput?.pending === true && validKural(lastInput.value) ? lastInput.value : null,
+    },
+    timeZone: typeof input.timeZone === "string" ? safeTimeZone(input.timeZone) : null,
+  };
+}
+
+export function writeUserDataOutbox(userId: string, outbox: UserDataOutbox): void {
+  writeJson(userDataOutboxKey(userId), outbox);
+}
+
+export function hasPendingOutboxCategory(
+  outbox: UserDataOutbox,
+  category: keyof DirtyUserData,
+): boolean {
+  if (category === "favourites") {
+    return outbox.favouriteAdds.length > 0 || outbox.favouriteRemoves.length > 0;
+  }
+  if (category === "appearance") return Object.keys(outbox.appearance).length > 0;
+  return (
+    Object.keys(outbox.hourlySettings).length > 0 ||
+    outbox.lastHourlyKural.pending ||
+    outbox.timeZone !== null
+  );
+}
+
+export function clearOutboxCategory(
+  outbox: UserDataOutbox,
+  category: keyof DirtyUserData,
+): UserDataOutbox {
+  if (category === "favourites") {
+    return { ...outbox, favouriteAdds: [], favouriteRemoves: [] };
+  }
+  if (category === "appearance") return { ...outbox, appearance: {} };
+  return {
+    ...outbox,
+    hourlySettings: {},
+    lastHourlyKural: { pending: false, value: null },
+    timeZone: null,
+  };
+}
+
+export function queueFavouriteChange(
+  outbox: UserDataOutbox,
+  number: number,
+  favourite: boolean,
+): UserDataOutbox {
+  if (!validKural(number)) return outbox;
+  const adds = new Set(outbox.favouriteAdds);
+  const removes = new Set(outbox.favouriteRemoves);
+  if (favourite) {
+    removes.delete(number);
+    adds.add(number);
+  } else {
+    adds.delete(number);
+    removes.add(number);
+  }
+  return { ...outbox, favouriteAdds: [...adds], favouriteRemoves: [...removes] };
+}
+
+export function queueAppearanceChange(
+  outbox: UserDataOutbox,
+  patch: Partial<AppearancePreferences>,
+): UserDataOutbox {
+  return { ...outbox, appearance: { ...outbox.appearance, ...patch } };
+}
+
+export function queueHourlyChange(
+  outbox: UserDataOutbox,
+  patch: Partial<HourlyKuralSettings>,
+): UserDataOutbox {
+  return { ...outbox, hourlySettings: { ...outbox.hourlySettings, ...patch } };
+}
+
+export function queueLastHourlyKuralChange(
+  outbox: UserDataOutbox,
+  value: number | null,
+): UserDataOutbox {
+  if (value !== null && !validKural(value)) return outbox;
+  return { ...outbox, lastHourlyKural: { pending: true, value } };
+}
+
+export function queueTimeZoneChange(outbox: UserDataOutbox, timeZone: string): UserDataOutbox {
+  return { ...outbox, timeZone: safeTimeZone(timeZone) };
+}
+
+export function applyUserDataOutbox(
+  remote: UserDataSnapshot,
+  outbox: UserDataOutbox,
+): UserDataSnapshot {
+  const removed = new Set(outbox.favouriteRemoves);
+  const favourites = remote.favourites.filter((number) => !removed.has(number));
+  for (const number of outbox.favouriteAdds) {
+    if (!favourites.includes(number)) favourites.unshift(number);
+  }
+
+  return {
+    favourites: favourites.slice(0, 100),
+    appearance: { ...remote.appearance, ...outbox.appearance },
+    hourlySettings: { ...remote.hourlySettings, ...outbox.hourlySettings },
+    lastHourlyKural: outbox.lastHourlyKural.pending
+      ? outbox.lastHourlyKural.value
+      : remote.lastHourlyKural,
+    timeZone: outbox.timeZone ?? remote.timeZone,
+  };
 }
 
 export function hasImportedGuestData(userId: string): boolean {
