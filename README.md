@@ -56,13 +56,17 @@ The safe defaults in `.env.example` keep unfinished services disabled:
 VITE_SUBSCRIPTIONS_ENABLED=false
 VITE_AUTH_ENABLED=false
 VITE_CHECKOUT_ENABLED=false
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_SITE_URL=
 ```
 
 Set `VITE_SITE_URL` to the final HTTPS origin before deployment so canonical
-metadata is absolute. Do not enable auth, checkout, or subscriptions until the
-corresponding backend, payment handling, session security, and end-to-end tests
-have been implemented.
+metadata is absolute. To enable email accounts, set `VITE_AUTH_ENABLED=true`
+and provide the Supabase project URL and publishable key. Never use a Supabase
+secret or service-role key in a `VITE_` variable. Checkout and subscriptions
+must remain disabled until payment handling and verified server-side
+entitlements are implemented.
 
 ## Verification
 
@@ -96,6 +100,8 @@ without rewriting Tamil text.
 - Configure the host to rewrite unknown routes such as `/kural/123` to
   `index.html` for client-side routing.
 - Set `VITE_SITE_URL` during the production build.
+- Allow `https://kural.abirami.app/**` and the required local origin in Supabase
+  Auth redirect URLs before sending confirmation or password-reset emails.
 - Keep the current Content Security Policy and analytics decisions with the
   deployment configuration; neither is silently injected by the app.
 

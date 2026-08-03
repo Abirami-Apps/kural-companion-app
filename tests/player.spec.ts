@@ -148,13 +148,30 @@ test("player shortcuts never hijack typing in the sign-in form", async ({ page }
   await expect(page).toHaveURL(/\/login$/);
 });
 
-test("unfinished services are disclosed and all kurals remain free", async ({ page }) => {
+test("invalid email credentials show a safe error", async ({ page }) => {
+  await page.route("https://test.supabase.co/auth/v1/token?grant_type=password", async (route) => {
+    await route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({ code: "invalid_credentials", msg: "Invalid login credentials" }),
+    });
+  });
+
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill("reader@example.com");
+  await page.getByLabel("Password").fill("incorrect-password");
+  await page.locator("form").getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("alert")).toHaveText("Email or password is incorrect.");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("connected auth and unfinished paid services are disclosed while all kurals remain free", async ({ page }) => {
   await page.goto("/kural/1330");
   await expect(page.getByRole("button", { name: "Play audio" })).toBeEnabled();
 
   await page.goto("/login");
-  await expect(page.getByText("Sign-in is not connected yet.")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeDisabled();
+  await expect(page.getByText(/Sign-in is unavailable in this build/)).toHaveCount(0);
+  await expect(page.locator("form").getByRole("button", { name: "Sign in", exact: true })).toBeEnabled();
 
   await page.goto("/subscribe");
   await expect(page.getByText(/All 1,330 kurals are free to play right now/)).toBeVisible();
@@ -178,7 +195,7 @@ test("core routes emit no uncaught runtime errors", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/subscribe"]) {
+  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/reset-password", "/subscribe"]) {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();
   }

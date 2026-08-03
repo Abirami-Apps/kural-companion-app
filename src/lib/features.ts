@@ -1,3 +1,5 @@
+import { supabaseConfigured } from "@/lib/supabase";
+
 /**
  * Feature flags.
  *
@@ -16,8 +18,9 @@ export const subscriptionsEnabled = enabled(
 /** Number of kurals available without a subscription when gating is enabled. */
 export const FREE_LIMIT = 10;
 
-/** No auth backend is wired up yet. */
-export const authEnabled = enabled(import.meta.env.VITE_AUTH_ENABLED);
+/** Auth is live only when both the flag and public Supabase configuration exist. */
+export const authEnabled =
+  enabled(import.meta.env.VITE_AUTH_ENABLED) && supabaseConfigured;
 
 /** No payment provider is wired up yet. */
 export const checkoutEnabled = enabled(import.meta.env.VITE_CHECKOUT_ENABLED);

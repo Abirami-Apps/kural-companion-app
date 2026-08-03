@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BookOpen, Clock3, Heart, Home, LogIn, Menu, Settings2, Sparkles } from "lucide-react";
+import { BookOpen, Clock3, Heart, Home, LogIn, Menu, Settings2, Sparkles, UserRound } from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { AppearancePanel } from "@/components/theme/AppearancePanel";
 import { checkoutEnabled } from "@/lib/features";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
+import { useAuth } from "@/hooks/useAuth";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, end: true },
@@ -18,6 +19,7 @@ const NAV_ITEMS = [
 export function AppHeader() {
   const [open, setOpen] = useState(false);
   const { settings: hourlySettings } = useHourlyKural();
+  const { user } = useAuth();
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `inline-flex items-center gap-2 rounded-full px-3 min-h-11 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
@@ -73,9 +75,9 @@ export function AppHeader() {
             </Button>
           )}
           <Button asChild variant="ghost" className="hidden min-h-11 gap-2 rounded-full px-3 nav:inline-flex">
-            <Link to="/login" aria-label="Log in to your account">
-              <LogIn className="h-4 w-4" aria-hidden="true" />
-              <span>Log in</span>
+            <Link to="/login" aria-label={user ? "Open your account" : "Log in to your account"}>
+              {user ? <UserRound className="h-4 w-4" aria-hidden="true" /> : <LogIn className="h-4 w-4" aria-hidden="true" />}
+              <span>{user ? "Account" : "Log in"}</span>
             </Link>
           </Button>
 
@@ -131,7 +133,8 @@ export function AppHeader() {
                   onClick={() => setOpen(false)}
                   className="flex items-center gap-3 rounded-xl px-3 min-h-11 text-sm font-medium text-foreground hover:bg-muted"
                 >
-                  <LogIn className="h-4 w-4" aria-hidden="true" /> Log in
+                  {user ? <UserRound className="h-4 w-4" aria-hidden="true" /> : <LogIn className="h-4 w-4" aria-hidden="true" />}
+                  {user ? "Account" : "Log in"}
                 </NavLink>
               </nav>
               <div className="mt-6 border-t border-border pt-4">
