@@ -85,6 +85,23 @@ phone, tablet, landscape, and desktop viewport sizes.
 
 GitHub Actions runs the same release checks on pushes and pull requests.
 
+### Database development
+
+Supabase schema changes are versioned in `supabase/migrations` and tested with
+pgTAP. Docker must be running before using the local database commands:
+
+```sh
+npm run db:start
+npm run db:reset
+npm run db:lint
+npm run test:db
+npm run db:stop
+```
+
+Deploy migrations through `supabase db push` after linking the intended project;
+do not make parallel schema changes directly in the hosted SQL editor because
+that bypasses migration history.
+
 ## Data integrity
 
 `src/data/kurals.json` remains an untouched legacy source export. The adapter
