@@ -45,6 +45,7 @@ const Favourites = () => {
               <li key={n}>
                 <Link
                   to={`/kural/${n}`}
+                  state={{ autoplay: true }}
                   className="flex gap-4 rounded-2xl border border-border bg-card p-4 transition hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <span className="digital-display text-sm text-primary tabular-nums">

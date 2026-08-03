@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getKural, getRandomKural, TOTAL_KURALS, type Kural } from "@/data/sample-kurals";
 import {
   HINT_KEY,
+  LAST_PLAYED_KEY,
   RECENTS_KEY,
   canGrow,
   isValidKuralNumber,
@@ -10,7 +11,9 @@ import {
   parseKuralNumber,
   prevNumber,
   readNumberList,
+  readPersistedKuralNumber,
   writeNumberList,
+  writePersistedKuralNumber,
 } from "@/lib/player-utils";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
@@ -43,14 +46,23 @@ export function useKuralPlayer() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const {
+    favourites,
+    toggleFavourite: toggleSyncedFavourite,
+    deviceKey,
+  } = useUserData();
 
   const routeStyle: "path" | "query" = params.number !== undefined ? "path" : "query";
   const rawTarget = params.number ?? searchParams.get("k");
   const parsedTarget = parseKuralNumber(rawTarget);
   const hasTarget = rawTarget !== null && rawTarget !== undefined && rawTarget !== "";
   const invalidTarget = hasTarget && parsedTarget === null;
-  const number = parsedTarget ?? 1;
+  const lastPlayedKey = deviceKey(LAST_PLAYED_KEY);
+  const number = parsedTarget ?? (hasTarget ? 1 : readPersistedKuralNumber(lastPlayedKey) ?? 1);
   const current = getKural(number) as Kural;
+  const autoplayRequested =
+    (location.state as { autoplay?: boolean } | null)?.autoplay === true;
+  const autoplayRequestKey = autoplayRequested ? location.key : null;
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -58,9 +70,9 @@ export function useKuralPlayer() {
   const shouldPlayRef = useRef(false);
   const playTokenRef = useRef(0);
   const activeHourlyRequestRef = useRef<HourlyPlaybackRequest | null>(null);
+  const handledAutoplayLocationsRef = useRef(new Set<string>());
 
   const { canAccessKural, gatingActive } = useEntitlements();
-  const { favourites, toggleFavourite: toggleSyncedFavourite } = useUserData();
   const {
     playbackRequest: hourlyPlaybackRequest,
     markPlayerPlaybackStarted,
@@ -85,6 +97,18 @@ export function useKuralPlayer() {
   const isFavourite = favourites.includes(number);
   const canPrev = prevNumber(number) !== null;
   const canNext = nextNumber(number) !== null;
+
+  useLayoutEffect(() => {
+    if (
+      !autoplayRequested ||
+      invalidTarget ||
+      handledAutoplayLocationsRef.current.has(location.key)
+    ) {
+      return;
+    }
+    handledAutoplayLocationsRef.current.add(location.key);
+    shouldPlayRef.current = true;
+  }, [autoplayRequested, invalidTarget, location.key]);
 
   const toggleFavourite = useCallback(() => {
     toggleSyncedFavourite(number);
@@ -125,8 +149,9 @@ export function useKuralPlayer() {
     });
   }, [number]);
 
-  // Reset + load audio whenever the kural changes (including Back/Forward).
-  useEffect(() => {
+  // A layout effect preserves the originating click's media permission in
+  // stricter mobile browsers when Favourites or Chapters request autoplay.
+  useLayoutEffect(() => {
     const activeHourlyRequest = activeHourlyRequestRef.current;
     if (activeHourlyRequest && activeHourlyRequest.number !== number) {
       activeHourlyRequestRef.current = null;
@@ -152,7 +177,7 @@ export function useKuralPlayer() {
     } else {
       setAudioState("idle");
     }
-  }, [completePlayerPlayback, number, locked]);
+  }, [autoplayRequestKey, completePlayerPlayback, number, locked]);
 
   // Hourly Kural hands playback to this one shared player after its time announcement.
   useEffect(() => {
@@ -444,6 +469,7 @@ export function useKuralPlayer() {
     onPlaying: () => {
       setAudioState("playing");
       setIsPlaying(true);
+      writePersistedKuralNumber(lastPlayedKey, number);
       const activeHourlyRequest = activeHourlyRequestRef.current;
       if (activeHourlyRequest) markPlayerPlaybackStarted(activeHourlyRequest.id);
     },
