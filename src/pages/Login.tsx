@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { PRODUCT_NAME } from "@/lib/features";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserData } from "@/hooks/useUserData";
 
 type FormMode = "sign-in" | "sign-up" | "forgot";
 
@@ -25,6 +26,7 @@ const Login = () => {
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
   const { enabled, user, loading, signIn, signUp, signOut, requestPasswordReset } = useAuth();
+  const { syncStatus, syncError, retrySync } = useUserData();
   const [mode, setMode] = useState<FormMode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -140,6 +142,22 @@ const Login = () => {
               </p>
             )}
             <p className="mt-2 break-all text-sm text-muted-foreground">{user.email}</p>
+            <p className="mt-3 text-xs text-muted-foreground" role="status">
+              {syncStatus === "synced"
+                ? "Favourites and settings are synced across your devices."
+                : syncStatus === "saving" || syncStatus === "loading"
+                  ? "Syncing your favourites and settings…"
+                  : "Changes are saved on this device and will sync when you reconnect."}
+            </p>
+            {syncError && (
+              <button
+                type="button"
+                className="mt-2 min-h-11 text-sm font-medium text-primary underline underline-offset-4"
+                onClick={() => void retrySync()}
+              >
+                Retry cloud sync
+              </button>
+            )}
             {formError && <p className="mt-4 text-sm text-destructive" role="alert">{formError}</p>}
             <Button asChild className="mt-6 h-12 w-full rounded-xl">
               <Link to="/">Continue reading</Link>

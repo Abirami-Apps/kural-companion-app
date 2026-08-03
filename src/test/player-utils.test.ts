@@ -7,7 +7,9 @@ import {
   parseKuralNumber,
   prevNumber,
   readNumberList,
+  readPersistedKuralNumber,
   writeNumberList,
+  writePersistedKuralNumber,
 } from "@/lib/player-utils";
 
 describe("player number parsing", () => {
@@ -57,6 +59,16 @@ describe("player persistence and formatting", () => {
     localStorage.setItem("test:mixed", JSON.stringify([0, 1, "2", 42, 1331]));
     expect(readNumberList("test:bad-json")).toEqual([]);
     expect(readNumberList("test:mixed")).toEqual([1, 42]);
+  });
+
+  it("persists only a valid last-played Kural number", () => {
+    writePersistedKuralNumber("test:last-played", 770);
+    expect(readPersistedKuralNumber("test:last-played")).toBe(770);
+
+    writePersistedKuralNumber("test:last-played", 1331);
+    expect(readPersistedKuralNumber("test:last-played")).toBe(770);
+    localStorage.setItem("test:last-played", "not-a-kural");
+    expect(readPersistedKuralNumber("test:last-played")).toBeNull();
   });
 
   it.each([

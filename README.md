@@ -9,15 +9,33 @@ accessibility preferences work without an account.
 
 - Production-ready responsive web SPA
 - All 1,330 bundled Kurals and HTTPS audio links
-- Device-local favourites, recent items, and appearance settings
+- Device-local guest data plus account-isolated cloud sync for favourites,
+  appearance preferences, and Hourly Kural settings
 - Hourly Kural scheduling with Tamil or English time announcements, configurable
   active hours, Kural selection, and an optional spoken Tamil meaning
-- Authentication, subscriptions, checkout, offline listening, and native
-  iOS/Android packages are not connected in this repository yet
+- Supabase email authentication, confirmation, password recovery, and secure
+  row-level access to each user's synchronized data
+- Subscriptions, checkout, offline audio downloads, and native iOS/Android
+  packages are not connected yet
 - Paid gating is off, so every valid Kural is accessible
 
-The sign-in and plan screens deliberately disclose those limitations and do not
-submit credentials or allow plan selection in the default build.
+The plan screen deliberately discloses those limitations and does not allow plan
+selection in the default build. Sign-in becomes active only when the public
+Supabase configuration and authentication feature flag are present.
+
+## Account data sync
+
+Signed-in accounts synchronize favourites, theme, text size, contrast, reduced
+motion, and Hourly Kural configuration through the tables in the versioned
+Supabase migration. Guest data remains available without an account. On the
+first successful sign-in, existing guest choices are imported only when they do
+not overwrite established cloud preferences, then the shared guest keys are
+cleared so one account's data cannot appear in another account.
+
+Each account also has an isolated local cache. Changes made while offline are
+marked as pending and retried after connectivity returns; the Favourites and
+Account screens disclose the current sync state and provide a manual retry.
+Recent-player history and the current hourly run marker remain device-only.
 
 ## Hourly Kural
 

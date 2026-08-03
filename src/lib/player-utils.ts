@@ -54,6 +54,24 @@ export function writeNumberList(key: string, list: number[]): void {
   }
 }
 
+export function readPersistedKuralNumber(key: string): number | null {
+  try {
+    const value = Number(localStorage.getItem(key));
+    return isValidKuralNumber(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export function writePersistedKuralNumber(key: string, number: number): void {
+  if (!isValidKuralNumber(number)) return;
+  try {
+    localStorage.setItem(key, String(number));
+  } catch {
+    /* Storage unavailable; the current player still works in memory. */
+  }
+}
+
 /** Formats seconds as m:ss, tolerating NaN/Infinity from unloaded media. */
 export function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
@@ -65,3 +83,4 @@ export function formatTime(seconds: number): string {
 export const FAVS_KEY = "kural:favs";
 export const RECENTS_KEY = "kural:recents";
 export const HINT_KEY = "kural:hint-seen";
+export const LAST_PLAYED_KEY = "kural:last-played";

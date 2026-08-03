@@ -67,6 +67,7 @@ const Chapters = () => {
           <li key={c.number}>
             <Link
               to={`/kural/${c.first}`}
+              state={{ autoplay: true }}
               className="flex h-full items-center gap-3 rounded-2xl border border-border bg-card p-4 transition hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span className="digital-display text-xs text-primary tabular-nums">

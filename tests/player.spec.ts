@@ -18,6 +18,16 @@ test("home, query and path routes resolve to the same player", async ({ page }) 
   await expect(page).toHaveTitle(/Kural Companion/);
 });
 
+test("home restores the last Kural that successfully started playing", async ({ page }) => {
+  await page.goto("/kural/321");
+  await page.getByRole("button", { name: "Play audio" }).click();
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+
+  await page.goto("/");
+  await waitForKural(page, 321);
+  await expect(page.getByRole("button", { name: "Play audio" })).toBeVisible();
+});
+
 test("keypad entry updates the URL and browser history remains authoritative", async ({ page }) => {
   await page.goto("/");
   for (const digit of ["1", "3", "3", "0"]) {
@@ -69,9 +79,13 @@ test("favourites persist on this device", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Remove kural 17 from favourites" })).toBeVisible();
 
   await page.goto("/favourites");
-  await expect(page.locator('a[href="/kural/17"]')).toBeVisible();
+  const savedKural = page.locator('a[href="/kural/17"]');
+  await expect(savedKural).toBeVisible();
   await page.reload();
-  await expect(page.locator('a[href="/kural/17"]')).toBeVisible();
+  await expect(savedKural).toBeVisible();
+  await savedKural.click();
+  await waitForKural(page, 17);
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
 });
 
 test("all three source section names filter chapters correctly", async ({ page }) => {
@@ -82,6 +96,15 @@ test("all three source section names filter chapters correctly", async ({ page }
   }
   await page.getByRole("button", { name: "காமத்துப்பால்" }).click();
   await expect(page.getByRole("list").getByRole("listitem")).toHaveCount(25);
+});
+
+test("selecting a chapter starts its first Kural in the shared player", async ({ page }) => {
+  await page.goto("/chapters");
+  await page.getByRole("list").getByRole("link").first().click();
+  await expect(page).toHaveURL(/\/kural\/1$/);
+  await waitForKural(page, 1);
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+  await expect(page.locator("audio")).toHaveCount(1);
 });
 
 test("appearance preferences survive reload", async ({ page }) => {
