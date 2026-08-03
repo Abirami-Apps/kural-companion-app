@@ -15,13 +15,44 @@ accessibility preferences work without an account.
   active hours, Kural selection, and an optional spoken Tamil meaning
 - Supabase email authentication, confirmation, password recovery, and secure
   row-level access to each user's synchronized data
-- Subscriptions, checkout, offline audio downloads, and native iOS/Android
-  packages are not connected yet
+- Server-owned premium entitlement records and read-only account verification
+- Checkout, billing-provider webhooks, offline audio downloads, and native
+  iOS/Android packages are not connected yet
 - Paid gating is off, so every valid Kural is accessible
 
 The plan screen deliberately discloses those limitations and does not allow plan
 selection in the default build. Sign-in becomes active only when the public
-Supabase configuration and authentication feature flag are present.
+Supabase configuration and authentication feature flag are present. Paid gating
+stays off until a trusted billing integration is maintaining entitlements.
+
+## Subscription entitlement foundation
+
+Phase 3A adds a provider-neutral `premium` entitlement for every account. The
+record contains browser-safe status, plan, source, validity dates, and
+cancellation state. Authenticated users may read only their own record; row-level
+security and database grants prevent browser clients from creating, activating,
+editing, or deleting entitlements.
+
+The app obtains the display record and calls the server-side
+`has_active_entitlement` predicate. Only `trialing`, `active`, and `grace_period`
+records within their validity window grant access. Missing rows, expired dates,
+unknown states, network failures, and delayed responses after an account switch
+all fail closed. Authentication metadata and local storage never grant paid
+access.
+
+The entitlement source is deliberately independent of a payment provider so
+future Stripe, App Store, Play Store, RevenueCat, promotional, or support-issued
+access can resolve to the same rule. Provider customer identifiers, receipts,
+webhook bodies, signing secrets, and service-role keys must remain in trusted
+server infrastructure, never this browser-readable table or a `VITE_` variable.
+
+Phase 3A does not turn on gating or checkout. The safe release order is:
+
+1. Deploy and verify the entitlement migration.
+2. Connect a real provider and signed, idempotent webhooks in Phase 3B.
+3. Verify purchase, renewal, cancellation, expiration, refund, and restore flows.
+4. Enable `VITE_SUBSCRIPTIONS_ENABLED`, then enable checkout only on supported
+   surfaces.
 
 ## Account data sync
 
@@ -89,9 +120,10 @@ VITE_SITE_URL=
 Set `VITE_SITE_URL` to the final HTTPS origin before deployment so canonical
 metadata is absolute. To enable email accounts, set `VITE_AUTH_ENABLED=true`
 and provide the Supabase project URL and publishable key. Never use a Supabase
-secret or service-role key in a `VITE_` variable. Checkout and subscriptions
-must remain disabled until payment handling and verified server-side
-entitlements are implemented.
+secret or service-role key in a `VITE_` variable. Checkout must remain disabled
+until payment handling and signed webhooks are implemented. Subscription gating
+must remain disabled until the entitlement migration is deployed and a trusted
+billing process is maintaining it.
 
 ## Verification
 

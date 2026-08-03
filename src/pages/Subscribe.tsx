@@ -1,8 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Check, Crown } from "lucide-react";
+import { ArrowLeft, Check, Crown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/ThemeProvider";
-import { checkoutEnabled } from "@/lib/features";
+import { checkoutEnabled, subscriptionsEnabled } from "@/lib/features";
+import { useAuth } from "@/hooks/useAuth";
 
 const plans = [
   {
@@ -42,6 +44,14 @@ const Subscribe = () => {
   const systemReduce = useReducedMotion();
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
+  const {
+    user,
+    subscribed,
+    premiumEntitlement,
+    entitlementStatus,
+    entitlementError,
+    refreshEntitlement,
+  } = useAuth();
 
   return (
     <div className="min-h-full px-4 py-6 max-w-lg mx-auto">
@@ -75,10 +85,69 @@ const Subscribe = () => {
           Kural Companion plans
         </h1>
         <p className="text-sm text-muted-foreground">
-          All 1,330 kurals are free to play right now. Checkout is not connected
-          until a payment provider is configured, so these plans are a preview.
+          {subscriptionsEnabled
+            ? "Premium access is verified securely through your account. Live checkout is not connected yet, so these plans remain a preview."
+            : "All 1,330 kurals are free to play right now. Checkout is not connected until a payment provider is configured, so these plans are a preview."}
         </p>
       </motion.div>
+
+      {subscriptionsEnabled && (
+        <div className="mb-8 rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            {entitlementStatus === "loading" ? (
+              <Loader2 className="mt-0.5 h-5 w-5 shrink-0 animate-spin text-primary" aria-hidden="true" />
+            ) : (
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-foreground">
+                {!user
+                  ? "Sign in to check premium access"
+                  : entitlementStatus === "loading"
+                    ? "Verifying your subscription…"
+                    : subscribed
+                      ? "Kural Companion Plus is active"
+                      : entitlementStatus === "error"
+                        ? "Subscription verification unavailable"
+                        : "No active premium entitlement"}
+              </p>
+              {subscribed && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {premiumEntitlement.planKey
+                    ? `${premiumEntitlement.planKey} plan`
+                    : "Premium access"}
+                  {premiumEntitlement.cancelAtPeriodEnd
+                    ? " · Ends after the current billing period"
+                    : ""}
+                </p>
+              )}
+              {entitlementError && (
+                <p className="mt-1 text-xs text-destructive" role="alert">
+                  {entitlementError}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {!user && (
+              <Button type="button" className="min-h-11 rounded-lg" onClick={() => navigate("/login")}>
+                Sign in
+              </Button>
+            )}
+            {user && entitlementStatus === "error" && (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 rounded-lg"
+                onClick={() => void refreshEntitlement()}
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                Retry verification
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Plans */}
       <div className="space-y-3 mb-8">
@@ -138,7 +207,9 @@ const Subscribe = () => {
 
       {!checkoutEnabled && (
         <p id="checkout-status" className="mb-6 text-center text-xs text-muted-foreground">
-          Plan selection is disabled until secure checkout is connected.
+          {subscriptionsEnabled
+            ? "Server-verified access is ready. Plan selection remains disabled until secure checkout and signed webhooks are connected."
+            : "Plan selection is disabled until secure checkout is connected."}
         </p>
       )}
 

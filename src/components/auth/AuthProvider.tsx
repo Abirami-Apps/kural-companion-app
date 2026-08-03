@@ -1,8 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { AuthContext, type AuthActionResult, type SignUpResult } from "@/lib/auth-context";
-import { authEnabled } from "@/lib/features";
+import { authEnabled, subscriptionsEnabled } from "@/lib/features";
+import {
+  fetchPremiumEntitlement,
+  INACTIVE_PREMIUM_ENTITLEMENT,
+  type PremiumEntitlement,
+} from "@/lib/subscription";
 import { supabase } from "@/lib/supabase";
+
+type EntitlementState = {
+  userId: string | null;
+  status: "disabled" | "signed-out" | "loading" | "ready" | "error";
+  data: PremiumEntitlement;
+  error: string | null;
+};
+
+const entitlementErrorMessage =
+  "We could not verify your subscription. Check your connection and try again.";
 
 function authRedirect(path: string) {
   return new URL(path, window.location.origin).toString();
@@ -32,6 +47,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const enabled = authEnabled && Boolean(client);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(enabled);
+  const currentUserId = session?.user.id ?? null;
+  const currentUserIdRef = useRef<string | null>(currentUserId);
+  const entitlementRequestRef = useRef(0);
+  const [entitlementState, setEntitlementState] = useState<EntitlementState>({
+    userId: null,
+    status: subscriptionsEnabled ? "signed-out" : "disabled",
+    data: { ...INACTIVE_PREMIUM_ENTITLEMENT },
+    error: null,
+  });
+  currentUserIdRef.current = currentUserId;
 
   useEffect(() => {
     if (!enabled || !client) {
@@ -57,6 +82,85 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       listener.subscription.unsubscribe();
     };
   }, [client, enabled]);
+
+  const refreshEntitlement = useCallback(async () => {
+    const expectedUserId = currentUserIdRef.current;
+    if (!subscriptionsEnabled || !client || !expectedUserId) return;
+
+    const request = ++entitlementRequestRef.current;
+    setEntitlementState((current) => ({
+      userId: expectedUserId,
+      status: "loading",
+      data:
+        current.userId === expectedUserId
+          ? current.data
+          : { ...INACTIVE_PREMIUM_ENTITLEMENT },
+      error: null,
+    }));
+
+    try {
+      const data = await fetchPremiumEntitlement(client, expectedUserId);
+      if (
+        entitlementRequestRef.current !== request ||
+        currentUserIdRef.current !== expectedUserId
+      ) {
+        return;
+      }
+      setEntitlementState({
+        userId: expectedUserId,
+        status: "ready",
+        data,
+        error: null,
+      });
+    } catch {
+      if (
+        entitlementRequestRef.current !== request ||
+        currentUserIdRef.current !== expectedUserId
+      ) {
+        return;
+      }
+      setEntitlementState({
+        userId: expectedUserId,
+        status: "error",
+        data: { ...INACTIVE_PREMIUM_ENTITLEMENT },
+        error: entitlementErrorMessage,
+      });
+    }
+  }, [client]);
+
+  useEffect(() => {
+    entitlementRequestRef.current += 1;
+    if (!subscriptionsEnabled) {
+      setEntitlementState({
+        userId: null,
+        status: "disabled",
+        data: { ...INACTIVE_PREMIUM_ENTITLEMENT },
+        error: null,
+      });
+      return;
+    }
+    if (!currentUserId || !client) {
+      setEntitlementState({
+        userId: null,
+        status: "signed-out",
+        data: { ...INACTIVE_PREMIUM_ENTITLEMENT },
+        error: null,
+      });
+      return;
+    }
+    void refreshEntitlement();
+  }, [client, currentUserId, refreshEntitlement]);
+
+  useEffect(() => {
+    if (!subscriptionsEnabled || !currentUserId) return;
+    const refresh = () => void refreshEntitlement();
+    window.addEventListener("focus", refresh);
+    window.addEventListener("online", refresh);
+    return () => {
+      window.removeEventListener("focus", refresh);
+      window.removeEventListener("online", refresh);
+    };
+  }, [currentUserId, refreshEntitlement]);
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<AuthActionResult> => {
@@ -133,19 +237,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({
+    () => {
+      const entitlementMatchesUser = Boolean(
+        user && entitlementState.userId === user.id,
+      );
+      return {
+        enabled,
+        user,
+        loading,
+        signedIn: Boolean(user),
+        subscribed:
+          entitlementMatchesUser &&
+          entitlementState.status === "ready" &&
+          entitlementState.data.active,
+        premiumEntitlement: entitlementMatchesUser
+          ? entitlementState.data
+          : INACTIVE_PREMIUM_ENTITLEMENT,
+        entitlementStatus: entitlementMatchesUser
+          ? entitlementState.status
+          : subscriptionsEnabled
+            ? user
+              ? "loading" as const
+              : "signed-out" as const
+            : "disabled" as const,
+        entitlementError: entitlementMatchesUser ? entitlementState.error : null,
+        refreshEntitlement,
+        signIn,
+        signUp,
+        signOut,
+        requestPasswordReset,
+        updatePassword,
+      };
+    },
+    [
       enabled,
-      user,
+      entitlementState,
       loading,
-      signedIn: Boolean(user),
-      subscribed: false,
-      signIn,
-      signUp,
-      signOut,
+      refreshEntitlement,
       requestPasswordReset,
+      signIn,
+      signOut,
+      signUp,
       updatePassword,
-    }),
-    [enabled, loading, requestPasswordReset, signIn, signOut, signUp, updatePassword, user],
+      user,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
