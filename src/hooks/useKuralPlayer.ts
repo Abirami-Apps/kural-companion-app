@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { getKural, getRandomKural, TOTAL_KURALS, type Kural } from "@/data/sample-kurals";
 import {
-  FAVS_KEY,
   HINT_KEY,
   RECENTS_KEY,
   canGrow,
@@ -15,6 +14,7 @@ import {
 } from "@/lib/player-utils";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
+import { useUserData } from "@/hooks/useUserData";
 import type { HourlyPlaybackRequest } from "@/contexts/HourlyKuralContext";
 import artwork from "@/assets/logo.png";
 
@@ -60,6 +60,7 @@ export function useKuralPlayer() {
   const activeHourlyRequestRef = useRef<HourlyPlaybackRequest | null>(null);
 
   const { canAccessKural, gatingActive } = useEntitlements();
+  const { favourites, toggleFavourite: toggleSyncedFavourite } = useUserData();
   const {
     playbackRequest: hourlyPlaybackRequest,
     markPlayerPlaybackStarted,
@@ -76,7 +77,6 @@ export function useKuralPlayer() {
   const [duration, setDuration] = useState(0);
   const [continuous, setContinuous] = useState(false);
   const [recents, setRecents] = useState<number[]>(() => readNumberList(RECENTS_KEY));
-  const [favourites, setFavourites] = useState<number[]>(() => readNumberList(FAVS_KEY));
   const [hintSeen, setHintSeen] = useState(
     () => typeof window !== "undefined" && !!localStorage.getItem(HINT_KEY),
   );
@@ -87,14 +87,8 @@ export function useKuralPlayer() {
   const canNext = nextNumber(number) !== null;
 
   const toggleFavourite = useCallback(() => {
-    setFavourites((prev) => {
-      const next = prev.includes(number)
-        ? prev.filter((n) => n !== number)
-        : [number, ...prev].slice(0, 100);
-      writeNumberList(FAVS_KEY, next);
-      return next;
-    });
-  }, [number]);
+    toggleSyncedFavourite(number);
+  }, [number, toggleSyncedFavourite]);
 
   /** Navigate to a kural. URL change drives the actual load. */
   const load = useCallback(

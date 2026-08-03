@@ -33,7 +33,7 @@ const plans = [
 
 const features = [
   "Hourly Kural clock and reminders",
-  "Cross-device favourites, notes and progress (coming soon)",
+  "Cross-device favourites, appearance and Hourly Kural settings",
   "Offline listening in the native apps (coming soon)",
 ];
 

@@ -1,6 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { useOptionalUserData } from "@/hooks/useUserData";
+import {
+  APPEARANCE_KEY,
+  DEFAULT_APPEARANCE,
+  parseAppearance,
+  type AppearancePreferences,
+  type ThemeName,
+} from "@/lib/user-data";
 
-export type ThemeName = "classic" | "palm" | "midnight" | "sepia";
+export type { ThemeName } from "@/lib/user-data";
 
 export const THEMES: { id: ThemeName; label: string; swatch: string[] }[] = [
   { id: "classic", label: "Classic", swatch: ["#1e2540", "#eae0d0", "#b5762a"] },
@@ -29,36 +37,22 @@ interface ThemeState {
   setReducedMotion: (v: boolean) => void;
 }
 
-const KEY = "kural:appearance";
-
 const ThemeContext = createContext<ThemeState | null>(null);
 
-interface Stored {
-  theme: ThemeName;
-  fontStep: number;
-  highContrast: boolean;
-  reducedMotion: boolean;
-}
-
-const defaults: Stored = {
-  theme: "classic",
-  fontStep: 1,
-  highContrast: false,
-  reducedMotion: false,
-};
-
-const read = (): Stored => {
-  if (typeof window === "undefined") return defaults;
+const read = (): AppearancePreferences => {
+  if (typeof window === "undefined") return { ...DEFAULT_APPEARANCE };
   try {
-    const raw = localStorage.getItem(KEY);
-    return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
+    const raw = localStorage.getItem(APPEARANCE_KEY);
+    return raw ? parseAppearance(JSON.parse(raw)) : { ...DEFAULT_APPEARANCE };
   } catch {
-    return defaults;
+    return { ...DEFAULT_APPEARANCE };
   }
 };
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<Stored>(read);
+  const userData = useOptionalUserData();
+  const [fallbackState, setFallbackState] = useState<AppearancePreferences>(read);
+  const state = userData?.appearance ?? fallbackState;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -69,13 +63,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const scale = FONT_STEPS[state.fontStep]?.scale ?? 1;
     root.style.setProperty("--font-scale", String(scale));
     try {
-      localStorage.setItem(KEY, JSON.stringify(state));
+      if (!userData) localStorage.setItem(APPEARANCE_KEY, JSON.stringify(state));
     } catch {
       /* storage unavailable */
     }
-  }, [state]);
+  }, [state, userData]);
 
-  const patch = useCallback((p: Partial<Stored>) => setState((s) => ({ ...s, ...p })), []);
+  const patch = useCallback(
+    (preferences: Partial<AppearancePreferences>) => {
+      if (userData) userData.updateAppearance(preferences);
+      else setFallbackState((current) => ({ ...current, ...preferences }));
+    },
+    [userData],
+  );
 
   const value = useMemo<ThemeState>(
     () => ({
@@ -85,8 +85,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setFontStep: (fontStep) =>
         patch({ fontStep: Math.min(FONT_STEPS.length - 1, Math.max(0, fontStep)) }),
       increaseFont: () =>
-        setState((s) => ({ ...s, fontStep: Math.min(FONT_STEPS.length - 1, s.fontStep + 1) })),
-      decreaseFont: () => setState((s) => ({ ...s, fontStep: Math.max(0, s.fontStep - 1) })),
+        patch({ fontStep: Math.min(FONT_STEPS.length - 1, state.fontStep + 1) }),
+      decreaseFont: () => patch({ fontStep: Math.max(0, state.fontStep - 1) }),
       highContrast: state.highContrast,
       setHighContrast: (highContrast) => patch({ highContrast }),
       reducedMotion: state.reducedMotion,

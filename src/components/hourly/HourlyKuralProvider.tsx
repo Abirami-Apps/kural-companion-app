@@ -9,6 +9,7 @@ import {
   type HourlyPlaybackStatus,
 } from "@/contexts/HourlyKuralContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
+import { useOptionalUserData } from "@/hooks/useUserData";
 import { FAVS_KEY, readNumberList } from "@/lib/player-utils";
 import {
   HOURLY_LAST_KURAL_KEY,
@@ -35,11 +36,16 @@ const readNotificationPermission = (): HourlyNotificationPermission =>
 export function HourlyKuralProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { premiumAccess, premiumPreview } = useEntitlements();
-  const [settings, setSettings] = useState<HourlyKuralSettings>(readHourlySettings);
+  const userData = useOptionalUserData();
+  const [fallbackSettings, setFallbackSettings] =
+    useState<HourlyKuralSettings>(readHourlySettings);
+  const settings = userData?.hourlySettings ?? fallbackSettings;
   const [status, setStatus] = useState<HourlyPlaybackStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [nextRun, setNextRun] = useState<Date | null>(null);
-  const [lastKuralNumber, setLastKuralNumber] = useState<number | null>(readLastKural);
+  const [fallbackLastKuralNumber, setFallbackLastKuralNumber] =
+    useState<number | null>(readLastKural);
+  const lastKuralNumber = userData ? userData.lastHourlyKural : fallbackLastKuralNumber;
   const [playbackRequest, setPlaybackRequest] = useState<HourlyPlaybackRequest | null>(null);
   const [notificationPermission, setNotificationPermission] =
     useState<HourlyNotificationPermission>(readNotificationPermission);
@@ -49,19 +55,27 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     try {
-      localStorage.setItem(HOURLY_SETTINGS_KEY, JSON.stringify(settings));
+      if (!userData) localStorage.setItem(HOURLY_SETTINGS_KEY, JSON.stringify(settings));
     } catch {
       /* storage can be unavailable in private browsing */
     }
-  }, [settings]);
+  }, [settings, userData]);
 
-  const updateSettings = useCallback((patch: Partial<HourlyKuralSettings>) => {
-    setSettings((current) => ({ ...current, ...patch }));
-  }, []);
+  const updateSettings = useCallback(
+    (patch: Partial<HourlyKuralSettings>) => {
+      if (userData) userData.updateHourlySettings(patch);
+      else setFallbackSettings((current) => ({ ...current, ...patch }));
+    },
+    [userData],
+  );
 
-  const setEnabled = useCallback((enabled: boolean) => {
-    setSettings((current) => ({ ...current, enabled }));
-  }, []);
+  const setEnabled = useCallback(
+    (enabled: boolean) => {
+      if (userData) userData.updateHourlySettings({ enabled });
+      else setFallbackSettings((current) => ({ ...current, enabled }));
+    },
+    [userData],
+  );
 
   const stopPlayback = useCallback(() => {
     handoffTokenRef.current += 1;
@@ -96,22 +110,26 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   }, []);
 
   const rememberKural = useCallback((number: number) => {
-    setLastKuralNumber(number);
+    if (userData) {
+      userData.setLastHourlyKural(number);
+      return;
+    }
+    setFallbackLastKuralNumber(number);
     try {
       localStorage.setItem(HOURLY_LAST_KURAL_KEY, String(number));
     } catch {
       /* ignore */
     }
-  }, []);
+  }, [userData]);
 
   const chooseNumber = useCallback(
     () =>
       chooseHourlyKuralNumber({
         selection: settings.selection,
         lastNumber: lastKuralNumber,
-        favourites: readNumberList(FAVS_KEY),
+        favourites: userData?.favourites ?? readNumberList(FAVS_KEY),
       }),
-    [lastKuralNumber, settings.selection],
+    [lastKuralNumber, settings.selection, userData?.favourites],
   );
 
   const handoffToMainPlayer = useCallback(
@@ -219,12 +237,13 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   const runScheduled = useCallback(
     async (date: Date) => {
       const key = hourlyRunKey(date);
-      if (localStorage.getItem(HOURLY_LAST_RUN_KEY) === key) return;
-      localStorage.setItem(HOURLY_LAST_RUN_KEY, key);
+      const runStorageKey = userData?.deviceKey(HOURLY_LAST_RUN_KEY) ?? HOURLY_LAST_RUN_KEY;
+      if (localStorage.getItem(runStorageKey) === key) return;
+      localStorage.setItem(runStorageKey, key);
       if (document.visibilityState === "visible") await playHourlyKural(date);
       else showNotification(date);
     },
-    [playHourlyKural, showNotification],
+    [playHourlyKural, showNotification, userData],
   );
 
   useEffect(() => {
@@ -260,11 +279,13 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
-      if (event.key === HOURLY_SETTINGS_KEY) setSettings(readHourlySettings());
+      if (!userData && event.key === HOURLY_SETTINGS_KEY) {
+        setFallbackSettings(readHourlySettings());
+      }
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [userData]);
 
   useEffect(
     () => () => {
