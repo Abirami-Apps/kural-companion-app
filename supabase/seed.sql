@@ -1,0 +1,1 @@
+-- Intentionally empty. Tirukkural content remains a validated, versioned app asset.
