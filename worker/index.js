@@ -30,7 +30,7 @@ const worker = {
       (response.status >= 300 && response.status < 400);
 
     if (isMissingRoute && request.method === "GET" && acceptsHtml) {
-      const indexUrl = new URL("/index.html", request.url);
+      const indexUrl = new URL("/", request.url);
       response = await env.ASSETS.fetch(new Request(indexUrl, request));
     }
 
