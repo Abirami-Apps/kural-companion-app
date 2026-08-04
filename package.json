@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:sites": "vite build && node scripts/prepare-sites-build.mjs",
     "build:dev": "vite build --mode development",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "lint": "eslint .",

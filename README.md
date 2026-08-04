@@ -212,9 +212,16 @@ without rewriting Tamil text.
 ## Deployment requirements
 
 - Serve `dist/` over HTTPS after `npm run build`.
+- Use `npm run build:sites` for OpenAI Sites hosting. It produces the normal
+  Vite assets plus a Cloudflare-compatible worker entry that serves real assets,
+  falls back to `index.html` only for browser navigation, and adds baseline
+  security headers.
 - Configure the host to rewrite unknown routes such as `/kural/123` to
   `index.html` for client-side routing.
 - Set `VITE_SITE_URL` during the production build.
+- Keep `VITE_SUBSCRIPTIONS_ENABLED=false` and `VITE_CHECKOUT_ENABLED=false` in
+  the first public deployment. Sandbox checkout must never be exposed as a live
+  revenue flow.
 - Allow `https://kural.abirami.app/**` and the required local origin in Supabase
   Auth redirect URLs before sending confirmation or password-reset emails.
 - Keep the current Content Security Policy and analytics decisions with the
