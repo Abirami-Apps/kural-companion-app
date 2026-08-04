@@ -25,8 +25,11 @@ const worker = {
   async fetch(request, env) {
     let response = await env.ASSETS.fetch(request);
     const acceptsHtml = request.headers.get("accept")?.includes("text/html");
+    const isMissingRoute =
+      response.status === 404 ||
+      (response.status >= 300 && response.status < 400);
 
-    if (response.status === 404 && request.method === "GET" && acceptsHtml) {
+    if (isMissingRoute && request.method === "GET" && acceptsHtml) {
       const indexUrl = new URL("/index.html", request.url);
       response = await env.ASSETS.fetch(new Request(indexUrl, request));
     }
