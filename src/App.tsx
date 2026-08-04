@@ -17,6 +17,8 @@ const Chapters = lazy(() => import("./pages/Chapters.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 const HourlyKural = lazy(() => import("./pages/HourlyKural.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
+const Terms = lazy(() => import("./pages/Terms.tsx"));
+const Privacy = lazy(() => import("./pages/Privacy.tsx"));
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,8 @@ const App = () => (
                     <Route path="/subscribe" element={<Subscribe />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/privacy" element={<Privacy />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>

@@ -137,3 +137,23 @@ export async function fetchPremiumEntitlement(
   );
   return { ...entitlement, active: activeResult.data === true };
 }
+
+/**
+ * Ask the authenticated Edge Function to reconcile this account against
+ * RevenueCat. The browser cannot choose a user ID or write an entitlement.
+ */
+export async function syncRevenueCatEntitlement(
+  client: SupabaseClient,
+): Promise<void> {
+  const { data, error } = await client.functions.invoke("revenuecat-sync", {
+    body: {},
+  });
+  if (error) throw new Error(error.message);
+  if (!data || data.ok !== true) {
+    throw new Error(
+      typeof data?.error === "string"
+        ? data.error
+        : "RevenueCat entitlement sync failed.",
+    );
+  }
+}

@@ -16,8 +16,9 @@ accessibility preferences work without an account.
 - Supabase email authentication, confirmation, password recovery, and secure
   row-level access to each user's synchronized data
 - Server-owned premium entitlement records and read-only account verification
-- Checkout, billing-provider webhooks, offline audio downloads, and native
-  iOS/Android packages are not connected yet
+- RevenueCat/Paddle sandbox checkout with signed, idempotent Supabase billing
+  synchronization; live billing remains disabled until production onboarding
+- Offline audio downloads and native iOS/Android packages are not connected yet
 - Paid gating is off, so every valid Kural is accessible
 
 The plan screen deliberately discloses those limitations and does not allow plan
@@ -46,13 +47,35 @@ access can resolve to the same rule. Provider customer identifiers, receipts,
 webhook bodies, signing secrets, and service-role keys must remain in trusted
 server infrastructure, never this browser-readable table or a `VITE_` variable.
 
-Phase 3A does not turn on gating or checkout. The safe release order is:
+Phase 3B preserves fail-closed defaults while adding the RevenueCat/Paddle
+provider boundary. The safe release order is:
 
 1. Deploy and verify the entitlement migration.
-2. Connect a real provider and signed, idempotent webhooks in Phase 3B.
+2. Configure and deploy the RevenueCat sync and webhook Edge Functions.
 3. Verify purchase, renewal, cancellation, expiration, refund, and restore flows.
 4. Enable `VITE_SUBSCRIPTIONS_ENABLED`, then enable checkout only on supported
    surfaces.
+
+## RevenueCat and Paddle billing
+
+Web customers choose a plan in the app and continue to a RevenueCat-hosted
+purchase link backed by Paddle. The link is always bound to the signed-in
+Supabase UUID and preselects the matching monthly, annual, or lifetime package.
+External return paths, non-RevenueCat hosts, malformed user identifiers and
+partially configured builds are rejected before checkout opens.
+
+RevenueCat remains the cross-platform entitlement resolver. Paddle is the web
+merchant of record; future iOS and Android releases will use their required
+native stores while mapping purchases to the same `premium` entitlement.
+
+The browser never writes access state. `revenuecat-sync` authenticates the
+current Supabase session, looks up only that UUID in RevenueCat, and applies the
+canonical result through a service-role-only database function.
+`revenuecat-webhook` requires both the configured Authorization header and
+RevenueCat's HMAC-SHA256 signature over the exact raw request body. It rejects
+replays outside the timestamp tolerance, resolves aliases to an existing
+Supabase account, fetches canonical Customer Info, and records only a SHA-256
+digest plus minimal event metadata in a private idempotency ledger.
 
 ## Account data sync
 
@@ -112,6 +135,7 @@ The safe defaults in `.env.example` keep unfinished services disabled:
 VITE_SUBSCRIPTIONS_ENABLED=false
 VITE_AUTH_ENABLED=false
 VITE_CHECKOUT_ENABLED=false
+VITE_REVENUECAT_PURCHASE_URL=
 VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_SITE_URL=
@@ -120,10 +144,27 @@ VITE_SITE_URL=
 Set `VITE_SITE_URL` to the final HTTPS origin before deployment so canonical
 metadata is absolute. To enable email accounts, set `VITE_AUTH_ENABLED=true`
 and provide the Supabase project URL and publishable key. Never use a Supabase
-secret or service-role key in a `VITE_` variable. Checkout must remain disabled
-until payment handling and signed webhooks are implemented. Subscription gating
-must remain disabled until the entitlement migration is deployed and a trusted
-billing process is maintaining it.
+secret or service-role key in a `VITE_` variable.
+
+`VITE_REVENUECAT_PURCHASE_URL` is the public Web Purchase Link base URL, such as
+`https://pay.rev.cat/generatedToken`. Do not include a user ID, query string or
+additional path. Checkout remains disabled unless the link passes that strict
+validation in addition to all three feature flags.
+
+Edge Function billing values are server secrets and must never use a `VITE_`
+prefix. Copy `supabase/.env.billing.example` to the ignored
+`supabase/.env.billing`, fill the provider values locally, and upload them:
+
+```sh
+npx supabase secrets set --env-file supabase/.env.billing
+npx supabase functions deploy revenuecat-sync
+npx supabase functions deploy revenuecat-webhook --no-verify-jwt
+```
+
+Use `SANDBOX` while testing and change the allowed environment and product IDs
+when moving to Paddle production. Keep checkout and paid gating disabled until
+the deployed functions, authorization header, HMAC secret, and complete
+lifecycle have been verified.
 
 ## Verification
 

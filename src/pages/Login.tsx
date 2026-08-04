@@ -10,6 +10,7 @@ import { PRODUCT_NAME, subscriptionsEnabled } from "@/lib/features";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
+import { safeInternalPath } from "@/lib/navigation";
 
 type FormMode = "sign-in" | "sign-up" | "forgot";
 
@@ -22,6 +23,7 @@ const credentialsSchema = z.object({
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const returnTo = safeInternalPath(searchParams.get("returnTo"));
   const systemReduce = useReducedMotion();
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
@@ -90,7 +92,7 @@ const Login = () => {
       if (mode === "sign-in") {
         const result = await signIn(email.trim(), password);
         if (result.error) setFormError(result.error);
-        else navigate("/", { replace: true });
+        else navigate(returnTo, { replace: true });
       } else if (mode === "sign-up") {
         const result = await signUp(email.trim(), password);
         if (result.error) {
@@ -99,7 +101,7 @@ const Login = () => {
           setPassword("");
           setStatus("Check your email and open the confirmation link to finish creating your account.");
         } else {
-          navigate("/", { replace: true });
+          navigate(returnTo, { replace: true });
         }
       } else {
         const result = await requestPasswordReset(email.trim());
@@ -230,7 +232,7 @@ const Login = () => {
             )}
             {formError && <p className="mt-4 text-sm text-destructive" role="alert">{formError}</p>}
             <Button asChild className="mt-6 h-12 w-full rounded-xl">
-              <Link to="/">Continue reading</Link>
+              <Link to={returnTo}>{returnTo === "/" ? "Continue reading" : "Continue"}</Link>
             </Button>
             <Button
               type="button"
