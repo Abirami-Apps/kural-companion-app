@@ -218,7 +218,7 @@ test("core routes emit no uncaught runtime errors", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/reset-password", "/subscribe"]) {
+  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/reset-password", "/subscribe", "/terms", "/privacy"]) {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();
   }

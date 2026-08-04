@@ -1,14 +1,20 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, Check, Crown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Check, Crown, ExternalLink, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { checkoutEnabled, subscriptionsEnabled } from "@/lib/features";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  buildRevenueCatPurchaseUrl,
+  revenueCatPurchaseUrl,
+  type CheckoutPlanId,
+} from "@/lib/checkout";
 
 const plans = [
   {
-    id: "monthly",
+    id: "monthly" as const,
     label: "Monthly",
     price: "₹99",
     period: "/month",
@@ -16,7 +22,7 @@ const plans = [
     popular: false,
   },
   {
-    id: "yearly",
+    id: "yearly" as const,
     label: "Yearly",
     price: "₹999",
     period: "/year",
@@ -24,7 +30,7 @@ const plans = [
     popular: true,
   },
   {
-    id: "lifetime",
+    id: "lifetime" as const,
     label: "Lifetime",
     price: "₹3,499",
     period: "one-time",
@@ -41,6 +47,7 @@ const features = [
 
 const Subscribe = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const systemReduce = useReducedMotion();
   const { reducedMotion } = useTheme();
   const reduce = systemReduce || reducedMotion;
@@ -51,7 +58,66 @@ const Subscribe = () => {
     entitlementStatus,
     entitlementError,
     refreshEntitlement,
+    syncPremiumEntitlement,
   } = useAuth();
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [purchaseStatus, setPurchaseStatus] = useState<"idle" | "syncing" | "synced" | "error">("idle");
+  const handledReturnRef = useRef(false);
+
+  const refreshProvider = useCallback(async () => {
+    setPurchaseStatus("syncing");
+    setCheckoutError(null);
+    const result = await syncPremiumEntitlement();
+    if (result.error) {
+      setPurchaseStatus("error");
+      setCheckoutError(result.error);
+      return;
+    }
+    setPurchaseStatus("synced");
+  }, [syncPremiumEntitlement]);
+
+  useEffect(() => {
+    if (
+      handledReturnRef.current ||
+      searchParams.get("purchase") !== "success" ||
+      !checkoutEnabled
+    ) {
+      return;
+    }
+    if (!user) {
+      navigate(`/login?returnTo=${encodeURIComponent("/subscribe?purchase=success")}`, {
+        replace: true,
+      });
+      return;
+    }
+
+    handledReturnRef.current = true;
+    void refreshProvider();
+  }, [navigate, refreshProvider, searchParams, user]);
+
+  const startCheckout = (planId: CheckoutPlanId) => {
+    setCheckoutError(null);
+    if (!checkoutEnabled) return;
+    if (!user) {
+      navigate(
+        `/login?returnTo=${encodeURIComponent(`/subscribe?plan=${planId}`)}`,
+      );
+      return;
+    }
+
+    try {
+      window.location.assign(
+        buildRevenueCatPurchaseUrl({
+          baseUrl: revenueCatPurchaseUrl,
+          userId: user.id,
+          email: user.email,
+          planId,
+        }),
+      );
+    } catch {
+      setCheckoutError("Secure checkout is temporarily unavailable. Please try again later.");
+    }
+  };
 
   return (
     <div className="min-h-full px-4 py-6 max-w-lg mx-auto">
@@ -86,7 +152,9 @@ const Subscribe = () => {
         </h1>
         <p className="text-sm text-muted-foreground">
           {subscriptionsEnabled
-            ? "Premium access is verified securely through your account. Live checkout is not connected yet, so these plans remain a preview."
+            ? checkoutEnabled
+              ? "Choose a plan to continue to secure Paddle checkout. Premium access stays connected to your signed-in account across supported devices."
+              : "Premium access is verified securely through your account. Checkout is not enabled for this build, so these plans remain a preview."
             : "All 1,330 kurals are free to play right now. Checkout is not connected until a payment provider is configured, so these plans are a preview."}
         </p>
       </motion.div>
@@ -103,6 +171,8 @@ const Subscribe = () => {
               <p className="text-sm font-medium text-foreground">
                 {!user
                   ? "Sign in to check premium access"
+                  : purchaseStatus === "syncing"
+                    ? "Confirming your purchase…"
                   : entitlementStatus === "loading"
                     ? "Verifying your subscription…"
                     : subscribed
@@ -126,6 +196,16 @@ const Subscribe = () => {
                   {entitlementError}
                 </p>
               )}
+              {purchaseStatus === "synced" && !subscribed && (
+                <p className="mt-1 text-xs text-muted-foreground" role="status">
+                  Purchase status refreshed. No active premium plan was found.
+                </p>
+              )}
+              {checkoutError && (
+                <p className="mt-1 text-xs text-destructive" role="alert">
+                  {checkoutError}
+                </p>
+              )}
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
@@ -143,6 +223,22 @@ const Subscribe = () => {
               >
                 <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 Retry verification
+              </Button>
+            )}
+            {user && checkoutEnabled && !subscribed && (
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 rounded-lg"
+                disabled={purchaseStatus === "syncing"}
+                onClick={() => void refreshProvider()}
+              >
+                {purchaseStatus === "syncing" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                )}
+                Refresh purchase
               </Button>
             )}
           </div>
@@ -164,16 +260,14 @@ const Subscribe = () => {
           >
             <button
               type="button"
-              disabled={!checkoutEnabled}
+              disabled={!checkoutEnabled || subscribed || purchaseStatus === "syncing"}
               aria-describedby={!checkoutEnabled ? "checkout-status" : undefined}
               className={`w-full text-left rounded-xl p-5 border transition-all duration-150 active:scale-[0.98] ${
                 plan.popular
                   ? "border-primary bg-primary/5 shadow-sm"
                   : "border-border bg-card hover:border-primary/30"
               } disabled:cursor-not-allowed disabled:active:scale-100`}
-              onClick={() => {
-                if (checkoutEnabled) navigate("/login");
-              }}
+              onClick={() => startCheckout(plan.id)}
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -198,6 +292,12 @@ const Subscribe = () => {
                   <span className="text-xs text-muted-foreground block">
                     {plan.period}
                   </span>
+                  {checkoutEnabled && !subscribed && (
+                    <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
+                      {user ? "Secure checkout" : "Sign in to purchase"}
+                      <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                    </span>
+                  )}
                 </div>
               </div>
             </button>
@@ -211,6 +311,26 @@ const Subscribe = () => {
             ? "Server-verified access is ready. Plan selection remains disabled until secure checkout and signed webhooks are connected."
             : "Plan selection is disabled until secure checkout is connected."}
         </p>
+      )}
+
+      {subscribed && (
+        <p className="mb-6 text-center text-xs text-muted-foreground">
+          Your plan is active. Use the management link in your Paddle receipt to change or cancel a web subscription.
+        </p>
+      )}
+
+      {checkoutEnabled && (
+        <div className="mb-8 rounded-xl border border-border bg-muted/35 p-4 text-xs leading-5 text-muted-foreground">
+          <div className="flex gap-2">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <p>
+              Paddle processes web payments as merchant of record. Prices include applicable tax. By purchasing, you agree to the{" "}
+              <Link to="/terms" className="font-medium text-primary underline underline-offset-4">Terms</Link>{" "}
+              and acknowledge the{" "}
+              <Link to="/privacy" className="font-medium text-primary underline underline-offset-4">Privacy Policy</Link>.
+            </p>
+          </div>
+        </div>
       )}
 
       {/* Features */}

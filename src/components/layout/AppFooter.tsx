@@ -15,6 +15,12 @@ export function AppFooter() {
           <Link to="/chapters" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-primary">
             Chapters
           </Link>
+          <Link to="/terms" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-primary">
+            Terms
+          </Link>
+          <Link to="/privacy" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-primary">
+            Privacy
+          </Link>
           <Link to="/login" className="inline-flex min-h-11 items-center text-muted-foreground hover:text-primary">
             {user ? "Account" : "Log in"}
           </Link>

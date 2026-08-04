@@ -1,4 +1,5 @@
 import { supabaseConfigured } from "@/lib/supabase";
+import { revenueCatPurchaseLinkConfigured } from "@/lib/checkout";
 
 /**
  * Feature flags.
@@ -21,9 +22,11 @@ export const subscriptionsEnabled =
 /** Number of kurals available without a subscription when gating is enabled. */
 export const FREE_LIMIT = 10;
 
-/** Checkout also requires the entitlement foundation; no provider is wired up yet. */
+/** Checkout requires auth, server-owned entitlements and a valid RevenueCat link. */
 export const checkoutEnabled =
-  enabled(import.meta.env.VITE_CHECKOUT_ENABLED) && subscriptionsEnabled;
+  enabled(import.meta.env.VITE_CHECKOUT_ENABLED) &&
+  subscriptionsEnabled &&
+  revenueCatPurchaseLinkConfigured;
 
 export const PRODUCT_NAME = "Kural Companion";
 export const PRODUCT_NAME_TA = "திருக்குறள்";

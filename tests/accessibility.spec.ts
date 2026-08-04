@@ -2,7 +2,17 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { installMediaMock } from "./helpers";
 
-const routes = ["/", "/favourites", "/chapters", "/hourly", "/login", "/subscribe", "/kural/1331"];
+const routes = [
+  "/",
+  "/favourites",
+  "/chapters",
+  "/hourly",
+  "/login",
+  "/subscribe",
+  "/terms",
+  "/privacy",
+  "/kural/1331",
+];
 
 test.beforeEach(async ({ page }) => {
   await installMediaMock(page);
