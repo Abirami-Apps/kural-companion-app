@@ -38,6 +38,12 @@ const sections = [
       "We may update this notice as the service and applicable requirements change. The effective date above identifies the current version. Material changes will be communicated through the service when appropriate.",
     ],
   },
+  {
+    title: "Contact",
+    paragraphs: [
+      "Privacy, account-data and deletion requests can be sent to support@abiramiaudio.com. Contact us from the email address associated with your Kural Companion account when the request concerns account-specific information.",
+    ],
+  },
 ];
 
 export default function Privacy() {

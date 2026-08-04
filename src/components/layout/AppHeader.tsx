@@ -1,5 +1,19 @@
 import { useState } from "react";
-import { BookOpen, Clock3, Heart, Home, LogIn, Menu, Settings2, Sparkles, UserRound } from "lucide-react";
+import {
+  BookOpen,
+  Clock3,
+  FileText,
+  Heart,
+  Home,
+  LifeBuoy,
+  LogIn,
+  Menu,
+  ReceiptText,
+  Settings2,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
@@ -137,6 +151,41 @@ export function AppHeader() {
                   {user ? "Account" : "Log in"}
                 </NavLink>
               </nav>
+              <div className="mt-5 border-t border-border pt-4">
+                <p className="px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Legal &amp; support
+                </p>
+                <nav aria-label="Legal and support" className="mt-2 flex flex-col gap-1">
+                  <Link
+                    to="/terms"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <FileText className="h-4 w-4" aria-hidden="true" /> Terms
+                  </Link>
+                  <Link
+                    to="/privacy"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Privacy
+                  </Link>
+                  <Link
+                    to="/refunds"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <ReceiptText className="h-4 w-4" aria-hidden="true" /> Refunds &amp; cancellations
+                  </Link>
+                  <Link
+                    to="/contact"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <LifeBuoy className="h-4 w-4" aria-hidden="true" /> Contact support
+                  </Link>
+                </nav>
+              </div>
               <div className="mt-6 border-t border-border pt-4">
                 <AppearancePanel
                   trigger={

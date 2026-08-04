@@ -328,6 +328,10 @@ const Subscribe = () => {
               <Link to="/terms" className="font-medium text-primary underline underline-offset-4">Terms</Link>{" "}
               and acknowledge the{" "}
               <Link to="/privacy" className="font-medium text-primary underline underline-offset-4">Privacy Policy</Link>.
+              {" "}Read our{" "}
+              <Link to="/refunds" className="font-medium text-primary underline underline-offset-4">Refund &amp; Cancellation Policy</Link>
+              {" "}or{" "}
+              <Link to="/contact" className="font-medium text-primary underline underline-offset-4">contact support</Link>.
             </p>
           </div>
         </div>

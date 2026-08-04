@@ -41,6 +41,12 @@ const sections = [
       "We may update these terms when the service, law or billing model changes. Material changes will be identified by a new effective date and communicated through the service when appropriate. Continued use after the effective date means the updated terms apply.",
     ],
   },
+  {
+    title: "Contact",
+    paragraphs: [
+      "Questions about these terms, purchases or account access can be sent to support@abiramiaudio.com.",
+    ],
+  },
 ];
 
 export default function Terms() {
