@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { HourlyKuralProvider } from "@/components/hourly/HourlyKuralProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { UserDataProvider } from "@/components/sync/UserDataProvider";
+import { PwaProvider } from "@/components/pwa/PwaProvider";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Subscribe = lazy(() => import("./pages/Subscribe.tsx"));
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -27,11 +28,12 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <UserDataProvider>
-            <ThemeProvider>
-              <HourlyKuralProvider>
+      <PwaProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <UserDataProvider>
+              <ThemeProvider>
+                <HourlyKuralProvider>
               <Toaster />
               <Sonner />
               <Suspense
@@ -59,11 +61,12 @@ const App = () => (
                   </Route>
                 </Routes>
               </Suspense>
-              </HourlyKuralProvider>
-            </ThemeProvider>
-          </UserDataProvider>
-        </AuthProvider>
-      </BrowserRouter>
+                </HourlyKuralProvider>
+              </ThemeProvider>
+            </UserDataProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </PwaProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

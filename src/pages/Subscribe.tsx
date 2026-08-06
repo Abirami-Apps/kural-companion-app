@@ -225,7 +225,7 @@ const Subscribe = () => {
                 Retry verification
               </Button>
             )}
-            {user && checkoutEnabled && !subscribed && (
+            {user && checkoutEnabled && (
               <Button
                 type="button"
                 variant="outline"
@@ -238,7 +238,7 @@ const Subscribe = () => {
                 ) : (
                   <RefreshCw className="h-4 w-4" aria-hidden="true" />
                 )}
-                Refresh purchase
+                {subscribed ? "Refresh subscription" : "Refresh purchase"}
               </Button>
             )}
           </div>

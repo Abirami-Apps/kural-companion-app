@@ -22,6 +22,7 @@ import { AppearancePanel } from "@/components/theme/AppearancePanel";
 import { checkoutEnabled } from "@/lib/features";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
 import { useAuth } from "@/hooks/useAuth";
+import { ConnectivityBadge, InstallAppButton } from "@/components/pwa/PwaControls";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, end: true },
@@ -80,6 +81,8 @@ export function AppHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-1 nav:ml-2">
+          <ConnectivityBadge className="hidden nav:inline-flex" />
+          <InstallAppButton className="hidden nav:inline-flex" />
           {checkoutEnabled && (
             <Button asChild variant="default" className="hidden min-h-11 rounded-full nav:inline-flex">
               <Link to="/subscribe">
@@ -113,6 +116,10 @@ export function AppHeader() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[min(18rem,85vw)]">
               <SheetTitle className="text-left">Menu</SheetTitle>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <ConnectivityBadge />
+                <InstallAppButton />
+              </div>
               <nav aria-label="Mobile" className="mt-6 flex flex-col gap-1">
                 {NAV_ITEMS.map((item) => (
                   <NavLink

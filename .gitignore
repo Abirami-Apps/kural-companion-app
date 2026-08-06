@@ -15,6 +15,7 @@ test-results
 artifacts
 *.local
 supabase/.env.billing
+supabase/.env.billing.live
 
 # Editor directories and files
 .vscode/*

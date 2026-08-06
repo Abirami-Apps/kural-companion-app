@@ -8,6 +8,8 @@ accessibility preferences work without an account.
 ## Current release scope
 
 - Production-ready responsive web SPA
+- Installable Progressive Web App with a precached app shell and all 1,330
+  bundled Kural texts available for offline reading
 - All 1,330 bundled Kurals and HTTPS audio links
 - Device-local guest data plus account-isolated cloud sync for favourites,
   appearance preferences, and Hourly Kural settings
@@ -18,7 +20,8 @@ accessibility preferences work without an account.
 - Server-owned premium entitlement records and read-only account verification
 - RevenueCat/Paddle sandbox checkout with signed, idempotent Supabase billing
   synchronization; live billing remains disabled until production onboarding
-- Offline audio downloads and native iOS/Android packages are not connected yet
+- Streaming audio, account synchronization and checkout remain network-only;
+  offline audio downloads and native iOS/Android packages are not connected yet
 - Paid gating is off, so every valid Kural is accessible
 
 The plan screen deliberately discloses those limitations and does not allow plan
@@ -112,6 +115,25 @@ When the page is in the background, the app uses an approved browser notificatio
 as the reminder instead of promising unattended playback. Reliable hourly
 playback with the app fully closed belongs in the future native iOS and Android
 packages.
+
+## Install and offline reading
+
+Supported browsers can install Kural Companion from the app or their browser
+menu. On iPhone and iPad, the in-app instructions use Safari's Share → Add to
+Home Screen flow. The manifest provides standard and maskable icons, standalone
+display metadata, theme colors, and shortcuts to the player, chapters, and
+Hourly Kural.
+
+The generated service worker precaches the versioned application shell, route
+chunks, local fonts, icons, and the validated 1,330-entry Kural dataset. Once an
+online visit finishes installing that release, all verses, meanings, chapters,
+favourites stored on the device, themes, and navigation remain usable without a
+connection. A global connection indicator and offline banner disclose when
+streaming audio and account synchronization are unavailable.
+
+Supabase, RevenueCat, Paddle, authentication, account records, checkout, and
+remote audio are never placed in the offline cache. Service-worker upgrades
+replace old versioned assets and remove outdated caches automatically.
 
 ## Local development
 
