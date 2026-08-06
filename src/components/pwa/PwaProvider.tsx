@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { PwaContext, type InstallResult } from "@/contexts/PwaContext";
+import { isNativeApp } from "@/lib/native";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -7,6 +8,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const standaloneDisplay = () =>
+  isNativeApp ||
   window.matchMedia("(display-mode: standalone)").matches ||
   ("standalone" in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
 
@@ -23,6 +25,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
     const markOffline = () => setOnline(false);
     const updateDisplay = () => setStandalone(standaloneDisplay());
     const capturePrompt = (event: Event) => {
+      if (isNativeApp) return;
       event.preventDefault();
       setInstallPrompt(event as BeforeInstallPromptEvent);
     };
@@ -46,7 +49,7 @@ export function PwaProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const install = useCallback(async (): Promise<InstallResult> => {
-    if (standalone) return "unavailable";
+    if (isNativeApp || standalone) return "unavailable";
     if (!installPrompt) return iosDevice() ? "manual" : "unavailable";
 
     await installPrompt.prompt();
@@ -59,7 +62,8 @@ export function PwaProvider({ children }: { children: ReactNode }) {
     () => ({
       online,
       standalone,
-      installAvailable: !standalone && (Boolean(installPrompt) || iosDevice()),
+      installAvailable:
+        !isNativeApp && !standalone && (Boolean(installPrompt) || iosDevice()),
       install,
     }),
     [install, installPrompt, online, standalone],

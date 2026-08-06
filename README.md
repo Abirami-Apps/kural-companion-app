@@ -21,7 +21,8 @@ accessibility preferences work without an account.
 - RevenueCat/Paddle sandbox checkout with signed, idempotent Supabase billing
   synchronization; live billing remains disabled until production onboarding
 - Streaming audio, account synchronization and checkout remain network-only;
-  offline audio downloads and native iOS/Android packages are not connected yet
+  offline audio downloads and native App Store/Play Store distribution are not
+  connected yet
 - Paid gating is off, so every valid Kural is accessible
 
 The plan screen deliberately discloses those limitations and does not allow plan
@@ -134,6 +135,40 @@ streaming audio and account synchronization are unavailable.
 Supabase, RevenueCat, Paddle, authentication, account records, checkout, and
 remote audio are never placed in the offline cache. Service-worker upgrades
 replace old versioned assets and remove outdated caches automatically.
+
+## Native iOS and Android foundation
+
+Capacitor 8 projects live in `ios/` and `android/` and use the same tested React
+interface as the web app. The native application identifier is
+`com.abiramiaudio.kuralcompanion`; confirm that identifier before creating the
+permanent App Store Connect and Google Play records.
+
+Native development requires Node.js 22 or newer, Xcode 26 or newer for iOS, and
+Android Studio 2025.2.1 or newer with its bundled Java 21 runtime for Android.
+
+```sh
+npm run native:sync
+npm run native:open:ios
+npm run native:open:android
+npm run native:build:android
+```
+
+`native:sync` builds the web bundle, copies it to both native projects and
+updates native plugins. Native builds force subscription gating and web
+checkout off while Paddle production approval is incomplete. The native shell
+handles the `kuralcompanion://` URL scheme, trusted `kural.abirami.app` links,
+foreground refresh, Android system back navigation, the keyboard, splash screen
+and status bar. PWA installation prompts are hidden inside installed native
+apps.
+
+On macOS, `native:build:android` automatically uses Android Studio's bundled
+Java runtime and produces a debug APK under `android/app/build/outputs/apk/`.
+
+Universal Links/App Links require the final Apple Team ID and Android signing
+certificate fingerprints, so their hosted association files are intentionally
+deferred until store signing is configured. Native store billing and reliable
+background Hourly Kural scheduling are separate release phases; the current
+web checkout is not exposed inside these native foundations.
 
 ## Local development
 

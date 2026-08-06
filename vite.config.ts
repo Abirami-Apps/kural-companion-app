@@ -4,6 +4,8 @@ import { componentTagger } from "lovable-tagger";
 import { fileURLToPath } from "node:url";
 import { VitePWA } from "vite-plugin-pwa";
 
+const nativeBuild = process.env.VITE_NATIVE_BUILD === "true";
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -16,7 +18,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    VitePWA({
+    !nativeBuild && VitePWA({
       registerType: "autoUpdate",
       injectRegister: "script-defer",
       includeAssets: [

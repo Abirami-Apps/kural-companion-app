@@ -10,6 +10,7 @@ import { HourlyKuralProvider } from "@/components/hourly/HourlyKuralProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { UserDataProvider } from "@/components/sync/UserDataProvider";
 import { PwaProvider } from "@/components/pwa/PwaProvider";
+import { NativeAppBridge } from "@/components/native/NativeAppBridge";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Subscribe = lazy(() => import("./pages/Subscribe.tsx"));
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -30,6 +31,7 @@ const App = () => (
     <TooltipProvider>
       <PwaProvider>
         <BrowserRouter>
+          <NativeAppBridge />
           <AuthProvider>
             <UserDataProvider>
               <ThemeProvider>
