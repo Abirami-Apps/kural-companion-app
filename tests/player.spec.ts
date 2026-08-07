@@ -28,6 +28,51 @@ test("home restores the last Kural that successfully started playing", async ({ 
   await expect(page.getByRole("button", { name: "Play audio" })).toBeVisible();
 });
 
+test("play continues automatically to the next Kural by default", async ({ page }) => {
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
+
+  await page.getByRole("button", { name: "Play audio" }).click();
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+  await page.locator("audio").dispatchEvent("ended");
+
+  await expect(page).toHaveURL(/\/kural\/142$/);
+  await waitForKural(page, 142);
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+});
+
+test("loop one repeats the current Kural instead of advancing", async ({ page }) => {
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
+
+  const loopOne = page.getByRole("button", { name: "Loop current kural" });
+  await loopOne.click();
+  await expect(loopOne).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "Play audio" }).click();
+  const audio = page.locator("audio");
+  await audio.evaluate((element) => {
+    element.currentTime = 37;
+  });
+  await audio.dispatchEvent("ended");
+
+  await expect(page).toHaveURL(/\/kural\/141$/);
+  await waitForKural(page, 141);
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+  await expect.poll(() => audio.evaluate((element) => element.currentTime)).toBe(0);
+});
+
+test("sequential playback stops safely after Kural 1330", async ({ page }) => {
+  await page.goto("/kural/1330");
+  await waitForKural(page, 1330);
+
+  await page.getByRole("button", { name: "Play audio" }).click();
+  await page.locator("audio").dispatchEvent("ended");
+
+  await expect(page).toHaveURL(/\/kural\/1330$/);
+  await expect(page.getByRole("button", { name: "Play audio" })).toBeVisible();
+});
+
 test("keypad entry updates the URL and browser history remains authoritative", async ({ page }) => {
   await page.goto("/");
   for (const digit of ["1", "3", "3", "0"]) {

@@ -85,12 +85,12 @@ export function KuralPlayer() {
       audioState={p.audioState}
       canPrev={p.canPrev}
       canNext={p.canNext}
-      continuous={p.continuous}
+      loopOne={p.loopOne}
       disabled={p.locked}
       onPrev={p.goPrev}
       onNext={p.goNext}
       onToggle={p.togglePlay}
-      onToggleContinuous={() => p.setContinuous((continuous) => !continuous)}
+      onToggleLoopOne={() => p.setLoopOne((loopOne) => !loopOne)}
     />
   );
 

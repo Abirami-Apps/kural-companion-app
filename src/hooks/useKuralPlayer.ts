@@ -87,7 +87,7 @@ export function useKuralPlayer() {
   const [audioState, setAudioState] = useState<AudioState>("idle");
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [continuous, setContinuous] = useState(false);
+  const [loopOne, setLoopOne] = useState(false);
   const [recents, setRecents] = useState<number[]>(() => readNumberList(RECENTS_KEY));
   const [hintSeen, setHintSeen] = useState(
     () => typeof window !== "undefined" && !!localStorage.getItem(HINT_KEY),
@@ -499,8 +499,29 @@ export function useKuralPlayer() {
         void completePlayerPlayback(activeHourlyRequest.id, current.meaning ?? "");
         return;
       }
+
+      if (loopOne) {
+        const el = audioRef.current;
+        if (!el || locked) {
+          shouldPlayRef.current = false;
+          return;
+        }
+
+        el.currentTime = 0;
+        shouldPlayRef.current = true;
+        const token = ++playTokenRef.current;
+        setAudioState("loading");
+        void el.play().catch(() => {
+          if (token !== playTokenRef.current) return;
+          shouldPlayRef.current = false;
+          setIsPlaying(false);
+          setAudioState("error");
+        });
+        return;
+      }
+
       const n = nextNumber(number);
-      if (continuous && n !== null) load(n, true);
+      if (n !== null) load(n, true);
       else shouldPlayRef.current = false;
     },
   };
@@ -524,8 +545,8 @@ export function useKuralPlayer() {
     audioState,
     progress,
     duration,
-    continuous,
-    setContinuous,
+    loopOne,
+    setLoopOne,
     recents,
     favourites,
     isFavourite,
