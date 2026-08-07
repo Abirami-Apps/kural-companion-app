@@ -1,4 +1,4 @@
-import { Clock3, Delete, Grid3X3, Keyboard, Lock, RotateCcw, Shuffle } from "lucide-react";
+import { Clock3, Delete, Keyboard, Lock, RotateCcw, Shuffle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { TOTAL_KURALS } from "@/data/sample-kurals";
@@ -104,10 +104,10 @@ export function KuralPlayer() {
 
   return (
     <div id="player" className="player-page min-h-full w-full">
-      <div className="mx-auto grid w-full max-w-[1280px] gap-5 px-4 py-5 sm:px-6 sm:py-7 studio:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.85fr)] studio:items-stretch studio:gap-6 studio:px-8 studio:py-8">
+      <div className="mx-auto grid w-full max-w-[1280px] gap-3 px-3 py-3 sm:gap-5 sm:px-6 sm:py-6 short:gap-3 short:px-3 short:py-3 wide:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)] wide:items-start split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:items-start studio:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.85fr)] studio:items-stretch studio:gap-6 studio:px-8 studio:py-8">
         <section
           aria-label="Kural verse"
-          className="reading-panel min-w-0 rounded-[1.5rem] border border-border/80 bg-card px-4 py-5 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:px-7 sm:py-7 studio:px-10 studio:py-9"
+          className="reading-panel min-w-0 rounded-[1.5rem] border border-border/80 bg-card px-3 py-4 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:px-7 sm:py-7 short:px-4 short:py-3 studio:px-10 studio:py-9"
         >
           <VerseDisplay
             kural={p.current}
@@ -117,6 +117,7 @@ export function KuralPlayer() {
             canNext={p.canNext}
             onPrev={p.goPrev}
             onNext={p.goNext}
+            onChooseNumber={() => setKeypadOpen(true)}
             locked={p.locked}
           />
         </section>
@@ -186,8 +187,8 @@ export function KuralPlayer() {
           </div>
         </aside>
 
-        <section aria-label="Compact player controls" className="studio:hidden">
-          <div className="rounded-[1.5rem] bg-secondary px-4 py-4 text-secondary-foreground shadow-[0_24px_60px_-38px_hsl(var(--navy)/0.9)] sm:px-6 sm:py-5">
+        <section aria-label="Compact player controls" className="wide:sticky wide:top-3 split:sticky split:top-3 studio:hidden">
+          <div className="rounded-[1.5rem] bg-secondary px-4 py-3 text-secondary-foreground shadow-[0_24px_60px_-38px_hsl(var(--navy)/0.9)] sm:px-6 sm:py-5 short:px-4 short:py-3">
             <div className="mx-auto flex max-w-2xl flex-col gap-2">
               {progress}
               <div className="min-h-11">{transport}</div>
@@ -198,52 +199,45 @@ export function KuralPlayer() {
               )}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setKeypadOpen(true)}
-            aria-label={`Choose a Kural number, currently ${p.number}`}
-            className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-primary/55 bg-card px-4 text-sm font-semibold text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Grid3X3 className="h-5 w-5" aria-hidden="true" />
-            Go to Kural {display}
-          </button>
         </section>
       </div>
 
       <Sheet open={keypadOpen} onOpenChange={setKeypadOpen}>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] overflow-y-auto rounded-t-[2rem] border-secondary-foreground/15 bg-secondary px-4 pb-[calc(1.25rem+var(--safe-bottom))] pt-4 text-secondary-foreground sm:px-8"
+          className="max-h-[92dvh] overflow-y-auto rounded-t-[2rem] border-secondary-foreground/15 bg-secondary pl-[calc(1rem+var(--safe-left))] pr-[calc(1rem+var(--safe-right))] pb-[calc(1.25rem+var(--safe-bottom))] pt-4 text-secondary-foreground sm:px-8 wide:max-h-[calc(100dvh-var(--safe-top))] wide:rounded-t-3xl wide:pb-[calc(0.75rem+var(--safe-bottom))] wide:pt-3"
         >
           <SheetTitle className="sr-only">Go to a Kural</SheetTitle>
           <div className="mx-auto mb-5 h-1.5 w-16 rounded-full bg-secondary-foreground/30" aria-hidden="true" />
-          <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
-            <NumberReadout
-              display={display}
-              pending={p.pending}
-              softDelay={p.softDelay}
-              onBackspace={p.backspace}
-            />
-            <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onSubmit={submitFromSheet} />
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => p.setShortcutsOpen(true)}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/75 hover:bg-secondary-foreground/[0.07] hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
-              >
-                <Keyboard className="h-4 w-4" aria-hidden="true" /> Shortcuts
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  p.shuffle();
-                  setKeypadOpen(false);
-                }}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/75 hover:bg-secondary-foreground/[0.07] hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
-              >
-                <Shuffle className="h-4 w-4" aria-hidden="true" /> Surprise me
-              </button>
+          <div className="mx-auto grid w-full max-w-lg gap-4 wide:max-w-3xl wide:grid-cols-[minmax(240px,0.75fr)_minmax(320px,1fr)] wide:items-start wide:gap-5">
+            <div className="flex flex-col gap-3">
+              <NumberReadout
+                display={display}
+                pending={p.pending}
+                softDelay={p.softDelay}
+                onBackspace={p.backspace}
+              />
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => p.setShortcutsOpen(true)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/75 hover:bg-secondary-foreground/[0.07] hover:text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+                >
+                  <Keyboard className="h-4 w-4" aria-hidden="true" /> Shortcuts
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    p.shuffle();
+                    setKeypadOpen(false);
+                  }}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/75 hover:bg-secondary-foreground/[0.07] hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+                >
+                  <Shuffle className="h-4 w-4" aria-hidden="true" /> Surprise me
+                </button>
+              </div>
             </div>
+            <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onSubmit={submitFromSheet} />
           </div>
         </SheetContent>
       </Sheet>

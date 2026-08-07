@@ -49,7 +49,13 @@ test("compact layouts open an accessible keypad sheet", async ({ page }) => {
   await page.goto("/kural/1");
   await waitForKural(page, 1);
 
-  await page.getByRole("button", { name: "Choose a Kural number, currently 1" }).click();
+  const numberButton = page.getByRole("button", { name: "Choose a Kural number, currently 1" });
+  const numberButtonBox = await numberButton.boundingBox();
+  expect(numberButtonBox).not.toBeNull();
+  expect(numberButtonBox!.y).toBeGreaterThanOrEqual(0);
+  expect(numberButtonBox!.y + numberButtonBox!.height).toBeLessThanOrEqual(844);
+
+  await numberButton.click();
   const sheet = page.getByRole("dialog", { name: "Go to a Kural" });
   await expect(sheet).toBeVisible();
   await page.screenshot({ path: "artifacts/screenshots/390x844-keypad.png" });
@@ -63,6 +69,56 @@ test("compact layouts open an accessible keypad sheet", async ({ page }) => {
   await expect(page).toHaveURL(/\/kural\/100$/);
   await waitForKural(page, 100);
   await expect(sheet).toBeHidden();
+});
+
+test("landscape player and keypad remain fully visible", async ({ page }) => {
+  const viewport = { width: 844, height: 390 };
+  await page.setViewportSize(viewport);
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
+
+  const reading = page.getByRole("region", { name: "Kural verse" });
+  const controls = page.getByRole("region", { name: "Compact player controls" });
+  const readingBox = await reading.boundingBox();
+  const controlsBox = await controls.boundingBox();
+  expect(readingBox).not.toBeNull();
+  expect(controlsBox).not.toBeNull();
+  expect(controlsBox!.x).toBeGreaterThan(readingBox!.x + readingBox!.width - 1);
+  expect(Math.abs(controlsBox!.y - readingBox!.y)).toBeLessThanOrEqual(1);
+
+  const numberButton = page.getByRole("button", { name: "Choose a Kural number, currently 141" });
+  const numberButtonBox = await numberButton.boundingBox();
+  expect(numberButtonBox).not.toBeNull();
+  expect(numberButtonBox!.y + numberButtonBox!.height).toBeLessThanOrEqual(viewport.height);
+  await page.screenshot({ path: "artifacts/screenshots/844x390-player.png" });
+  await numberButton.click();
+
+  const sheet = page.getByRole("dialog", { name: "Go to a Kural" });
+  await expect(sheet).toBeVisible();
+  const clippedControls = await sheet.locator("button").evaluateAll(
+    (buttons, bounds) =>
+      buttons.flatMap((button) => {
+        const rect = button.getBoundingClientRect();
+        if (
+          rect.left >= -1 &&
+          rect.top >= -1 &&
+          rect.right <= bounds.width + 1 &&
+          rect.bottom <= bounds.height + 1
+        ) {
+          return [];
+        }
+        return [{
+          label: button.getAttribute("aria-label") || button.textContent?.trim(),
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+        }];
+      }),
+    viewport,
+  );
+  expect(clippedControls, JSON.stringify(clippedControls, null, 2)).toEqual([]);
+  await page.screenshot({ path: "artifacts/screenshots/844x390-keypad.png" });
 });
 
 test("invalid kural links recover safely", async ({ page }) => {

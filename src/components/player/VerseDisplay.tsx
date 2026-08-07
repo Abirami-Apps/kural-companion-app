@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Heart, Lock, Share2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Grid3X3, Heart, Lock, Share2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Kural } from "@/data/sample-kurals";
@@ -13,6 +13,7 @@ interface VerseDisplayProps {
   canNext: boolean;
   onPrev: () => void;
   onNext: () => void;
+  onChooseNumber: () => void;
   locked?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function VerseDisplay({
   canNext,
   onPrev,
   onNext,
+  onChooseNumber,
   locked = false,
 }: VerseDisplayProps) {
   const systemReduce = useReducedMotion();
@@ -64,20 +66,31 @@ export function VerseDisplay({
                 {kural.chapterNumber}. {kural.chapter}
               </h1>
             </div>
-            <span className="mt-4 inline-flex min-h-9 items-center rounded-full bg-primary px-4 py-1.5 font-tamil text-sm font-semibold text-primary-foreground shadow-sm">
-              குறள் {kural.number}
-            </span>
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-2 sm:mt-4">
+              <span className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-1.5 font-tamil text-sm font-semibold text-primary-foreground shadow-sm">
+                குறள் {kural.number}
+              </span>
+              <button
+                type="button"
+                onClick={onChooseNumber}
+                aria-label={`Choose a Kural number, currently ${kural.number}`}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary/45 bg-background/40 px-4 text-xs font-semibold text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring studio:hidden"
+              >
+                <Grid3X3 className="h-4 w-4" aria-hidden="true" />
+                Enter number
+              </button>
+            </div>
           </div>
 
-          <div className="reading-divider my-5" aria-hidden="true" />
+          <div className="reading-divider my-3 sm:my-5 short:my-3" aria-hidden="true" />
 
-          <div className="flex min-h-[8rem] flex-1 items-center px-1 py-2 sm:min-h-[10rem] sm:px-5">
+          <div className="flex min-h-24 flex-1 items-center px-1 py-1 sm:min-h-40 sm:px-5 sm:py-2 short:min-h-20 short:px-1 short:py-0">
             {/* The source text carries a hard line break. Never re-wrap:
                 both source lines stay nowrap and share one auto-fitted size. */}
             <VerseLines text={kural.tamil} />
           </div>
 
-          <div className="reading-divider my-5" aria-hidden="true" />
+          <div className="reading-divider my-3 sm:my-5 short:my-3" aria-hidden="true" />
 
           {locked ? (
             <div
@@ -98,7 +111,7 @@ export function VerseDisplay({
             kural.meaning && <Meaning text={kural.meaning} />
           )}
 
-          <div className="mt-5 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] items-center gap-2 border-t border-border/70 pt-4">
+          <div className="mt-3 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] items-center gap-2 border-t border-border/70 pt-3 sm:mt-5 sm:pt-4 short:mt-3 short:pt-3">
             <button
               type="button"
               onClick={onPrev}
@@ -159,7 +172,7 @@ export function VerseDisplay({
 
 function Meaning({ text }: { text: string }) {
   return (
-    <div className="meaning-box rounded-2xl border border-border/80 bg-background/45 px-4 py-4 text-center sm:px-6 sm:py-5">
+    <div className="meaning-box rounded-2xl border border-border/80 bg-background/45 px-4 py-3 text-center sm:px-6 sm:py-5 short:px-4 short:py-3">
       <p
         data-fit-probe="meaning"
         className="font-tamil text-sm leading-relaxed text-foreground/80 sm:text-[0.95rem]"
