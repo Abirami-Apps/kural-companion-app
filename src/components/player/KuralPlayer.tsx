@@ -58,8 +58,6 @@ export function KuralPlayer() {
     <span className="inline-flex items-center gap-1.5">
       <Clock3 className="h-3.5 w-3.5" aria-hidden="true" /> Hourly Kural
     </span>
-  ) : !p.hintSeen ? (
-    <span>Enter a number from 1 to {TOTAL_KURALS}</span>
   ) : null;
 
   const progress = (
@@ -103,11 +101,11 @@ export function KuralPlayer() {
   };
 
   return (
-    <div id="player" className="player-page min-h-full w-full">
-      <div className="mx-auto grid w-full max-w-[1280px] gap-3 px-3 py-3 sm:gap-5 sm:px-6 sm:py-6 short:gap-3 short:px-3 short:py-3 wide:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)] wide:items-start split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:items-start studio:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.85fr)] studio:items-stretch studio:gap-6 studio:px-8 studio:py-8">
+    <div id="player" className="player-page h-full min-h-0 w-full overflow-hidden">
+      <div className="mx-auto grid h-full min-h-0 w-full max-w-[1280px] grid-rows-[minmax(0,1fr)_auto] gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3 short:gap-2 short:px-2 short:py-2 wide:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)] wide:grid-rows-1 wide:items-stretch split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:grid-rows-1 split:items-stretch studio:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.85fr)] studio:grid-rows-1 studio:items-stretch studio:gap-6 studio:px-8 studio:py-8">
         <section
           aria-label="Kural verse"
-          className="reading-panel min-w-0 rounded-[1.5rem] border border-border/80 bg-card px-3 py-4 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:px-7 sm:py-7 short:px-4 short:py-3 studio:px-10 studio:py-9"
+          className="reading-panel h-full min-h-0 min-w-0 overflow-hidden rounded-[1.35rem] border border-border/80 bg-card px-3 py-3 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:rounded-[1.5rem] sm:px-5 sm:py-4 short:px-3 short:py-2 studio:px-8 studio:py-6"
         >
           <VerseDisplay
             kural={p.current}
@@ -187,13 +185,13 @@ export function KuralPlayer() {
           </div>
         </aside>
 
-        <section aria-label="Compact player controls" className="wide:sticky wide:top-3 split:sticky split:top-3 studio:hidden">
-          <div className="rounded-[1.5rem] bg-secondary px-4 py-3 text-secondary-foreground shadow-[0_24px_60px_-38px_hsl(var(--navy)/0.9)] sm:px-6 sm:py-5 short:px-4 short:py-3">
-            <div className="mx-auto flex max-w-2xl flex-col gap-2">
+        <section aria-label="Compact player controls" className="min-h-0 studio:hidden">
+          <div className="h-full rounded-[1.35rem] bg-secondary px-3 py-2 text-secondary-foreground shadow-[0_24px_60px_-38px_hsl(var(--navy)/0.9)] sm:rounded-[1.5rem] sm:px-4 sm:py-3 short:px-3 short:py-2">
+            <div className="mx-auto flex h-full max-w-2xl flex-col justify-center gap-0.5 sm:gap-1">
               {progress}
               <div className="min-h-11">{transport}</div>
               {status && (
-                <div className="flex min-h-6 items-center justify-center gap-2 text-center text-xs text-secondary-foreground/70" lang="en">
+                <div className="flex min-h-5 items-center justify-center gap-2 text-center text-[0.68rem] text-secondary-foreground/70" lang="en">
                   {status}
                 </div>
               )}

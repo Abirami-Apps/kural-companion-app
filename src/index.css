@@ -311,6 +311,15 @@
   padding-right: var(--safe-right);
 }
 
+/* The normal player is a strict one-screen composition. At the deliberately
+   largest accessibility text setting, preserve every control with contained
+   card scrolling instead of clipping content or re-enabling page scrolling. */
+[data-font-step='3'] .reading-panel,
+[data-font-step='3'] .control-card {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 /* Tightened spacing while the no-scroll guard is compressing the layout */
 [data-fit='tight'] .fit-tighten {
   gap: 0.25rem;

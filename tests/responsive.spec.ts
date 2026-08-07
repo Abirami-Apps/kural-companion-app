@@ -20,18 +20,6 @@ for (const viewport of viewports) {
     await page.setViewportSize(viewport);
     await installMediaMock(page);
     await page.emulateMedia({ reducedMotion: "reduce" });
-    await page.addInitScript(() => {
-      localStorage.setItem(
-        "kural:appearance",
-        JSON.stringify({
-          theme: "classic",
-          fontStep: 3,
-          highContrast: false,
-          reducedMotion: true,
-        }),
-      );
-    });
-
     await page.goto("/kural/1");
     await waitForKural(page, 1);
     await page.evaluate(() => document.fonts.ready);
@@ -49,6 +37,12 @@ for (const viewport of viewports) {
     expect(dimensions.appWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
     expect(dimensions.bodyHeight).toBeLessThanOrEqual(dimensions.viewportHeight + 1);
     expect(dimensions.appHeight).toBeLessThanOrEqual(dimensions.viewportHeight + 1);
+
+    const mainDimensions = await page.locator("#main").evaluate((main) => ({
+      clientHeight: main.clientHeight,
+      scrollHeight: main.scrollHeight,
+    }));
+    expect(mainDimensions.scrollHeight).toBeLessThanOrEqual(mainDimensions.clientHeight + 1);
 
     const undersized = await page.locator('button, a[href], input, [role="radio"], [role="switch"]').evaluateAll(
       (elements) =>
@@ -146,3 +140,37 @@ for (const viewport of viewports) {
     });
   });
 }
+
+test("largest text remains reachable without restoring page scroll", async ({ page }) => {
+  await page.setViewportSize({ width: 667, height: 375 });
+  await installMediaMock(page);
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "kural:appearance",
+      JSON.stringify({
+        theme: "classic",
+        fontStep: 3,
+        highContrast: false,
+        reducedMotion: true,
+      }),
+    );
+  });
+
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
+
+  const mainDimensions = await page.locator("#main").evaluate((main) => ({
+    clientHeight: main.clientHeight,
+    scrollHeight: main.scrollHeight,
+  }));
+  expect(mainDimensions.scrollHeight).toBeLessThanOrEqual(mainDimensions.clientHeight + 1);
+
+  const readingPanel = page.getByRole("region", { name: "Kural verse" });
+  await expect(readingPanel).toHaveCSS("overflow-y", "auto");
+  await expect(page.getByRole("button", { name: "Choose a Kural number, currently 141" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Play audio" })).toBeVisible();
+
+  const meaning = page.locator('[data-fit-probe="meaning"]');
+  await meaning.scrollIntoViewIfNeeded();
+  await expect(meaning).toBeVisible();
+});

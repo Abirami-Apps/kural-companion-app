@@ -46,14 +46,21 @@ test("keypad entry updates the URL and browser history remains authoritative", a
 
 test("compact layouts open an accessible keypad sheet", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/kural/1");
-  await waitForKural(page, 1);
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
 
-  const numberButton = page.getByRole("button", { name: "Choose a Kural number, currently 1" });
+  const portraitMain = await page.locator("#main").evaluate((main) => ({
+    clientHeight: main.clientHeight,
+    scrollHeight: main.scrollHeight,
+  }));
+  expect(portraitMain.scrollHeight).toBeLessThanOrEqual(portraitMain.clientHeight + 1);
+
+  const numberButton = page.getByRole("button", { name: "Choose a Kural number, currently 141" });
   const numberButtonBox = await numberButton.boundingBox();
   expect(numberButtonBox).not.toBeNull();
   expect(numberButtonBox!.y).toBeGreaterThanOrEqual(0);
   expect(numberButtonBox!.y + numberButtonBox!.height).toBeLessThanOrEqual(844);
+  await page.screenshot({ path: "artifacts/screenshots/390x844-player.png" });
 
   await numberButton.click();
   const sheet = page.getByRole("dialog", { name: "Go to a Kural" });
@@ -76,6 +83,12 @@ test("landscape player and keypad remain fully visible", async ({ page }) => {
   await page.setViewportSize(viewport);
   await page.goto("/kural/141");
   await waitForKural(page, 141);
+
+  const landscapeMain = await page.locator("#main").evaluate((main) => ({
+    clientHeight: main.clientHeight,
+    scrollHeight: main.scrollHeight,
+  }));
+  expect(landscapeMain.scrollHeight).toBeLessThanOrEqual(landscapeMain.clientHeight + 1);
 
   const reading = page.getByRole("region", { name: "Kural verse" });
   const controls = page.getByRole("region", { name: "Compact player controls" });
