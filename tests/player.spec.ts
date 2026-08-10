@@ -312,7 +312,7 @@ test("connected auth and unfinished paid services are disclosed while all kurals
 
   await page.goto("/subscribe");
   await expect(page.getByText(/All 1,330 kurals are free to play right now/)).toBeVisible();
-  await expect(page.getByText(/Checkout is not connected/)).toBeVisible();
+  await expect(page.getByText(/plans are a preview until paid access is enabled/)).toBeVisible();
   await expect(page.getByRole("button", { name: /Monthly/ })).toBeDisabled();
 });
 
@@ -332,7 +332,7 @@ test("core routes emit no uncaught runtime errors", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/reset-password", "/subscribe", "/terms", "/privacy"]) {
+  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/reset-password", "/subscribe", "/terms", "/privacy", "/refunds", "/delivery", "/contact"]) {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();
   }

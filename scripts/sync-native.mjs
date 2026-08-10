@@ -13,7 +13,6 @@ const safeEnvironment = {
   VITE_NATIVE_BUILD: "true",
   VITE_SUBSCRIPTIONS_ENABLED: "false",
   VITE_CHECKOUT_ENABLED: "false",
-  VITE_REVENUECAT_PURCHASE_URL: "",
   VITE_SITE_URL: "https://kural.abirami.app",
 };
 

@@ -8,6 +8,7 @@ import {
   LifeBuoy,
   LogIn,
   Menu,
+  PackageCheck,
   ReceiptText,
   Settings2,
   ShieldCheck,
@@ -183,6 +184,13 @@ export function AppHeader() {
                     className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
                   >
                     <ReceiptText className="h-4 w-4" aria-hidden="true" /> Refunds &amp; cancellations
+                  </Link>
+                  <Link
+                    to="/delivery"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <PackageCheck className="h-4 w-4" aria-hidden="true" /> Digital delivery
                   </Link>
                   <Link
                     to="/contact"

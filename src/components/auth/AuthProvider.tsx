@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { AuthContext, type AuthActionResult, type SignUpResult } from "@/lib/auth-context";
-import { authEnabled, checkoutEnabled, subscriptionsEnabled } from "@/lib/features";
+import { authEnabled, subscriptionsEnabled } from "@/lib/features";
 import {
   fetchPremiumEntitlement,
   INACTIVE_PREMIUM_ENTITLEMENT,
-  syncRevenueCatEntitlement,
   type PremiumEntitlement,
 } from "@/lib/subscription";
 import { supabase } from "@/lib/supabase";
@@ -175,22 +174,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [client, enabled],
   );
 
-  const syncPremiumEntitlement = useCallback(async (): Promise<AuthActionResult> => {
-    if (!checkoutEnabled || !client || !currentUserIdRef.current) {
-      return { error: "Sign in before refreshing your subscription." };
-    }
-
-    try {
-      await syncRevenueCatEntitlement(client);
-      await refreshEntitlement();
-      return { error: null };
-    } catch {
-      return {
-        error: "We could not refresh your purchase yet. Wait a moment and try again.",
-      };
-    }
-  }, [client, refreshEntitlement]);
-
   const signUp = useCallback(
     async (email: string, password: string): Promise<SignUpResult> => {
       if (!enabled || !client) {
@@ -279,7 +262,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             : "disabled" as const,
         entitlementError: entitlementMatchesUser ? entitlementState.error : null,
         refreshEntitlement,
-        syncPremiumEntitlement,
         signIn,
         signUp,
         signOut,
@@ -296,7 +278,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn,
       signOut,
       signUp,
-      syncPremiumEntitlement,
       updatePassword,
       user,
     ],

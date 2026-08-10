@@ -4,8 +4,7 @@ const sections = [
   {
     title: "Cancelling a recurring plan",
     paragraphs: [
-      "Monthly and yearly Kural Companion Plus plans renew automatically until cancelled. You can cancel using the subscription-management link in the purchase receipt sent by Paddle. Cancellation stops future renewals, and premium access normally continues until the end of the current paid billing period.",
-      "If you cannot locate the management link, contact support@abiramiaudio.com from the email address used for the purchase.",
+      "Monthly and yearly Kural Companion Plus plans renew automatically until cancelled. While signed in, open the Kural Companion plan screen and choose Cancel renewal. You may also email support@abiramiaudio.com from the account used for purchase. Cancellation stops future renewals, and premium access normally continues until the end of the current paid billing period.",
     ],
   },
   {
@@ -17,14 +16,14 @@ const sections = [
   {
     title: "Requesting a refund",
     paragraphs: [
-      "For a web purchase, email support@abiramiaudio.com with the purchase email address, plan name, Paddle receipt or transaction reference, and a short explanation of the request. Never send a full payment-card number or password.",
-      "Paddle processes web payments as merchant of record and handles approved refunds. Eligibility depends on the purchase circumstances, applicable consumer law and Paddle's processes. This policy does not limit any mandatory consumer right.",
+      "For a web purchase, email support@abiramiaudio.com with the purchase email address, plan name, Razorpay payment or order ID, purchase date and a short explanation. Never send a full card number, CVV, UPI PIN, banking password or account password.",
+      "We review refund requests based on the purchase circumstances, service delivery, applicable consumer law and this policy. Approval is not automatic except where required by law. If approved, we initiate the refund through Razorpay to the original payment method.",
     ],
   },
   {
-    title: "Access after a refund",
+    title: "Access and processing time",
     paragraphs: [
-      "When a full refund is completed, the related premium entitlement may end immediately. Partial refunds, credits and processing times are determined by Paddle and the payment method used.",
+      "When a full refund is completed, the related premium entitlement may end immediately. After we initiate an approved refund, the bank, card network or payment method determines when the money appears in the customer account. We will provide the available refund reference on request.",
     ],
   },
   {
@@ -39,7 +38,7 @@ export default function RefundPolicy() {
   return (
     <LegalPage
       title="Refund & Cancellation Policy"
-      effectiveDate="4 August 2026"
+      effectiveDate="8 August 2026"
       introduction="This policy explains how to cancel a Kural Companion plan and how refund requests are handled."
       sections={sections}
     />

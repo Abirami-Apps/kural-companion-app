@@ -12,6 +12,7 @@ const routes = [
   "/terms",
   "/privacy",
   "/refunds",
+  "/delivery",
   "/contact",
   "/kural/1331",
 ];

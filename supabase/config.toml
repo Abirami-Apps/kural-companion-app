@@ -4,10 +4,16 @@
 # working directory name when running `supabase init`.
 project_id = "kural-companion-app"
 
-[functions.revenuecat-sync]
+[functions.razorpay-checkout]
 verify_jwt = false
 
-[functions.revenuecat-webhook]
+[functions.razorpay-verify]
+verify_jwt = false
+
+[functions.razorpay-webhook]
+verify_jwt = false
+
+[functions.razorpay-cancel]
 verify_jwt = false
 
 [api]

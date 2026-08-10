@@ -24,6 +24,9 @@ export function AppFooter() {
           <Link to="/refunds" className="inline-flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-primary">
             Refunds
           </Link>
+          <Link to="/delivery" className="inline-flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-primary">
+            Delivery
+          </Link>
           <Link to="/contact" className="inline-flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-primary">
             Contact
           </Link>

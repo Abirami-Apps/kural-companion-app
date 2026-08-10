@@ -18,14 +18,14 @@ const sections = [
   {
     title: "Subscriptions and lifetime access",
     paragraphs: [
-      "Monthly and yearly plans renew automatically until cancelled. The price, billing interval, included taxes and renewal terms are shown before purchase. Paddle processes web purchases as merchant of record; future native-app purchases may instead be processed by Apple or Google under their store terms.",
-      "You can cancel a recurring web plan using the subscription-management link supplied by Paddle. Cancellation stops future renewals and access normally continues through the paid period. A lifetime purchase is a one-time entitlement to the supported Kural Companion service for as long as that service is operated; it is not a promise that every future product, third-party service or platform will be included forever.",
+      "Monthly and yearly web plans renew automatically until cancelled. The final price, billing interval, applicable taxes and renewal terms are shown in Razorpay checkout before payment. Future native-app purchases may instead be processed by Apple or Google under their store terms.",
+      "You can cancel the next renewal from the Kural Companion plan screen while signed in, or contact support@abiramiaudio.com. Cancellation stops future renewals and access normally continues through the current paid period. A lifetime purchase is a one-time entitlement to the supported Kural Companion service for as long as that service is operated; it does not promise that every future product, third-party service or platform will be included forever.",
     ],
   },
   {
     title: "Refunds",
     paragraphs: [
-      "Refund requests for web purchases are handled through Paddle and remain subject to applicable consumer law. Purchases through Apple or Google are handled under the relevant store's refund process. Nothing in these terms limits a mandatory consumer right.",
+      "Web refund requests are reviewed under our Refund & Cancellation Policy and applicable consumer law. Approved refunds are initiated through the payment provider and may take additional time to appear, depending on the bank or payment method. Purchases through Apple or Google follow the relevant store's refund process. Nothing in these terms limits a mandatory consumer right.",
     ],
   },
   {
@@ -53,7 +53,7 @@ export default function Terms() {
   return (
     <LegalPage
       title="Terms and Conditions"
-      effectiveDate="4 August 2026"
+      effectiveDate="8 August 2026"
       introduction="These terms govern your use of Kural Companion and its optional paid plans. Please read them before purchasing or using the service."
       sections={sections}
     />

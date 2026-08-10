@@ -45,7 +45,7 @@ export default function Contact() {
         <section aria-labelledby="purchase-help">
           <h2 id="purchase-help" className="text-xl font-semibold text-foreground">Purchase help</h2>
           <p className="mt-3 leading-7 text-foreground/80">
-            Include the plan name and Paddle receipt or transaction reference. Never email your password or full payment-card number.
+            Include the plan name and Razorpay payment or order ID. Never email your password, full card number, CVV, UPI PIN or banking password.
           </p>
         </section>
 

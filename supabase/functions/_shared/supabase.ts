@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2.111.0";
-import type { ResolvedEntitlement } from "./revenuecat.ts";
+import type { BillingState, CheckoutKind, PlanKey, RazorpayEnvironment } from "./razorpay.ts";
 
 export function serviceClient() {
   const url = Deno.env.get("SUPABASE_URL")?.trim();
@@ -12,50 +12,134 @@ export function serviceClient() {
   });
 }
 
-export async function findExistingUserId(
-  client: ReturnType<typeof serviceClient>,
-  candidates: string[],
-): Promise<string | null> {
-  const uuidPattern =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  for (const candidate of candidates) {
-    if (!uuidPattern.test(candidate)) continue;
-    const { data, error } = await client
-      .from("user_entitlements")
-      .select("user_id")
-      .eq("user_id", candidate)
-      .eq("entitlement_key", "premium")
-      .maybeSingle();
-    if (error) throw new Error("Unable to match the billing account.");
-    if (data?.user_id === candidate) return candidate;
-  }
-  return null;
+export type ServiceClient = ReturnType<typeof serviceClient>;
+
+export async function authenticatedUser(request: Request, client: ServiceClient) {
+  const token = request.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) return null;
+  const { data, error } = await client.auth.getUser(token);
+  return error ? null : data.user;
 }
 
-export async function applyEntitlement(
-  client: ReturnType<typeof serviceClient>,
-  args: {
-    eventId: string | null;
-    eventType: string;
-    eventTimestamp: string;
-    payloadSha256: string;
-    userId: string;
-    entitlement: ResolvedEntitlement;
-  },
-): Promise<boolean> {
-  const { data, error } = await client.rpc("apply_revenuecat_entitlement_sync", {
-    p_event_id: args.eventId,
+function rpcError(error: { message?: string } | null, fallback: string) {
+  if (error) throw new Error(error.message || fallback);
+}
+
+export async function createCheckoutSession(client: ServiceClient, args: {
+  userId: string;
+  planKey: PlanKey;
+  checkoutKind: CheckoutKind;
+  environment: RazorpayEnvironment;
+  amount: number;
+  currency: string;
+}): Promise<string> {
+  const { data, error } = await client.rpc("create_razorpay_checkout_session", {
     p_user_id: args.userId,
+    p_plan_key: args.planKey,
+    p_checkout_kind: args.checkoutKind,
+    p_environment: args.environment,
+    p_amount_subunits: args.amount,
+    p_currency: args.currency,
+  });
+  rpcError(error, "Unable to create the checkout session.");
+  if (typeof data !== "string") throw new Error("Checkout session creation failed.");
+  return data;
+}
+
+export async function attachProviderId(client: ServiceClient, args: {
+  sessionId: string;
+  userId: string;
+  providerId: string;
+}): Promise<void> {
+  const { error } = await client.rpc("attach_razorpay_provider_id", {
+    p_session_id: args.sessionId,
+    p_user_id: args.userId,
+    p_provider_id: args.providerId,
+  });
+  rpcError(error, "Unable to attach the payment provider session.");
+}
+
+export type CheckoutSession = {
+  session_id: string;
+  plan_key: PlanKey;
+  checkout_kind: CheckoutKind;
+  provider_id: string;
+  environment: RazorpayEnvironment;
+  amount_subunits: number;
+  currency: string;
+};
+
+export async function getCheckoutSession(client: ServiceClient, args: {
+  sessionId: string;
+  userId: string;
+}): Promise<CheckoutSession | null> {
+  const { data, error } = await client.rpc("get_razorpay_checkout_session", {
+    p_session_id: args.sessionId,
+    p_user_id: args.userId,
+  });
+  rpcError(error, "Unable to read the checkout session.");
+  return Array.isArray(data) && data.length ? data[0] as CheckoutSession : null;
+}
+
+export async function applyCheckoutState(client: ServiceClient, args: {
+  sessionId: string;
+  userId: string;
+  state: BillingState;
+  paymentId: string | null;
+  startsAt: string | null;
+  expiresAt: string | null;
+  cancelAtPeriodEnd: boolean;
+  eventTimestamp: string;
+}): Promise<void> {
+  const { error } = await client.rpc("apply_razorpay_checkout_state", {
+    p_session_id: args.sessionId,
+    p_user_id: args.userId,
+    p_status: args.state,
+    p_payment_id: args.paymentId,
+    p_starts_at: args.startsAt,
+    p_expires_at: args.expiresAt,
+    p_cancel_at_period_end: args.cancelAtPeriodEnd,
+    p_event_timestamp: args.eventTimestamp,
+  });
+  rpcError(error, "Unable to persist the verified payment.");
+}
+
+export async function applyWebhookState(client: ServiceClient, args: {
+  eventId: string;
+  eventType: string;
+  eventTimestamp: string;
+  environment: RazorpayEnvironment;
+  payloadSha256: string;
+  providerId: string;
+  state: BillingState;
+  paymentId: string | null;
+  startsAt: string | null;
+  expiresAt: string | null;
+  cancelAtPeriodEnd: boolean;
+}): Promise<boolean> {
+  const { data, error } = await client.rpc("apply_razorpay_webhook_state", {
+    p_event_id: args.eventId,
     p_event_type: args.eventType,
     p_event_timestamp: args.eventTimestamp,
-    p_environment: args.entitlement.environment,
-    p_status: args.entitlement.status,
-    p_plan_key: args.entitlement.planKey,
-    p_starts_at: args.entitlement.startsAt,
-    p_expires_at: args.entitlement.expiresAt,
-    p_cancel_at_period_end: args.entitlement.cancelAtPeriodEnd,
+    p_environment: args.environment,
     p_payload_sha256: args.payloadSha256,
+    p_provider_id: args.providerId,
+    p_status: args.state,
+    p_payment_id: args.paymentId,
+    p_starts_at: args.startsAt,
+    p_expires_at: args.expiresAt,
+    p_cancel_at_period_end: args.cancelAtPeriodEnd,
   });
-  if (error) throw new Error("Unable to persist the entitlement state.");
+  rpcError(error, "Unable to persist the webhook event.");
   return data === true;
+}
+
+export async function currentRecurringSubscription(client: ServiceClient, userId: string) {
+  const { data, error } = await client.rpc("get_razorpay_recurring_subscription", {
+    p_user_id: userId,
+  });
+  rpcError(error, "Unable to find the current subscription.");
+  return Array.isArray(data) && data.length
+    ? data[0] as { session_id: string; provider_id: string }
+    : null;
 }
