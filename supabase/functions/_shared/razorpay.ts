@@ -257,6 +257,8 @@ function subscriptionState(entity: UnknownRecord): RazorpayEntityState {
   const futureEnd = expiresAt ? Date.parse(expiresAt) > Date.now() : false;
   const scheduledChanges = record(entity.change_scheduled_at);
   const scheduledCancel = Boolean(entity.cancel_at_cycle_end) ||
+    (entity.has_scheduled_changes === true &&
+      text(entity.schedule_change_at) === "cycle_end") ||
     text(entity.change_scheduled_at) === "cycle_end" ||
     text(scheduledChanges?.type) === "cancel";
 

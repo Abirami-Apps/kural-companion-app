@@ -120,6 +120,28 @@ describe("Razorpay webhook mapping", () => {
     });
   });
 
+  it("preserves a cancellation scheduled for the current cycle end", () => {
+    expect(parseWebhookEvent({
+      event: "subscription.charged",
+      payload: {
+        subscription: { entity: {
+          id: "sub_123",
+          status: "active",
+          current_start: 1_785_819_600,
+          current_end: 1_788_498_000,
+          has_scheduled_changes: true,
+          schedule_change_at: "cycle_end",
+          change_scheduled_at: 1_788_498_000,
+        } },
+        payment: { entity: { id: "pay_456" } },
+      },
+    })).toMatchObject({
+      providerId: "sub_123",
+      state: "active",
+      cancelAtPeriodEnd: true,
+    });
+  });
+
   it("does not grant an authenticated subscription before a paid period exists", () => {
     expect(parseWebhookEvent({
       event: "subscription.authenticated",
