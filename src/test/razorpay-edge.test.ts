@@ -140,21 +140,31 @@ describe("Razorpay webhook mapping", () => {
 
   it("revokes lifetime access only after a full refund", () => {
     const partial = {
-      event: "payment.refunded",
-      payload: { payment: { entity: {
-        id: "pay_123",
-        order_id: "order_123",
-        amount: 349900,
-        amount_refunded: 10000,
-      } } },
+      event: "refund.processed",
+      payload: {
+        refund: { entity: {
+          id: "rfnd_123",
+          status: "processed",
+          payment_id: "pay_123",
+        } },
+        payment: { entity: {
+          id: "pay_123",
+          order_id: "order_123",
+          amount: 349900,
+          amount_refunded: 10000,
+        } },
+      },
     };
     expect(parseWebhookEvent(partial)).toBeNull();
     expect(parseWebhookEvent({
       ...partial,
-      payload: { payment: { entity: {
-        ...partial.payload.payment.entity,
-        amount_refunded: 349900,
-      } } },
+      payload: {
+        ...partial.payload,
+        payment: { entity: {
+          ...partial.payload.payment.entity,
+          amount_refunded: 349900,
+        } },
+      },
     })).toMatchObject({ providerId: "order_123", state: "revoked" });
   });
 });

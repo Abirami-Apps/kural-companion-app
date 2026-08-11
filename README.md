@@ -178,7 +178,7 @@ its raw-body HMAC instead of a user JWT.
 https://YOUR_PROJECT_REF.supabase.co/functions/v1/razorpay-webhook
 ```
 
-Select order paid, payment refunded, and all subscription lifecycle events.
+Select `order.paid`, `refund.processed`, and all subscription lifecycle events.
 Use exactly the same webhook secret stored in Supabase.
 
 7. Build a private test release with authentication, subscriptions and checkout

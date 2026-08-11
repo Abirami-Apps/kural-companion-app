@@ -186,7 +186,7 @@ select results_eq(
 select ok(
   public.apply_razorpay_webhook_state(
     'evt_cancelled',
-    'payment.refunded',
+    'refund.processed',
     now() + interval '3 seconds',
     'TEST',
     repeat('c', 64),

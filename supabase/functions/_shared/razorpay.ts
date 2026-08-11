@@ -362,6 +362,7 @@ export function parseWebhookEvent(payload: unknown): RazorpayEntityState | null 
   const subscription = record(record(payloadRecord?.subscription)?.entity);
   const order = record(record(payloadRecord?.order)?.entity);
   const payment = record(record(payloadRecord?.payment)?.entity);
+  const refund = record(record(payloadRecord?.refund)?.entity);
 
   if (event?.startsWith("subscription.") && subscription) {
     const state = subscriptionState(subscription);
@@ -379,7 +380,13 @@ export function parseWebhookEvent(payload: unknown): RazorpayEntityState | null 
       cancelAtPeriodEnd: false,
     };
   }
-  if (event === "payment.refunded" && payment) {
+  if (event === "refund.processed" && payment && refund) {
+    if (
+      text(refund.status) !== "processed" ||
+      text(refund.payment_id) !== text(payment.id)
+    ) {
+      return null;
+    }
     const amount = integer(payment.amount);
     const amountRefunded = integer(payment.amount_refunded);
     if (amount === null || amountRefunded === null || amountRefunded < amount) {
