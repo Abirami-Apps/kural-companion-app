@@ -1,5 +1,20 @@
 import { useState } from "react";
-import { BookOpen, Clock3, Heart, Home, LogIn, Menu, Settings2, Sparkles, UserRound } from "lucide-react";
+import {
+  BookOpen,
+  Clock3,
+  FileText,
+  Heart,
+  Home,
+  LifeBuoy,
+  LogIn,
+  Menu,
+  PackageCheck,
+  ReceiptText,
+  Settings2,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { NavLink, Link } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
@@ -8,6 +23,7 @@ import { AppearancePanel } from "@/components/theme/AppearancePanel";
 import { checkoutEnabled } from "@/lib/features";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
 import { useAuth } from "@/hooks/useAuth";
+import { ConnectivityBadge, InstallAppButton } from "@/components/pwa/PwaControls";
 
 const NAV_ITEMS = [
   { to: "/", label: "Home", icon: Home, end: true },
@@ -66,6 +82,8 @@ export function AppHeader() {
         </nav>
 
         <div className="ml-auto flex items-center gap-1 nav:ml-2">
+          <ConnectivityBadge className="hidden nav:inline-flex" />
+          <InstallAppButton className="hidden nav:inline-flex" />
           {checkoutEnabled && (
             <Button asChild variant="default" className="hidden min-h-11 rounded-full nav:inline-flex">
               <Link to="/subscribe">
@@ -99,6 +117,10 @@ export function AppHeader() {
             </SheetTrigger>
             <SheetContent side="left" className="w-[min(18rem,85vw)]">
               <SheetTitle className="text-left">Menu</SheetTitle>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <ConnectivityBadge />
+                <InstallAppButton />
+              </div>
               <nav aria-label="Mobile" className="mt-6 flex flex-col gap-1">
                 {NAV_ITEMS.map((item) => (
                   <NavLink
@@ -137,6 +159,48 @@ export function AppHeader() {
                   {user ? "Account" : "Log in"}
                 </NavLink>
               </nav>
+              <div className="mt-5 border-t border-border pt-4">
+                <p className="px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Legal &amp; support
+                </p>
+                <nav aria-label="Legal and support" className="mt-2 flex flex-col gap-1">
+                  <Link
+                    to="/terms"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <FileText className="h-4 w-4" aria-hidden="true" /> Terms
+                  </Link>
+                  <Link
+                    to="/privacy"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <ShieldCheck className="h-4 w-4" aria-hidden="true" /> Privacy
+                  </Link>
+                  <Link
+                    to="/refunds"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <ReceiptText className="h-4 w-4" aria-hidden="true" /> Refunds &amp; cancellations
+                  </Link>
+                  <Link
+                    to="/delivery"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <PackageCheck className="h-4 w-4" aria-hidden="true" /> Digital delivery
+                  </Link>
+                  <Link
+                    to="/contact"
+                    onClick={() => setOpen(false)}
+                    className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium text-foreground hover:bg-muted"
+                  >
+                    <LifeBuoy className="h-4 w-4" aria-hidden="true" /> Contact support
+                  </Link>
+                </nav>
+              </div>
               <div className="mt-6 border-t border-border pt-4">
                 <AppearancePanel
                   trigger={

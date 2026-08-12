@@ -11,6 +11,9 @@ const routes = [
   "/subscribe",
   "/terms",
   "/privacy",
+  "/refunds",
+  "/delivery",
+  "/contact",
   "/kural/1331",
 ];
 

@@ -1,117 +1,108 @@
 # Kural Companion
 
-Kural Companion is a responsive Thirukkural web player. Enter any number from
-1–1330 to open its Tamil verse, meaning, and audio. Deep links, browser history,
-favourites, chapter browsing, themes, text sizing, keyboard controls, and
+Kural Companion is a responsive Tirukkural player. Enter a number from 1–1330
+to open its Tamil verse, meaning and audio. Deep links, browser history,
+favourites, chapter browsing, themes, text sizing, keyboard controls and
 accessibility preferences work without an account.
 
 ## Current release scope
 
-- Production-ready responsive web SPA
+- Responsive web app and installable Progressive Web App
 - All 1,330 bundled Kurals and HTTPS audio links
-- Device-local guest data plus account-isolated cloud sync for favourites,
-  appearance preferences, and Hourly Kural settings
-- Hourly Kural scheduling with Tamil or English time announcements, configurable
-  active hours, Kural selection, and an optional spoken Tamil meaning
-- Supabase email authentication, confirmation, password recovery, and secure
-  row-level access to each user's synchronized data
-- Server-owned premium entitlement records and read-only account verification
-- RevenueCat/Paddle sandbox checkout with signed, idempotent Supabase billing
-  synchronization; live billing remains disabled until production onboarding
-- Offline audio downloads and native iOS/Android packages are not connected yet
-- Paid gating is off, so every valid Kural is accessible
+- Offline app shell and Kural text after the first successful online load
+- Device-local guest data plus account-isolated Supabase synchronization
+- Email sign-in, confirmation and password recovery
+- Hourly Kural scheduling with Tamil or English time announcements
+- One-Kural repeat and sequential playback
+- Server-owned premium entitlements that browser clients may only read
+- Razorpay web billing foundation with server-created orders/subscriptions,
+  server-side payment verification, signed webhooks and idempotency
+- Capacitor iOS and Android foundations using the same player interface
 
-The plan screen deliberately discloses those limitations and does not allow plan
-selection in the default build. Sign-in becomes active only when the public
-Supabase configuration and authentication feature flag are present. Paid gating
-stays off until a trusted billing integration is maintaining entitlements.
+Paid gating and checkout are disabled in the default build. Keep them disabled
+until the test-mode checklist below passes completely. Native store billing,
+offline audio downloads and reliable background hourly scheduling are later
+release phases.
 
-## Subscription entitlement foundation
+## Security model
 
-Phase 3A adds a provider-neutral `premium` entitlement for every account. The
-record contains browser-safe status, plan, source, validity dates, and
-cancellation state. Authenticated users may read only their own record; row-level
-security and database grants prevent browser clients from creating, activating,
-editing, or deleting entitlements.
+The provider-neutral `premium` entitlement contains only browser-safe status,
+plan, source, dates and cancellation state. Authenticated users can select only
+their own row. Row-level security and grants prevent browser clients from
+creating, activating, changing or deleting access.
 
-The app obtains the display record and calls the server-side
-`has_active_entitlement` predicate. Only `trialing`, `active`, and `grace_period`
-records within their validity window grant access. Missing rows, expired dates,
-unknown states, network failures, and delayed responses after an account switch
-all fail closed. Authentication metadata and local storage never grant paid
-access.
+The app also calls the server-side `has_active_entitlement` predicate. Only
+`trialing`, `active` and `grace_period` records inside their validity window
+grant premium access. Missing rows, unknown states, expired dates and network
+failures all fail closed. Authentication metadata and local storage never grant
+paid access.
 
-The entitlement source is deliberately independent of a payment provider so
-future Stripe, App Store, Play Store, RevenueCat, promotional, or support-issued
-access can resolve to the same rule. Provider customer identifiers, receipts,
-webhook bodies, signing secrets, and service-role keys must remain in trusted
-server infrastructure, never this browser-readable table or a `VITE_` variable.
+Payment credentials, provider IDs, payment IDs and webhook delivery data remain
+in Edge Function secrets or the private `kural_private` schema. They are never
+stored in a `VITE_` variable or exposed through the browser Data API.
 
-Phase 3B preserves fail-closed defaults while adding the RevenueCat/Paddle
-provider boundary. The safe release order is:
+## Razorpay web billing
 
-1. Deploy and verify the entitlement migration.
-2. Configure and deploy the RevenueCat sync and webhook Edge Functions.
-3. Verify purchase, renewal, cancellation, expiration, refund, and restore flows.
-4. Enable `VITE_SUBSCRIPTIONS_ENABLED`, then enable checkout only on supported
-   surfaces.
+Monthly and yearly purchases use Razorpay Subscriptions. Lifetime access uses a
+Razorpay Order. Prices and provider plan IDs are selected by the server; the
+browser sends only `monthly`, `yearly` or `lifetime`.
 
-## RevenueCat and Paddle billing
+The secure flow is:
 
-Web customers choose a plan in the app and continue to a RevenueCat-hosted
-purchase link backed by Paddle. The link is always bound to the signed-in
-Supabase UUID and preselects the matching monthly, annual, or lifetime package.
-External return paths, non-RevenueCat hosts, malformed user identifiers and
-partially configured builds are rejected before checkout opens.
+1. `razorpay-checkout` authenticates the Supabase session, rate-limits recent
+   attempts, creates a private checkout record, then creates the matching
+   Razorpay order or subscription.
+2. The browser opens Razorpay Standard Checkout using only the public key ID and
+   the server-created provider ID.
+3. `razorpay-verify` validates Razorpay's HMAC signature and fetches the payment
+   plus order/subscription from Razorpay before granting access.
+4. `razorpay-webhook` validates the signature over the exact raw body, uses
+   `X-Razorpay-Event-Id` for idempotency, and matches only provider IDs previously
+   created by the server.
+5. The database reconciles all valid sessions for the account. A stale,
+   duplicate, cancellation or refund event for one purchase cannot revoke a
+   different valid purchase.
+6. `razorpay-cancel` schedules the end of a recurring plan at the current cycle
+   boundary. Lifetime access has no renewal to cancel.
 
-RevenueCat remains the cross-platform entitlement resolver. Paddle is the web
-merchant of record; future iOS and Android releases will use their required
-native stores while mapping purchases to the same `premium` entitlement.
-
-The browser never writes access state. `revenuecat-sync` authenticates the
-current Supabase session, looks up only that UUID in RevenueCat, and applies the
-canonical result through a service-role-only database function.
-`revenuecat-webhook` requires both the configured Authorization header and
-RevenueCat's HMAC-SHA256 signature over the exact raw request body. It rejects
-replays outside the timestamp tolerance, resolves aliases to an existing
-Supabase account, fetches canonical Customer Info, and records only a SHA-256
-digest plus minimal event metadata in a private idempotency ledger.
+The webhook handles order payment, full refund, and subscription lifecycle
+events. Partial refunds do not automatically revoke the complete entitlement;
+support must decide and process them deliberately.
 
 ## Account data sync
 
 Signed-in accounts synchronize favourites, theme, text size, contrast, reduced
-motion, and Hourly Kural configuration through the tables in the versioned
-Supabase migration. Guest data remains available without an account. On the
-first successful sign-in, existing guest choices are imported only when they do
-not overwrite established cloud preferences, then the shared guest keys are
-cleared so one account's data cannot appear in another account.
+motion and Hourly Kural configuration. Guest data remains available without an
+account. On first sign-in, guest choices are imported only when they do not
+overwrite established cloud preferences, then shared guest keys are cleared.
 
-Each account also has an isolated local cache. Changes made while offline are
-marked as pending and retried after connectivity returns; the Favourites and
-Account screens disclose the current sync state and provide a manual retry.
-Recent-player history and the current hourly run marker remain device-only.
-
-Pending favourites are stored as explicit add/remove operations, and preference
-updates contain only the fields the user changed. Reconnecting therefore merges
-unrelated edits from multiple devices instead of replacing an entire stale
-record or favourite list. If two devices change the same scalar setting, the
-last successful write wins. The app refreshes clean account data on focus and
-rejects late responses after an account switch.
+Each account also has an isolated local cache. Offline writes are marked pending
+and retried after connectivity returns. Recent-player history remains
+device-only.
 
 ## Hourly Kural
 
-Open `/hourly` to configure the premium Hourly Kural experience. Until paid
-subscriptions are connected, this feature is available as a clearly labelled
-premium preview. When subscription gating is enabled, access automatically
-requires an active entitlement.
+Open `/hourly` to configure time announcements and playback. The scheduled verse
+uses the same main player, URL, favourites and sharing state. Web browsers can
+play on schedule only while browser and operating-system restrictions allow it;
+reliable closed-app background scheduling belongs in a later native release.
 
-Web browsers allow scheduled voice and audio while the app remains active. When
-the hour arrives, the selected verse opens and plays through the same main Kural
-player, keeping its URL, verse, controls, favourites, and sharing state aligned.
-When the page is in the background, the app uses an approved browser notification
-as the reminder instead of promising unattended playback. Reliable hourly
-playback with the app fully closed belongs in the future native iOS and Android
-packages.
+## Native iOS and Android foundation
+
+Capacitor projects live in `ios/` and `android/`. The application identifier is
+`com.abiramiaudio.kuralcompanion`; confirm it before permanently creating App
+Store Connect and Google Play records.
+
+```sh
+npm run native:sync
+npm run native:open:ios
+npm run native:open:android
+npm run native:build:android
+```
+
+Native builds force web checkout and subscription gating off. Apple and Google
+in-app purchase implementations will map their verified purchases into the same
+provider-neutral premium entitlement in a later phase.
 
 ## Local development
 
@@ -127,44 +118,102 @@ npm run dev
 
 Open `http://localhost:8080`.
 
-## Configuration
+## Browser configuration
 
-The safe defaults in `.env.example` keep unfinished services disabled:
+Safe defaults:
 
 ```dotenv
 VITE_SUBSCRIPTIONS_ENABLED=false
 VITE_AUTH_ENABLED=false
 VITE_CHECKOUT_ENABLED=false
-VITE_REVENUECAT_PURCHASE_URL=
 VITE_SUPABASE_URL=
 VITE_SUPABASE_PUBLISHABLE_KEY=
 VITE_SITE_URL=
 ```
 
-Set `VITE_SITE_URL` to the final HTTPS origin before deployment so canonical
-metadata is absolute. To enable email accounts, set `VITE_AUTH_ENABLED=true`
-and provide the Supabase project URL and publishable key. Never use a Supabase
-secret or service-role key in a `VITE_` variable.
+Set `VITE_SITE_URL` to the final HTTPS origin. To enable accounts, set
+`VITE_AUTH_ENABLED=true` and provide only the Supabase project URL and
+publishable key. Never place Razorpay secrets or a Supabase service-role key in
+a `VITE_` variable.
 
-`VITE_REVENUECAT_PURCHASE_URL` is the public Web Purchase Link base URL, such as
-`https://pay.rev.cat/generatedToken`. Do not include a user ID, query string or
-additional path. Checkout remains disabled unless the link passes that strict
-validation in addition to all three feature flags.
+## Razorpay test-mode preparation
 
-Edge Function billing values are server secrets and must never use a `VITE_`
-prefix. Copy `supabase/.env.billing.example` to the ignored
-`supabase/.env.billing`, fill the provider values locally, and upload them:
+1. In Razorpay Test Mode, create one monthly subscription Plan for INR 99 and
+   one yearly Plan for INR 999. Lifetime uses a server-created INR 3,499 order
+   and does not need a Plan.
+2. Generate a Test Mode API key.
+3. Create a strong, independent webhook secret.
+4. Copy `supabase/.env.billing.example` to the ignored
+   `supabase/.env.billing` and fill:
 
-```sh
-npx supabase secrets set --env-file supabase/.env.billing
-npx supabase functions deploy revenuecat-sync
-npx supabase functions deploy revenuecat-webhook --no-verify-jwt
+```dotenv
+APP_ALLOWED_ORIGINS=https://kural.abirami.app,http://localhost:8080,http://127.0.0.1:8080
+RAZORPAY_ENVIRONMENT=TEST
+RAZORPAY_KEY_ID=rzp_test_...
+RAZORPAY_KEY_SECRET=...
+RAZORPAY_WEBHOOK_SECRET=...
+RAZORPAY_MONTHLY_PLAN_ID=plan_...
+RAZORPAY_YEARLY_PLAN_ID=plan_...
 ```
 
-Use `SANDBOX` while testing and change the allowed environment and product IDs
-when moving to Paddle production. Keep checkout and paid gating disabled until
-the deployed functions, authorization header, HMAC secret, and complete
-lifecycle have been verified.
+5. Link the intended Supabase project, deploy the migration and upload secrets:
+
+```sh
+npx supabase db push
+npx supabase secrets set --env-file supabase/.env.billing
+npx supabase functions deploy razorpay-checkout --no-verify-jwt
+npx supabase functions deploy razorpay-verify --no-verify-jwt
+npx supabase functions deploy razorpay-webhook --no-verify-jwt
+npx supabase functions deploy razorpay-cancel --no-verify-jwt
+```
+
+The `--no-verify-jwt` setting delegates JWT verification to the functions so
+they work with Supabase publishable-key sessions. Checkout, verification and
+cancellation still authenticate the bearer token explicitly. The webhook uses
+its raw-body HMAC instead of a user JWT.
+
+6. Configure the Razorpay webhook URL:
+
+```text
+https://YOUR_PROJECT_REF.supabase.co/functions/v1/razorpay-webhook
+```
+
+Select `order.paid`, `refund.processed`, and all subscription lifecycle events.
+Use exactly the same webhook secret stored in Supabase.
+
+7. Build a private test release with authentication, subscriptions and checkout
+   enabled. Test monthly, yearly, lifetime, failed/dismissed payment, renewal,
+   scheduled cancellation, expiry, duplicate webhook delivery, full refund,
+   account switching and signed-out access.
+8. Only after all tests pass, submit `https://kural.abirami.app` for Razorpay
+   website verification with a dedicated reviewer account. The homepage links
+   to Terms, Privacy, Refund & Cancellation, Digital Delivery and Contact pages.
+
+## Live cutover
+
+Do not reuse test keys, test plan IDs or the test webhook secret. After Razorpay
+approves the website:
+
+1. Create matching live monthly and yearly Plans.
+2. Generate live API keys and a new live webhook secret.
+3. Fill `supabase/.env.billing.live` from the live example.
+4. Upload live secrets and verify the live webhook.
+5. Deactivate all test entitlements before enabling the public live checkout.
+6. Make one controlled real purchase and test cancellation/refund reconciliation.
+7. Enable `VITE_SUBSCRIPTIONS_ENABLED=true` and
+   `VITE_CHECKOUT_ENABLED=true` only in the verified web release.
+
+## Legal and support pages
+
+Public routes required for website review:
+
+- `/terms` — Terms and Conditions
+- `/privacy` — Privacy Policy
+- `/refunds` — Refund & Cancellation Policy
+- `/delivery` — Digital Delivery Policy
+- `/contact` — support@abiramiaudio.com
+
+No physical products are sold or shipped.
 
 ## Verification
 
@@ -176,17 +225,13 @@ npm run build
 npm run test:e2e
 ```
 
-`npm run check` runs the complete sequence. Playwright covers player routing,
-history, persistence, feature disclosures, runtime errors, serious/critical axe
-violations, touch-target sizing, text fitting, overflow, and screenshots at 11
-phone, tablet, landscape, and desktop viewport sizes.
-
-GitHub Actions runs the same release checks on pushes and pull requests.
+`npm run check` runs the complete web sequence. Playwright covers player
+routing, persistence, feature disclosures, runtime errors, axe violations,
+touch targets, overflow and responsive screenshots.
 
 ### Database development
 
-Supabase schema changes are versioned in `supabase/migrations` and tested with
-pgTAP. Docker must be running before using the local database commands:
+Docker must be running for local pgTAP verification:
 
 ```sh
 npm run db:start
@@ -196,40 +241,23 @@ npm run test:db
 npm run db:stop
 ```
 
-Deploy migrations through `supabase db push` after linking the intended project;
-do not make parallel schema changes directly in the hosted SQL editor because
-that bypasses migration history.
+Deploy schema changes only through versioned migrations. Do not reproduce them
+manually in the hosted SQL editor.
+
+## Deployment requirements
+
+- Serve `dist/` over HTTPS.
+- Use `npm run build:sites` for OpenAI Sites hosting.
+- Set `VITE_SITE_URL=https://kural.abirami.app` during the release build.
+- Keep checkout disabled in public builds until Razorpay approves the website
+  and the complete test-mode checklist passes.
+- Keep the hosted app public for payment-provider review; users must not need a
+  ChatGPT account to reach the product or legal pages.
+- Allow the production and local origins in Supabase Auth redirect URLs.
 
 ## Data integrity
 
 `src/data/kurals.json` remains an untouched legacy source export. The adapter
 repairs two known chapter-heading offsets and canonical section boundaries at
-runtime without changing verse text, meanings, or audio URLs. Unit validation
-checks sequential numbering, 133 chapters, the 380/700/250 section split, two
-non-empty verse lines, HTTPS audio, and reports whitespace-token anomalies
-without rewriting Tamil text.
-
-## Deployment requirements
-
-- Serve `dist/` over HTTPS after `npm run build`.
-- Configure the host to rewrite unknown routes such as `/kural/123` to
-  `index.html` for client-side routing.
-- Set `VITE_SITE_URL` during the production build.
-- Allow `https://kural.abirami.app/**` and the required local origin in Supabase
-  Auth redirect URLs before sending confirmation or password-reset emails.
-- Keep the current Content Security Policy and analytics decisions with the
-  deployment configuration; neither is silently injected by the app.
-
-## Security note
-
-The current npm audit reports React Router advisory `GHSA-qwww-vcr4-c8h2` for
-React Server Components mode. This app is a client-only Vite SPA and does not
-use React Server Components or server actions. React Router is pinned to the
-latest available release and should be upgraded when an upstream patched
-version is published.
-
-## Lovable workflow
-
-This project originated in [Lovable](https://lovable.dev). Changes pushed to the
-GitHub repository can be synced back into the
-[Lovable project](https://lovable.dev/projects/f47349fe-798a-4606-ac44-8cfe9b0617e9).
+runtime without changing verse text, meanings or audio URLs. Unit validation
+checks numbering, chapter/section counts, verse lines and HTTPS audio.

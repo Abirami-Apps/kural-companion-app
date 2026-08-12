@@ -16,4 +16,10 @@ openGraphUrl.setAttribute("property", "og:url");
 openGraphUrl.content = canonicalUrl;
 document.head.append(openGraphUrl);
 
+// Social images must be absolute for link unfurlers. Keep the static HTML
+// fallback while making previews correct on the configured production origin.
+const socialImageUrl = new URL("/og.png", siteOrigin).href;
+document.querySelector('meta[property="og:image"]')?.setAttribute("content", socialImageUrl);
+document.querySelector('meta[name="twitter:image"]')?.setAttribute("content", socialImageUrl);
+
 createRoot(document.getElementById("root")!).render(<App />);

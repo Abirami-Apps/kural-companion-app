@@ -28,17 +28,17 @@ describe("player controls", () => {
         audioState="idle"
         canPrev={false}
         canNext
-        continuous={false}
+        loopOne={false}
         disabled
         onPrev={noop}
         onNext={noop}
         onToggle={noop}
-        onToggleContinuous={noop}
+        onToggleLoopOne={noop}
       />,
     );
     expect(screen.getByRole("button", { name: "Previous kural" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Next kural" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Play audio" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Turn on continuous play" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Loop current kural" })).toBeDisabled();
   });
 });

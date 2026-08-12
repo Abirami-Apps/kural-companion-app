@@ -9,6 +9,8 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { HourlyKuralProvider } from "@/components/hourly/HourlyKuralProvider";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { UserDataProvider } from "@/components/sync/UserDataProvider";
+import { PwaProvider } from "@/components/pwa/PwaProvider";
+import { NativeAppBridge } from "@/components/native/NativeAppBridge";
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Subscribe = lazy(() => import("./pages/Subscribe.tsx"));
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -19,17 +21,22 @@ const HourlyKural = lazy(() => import("./pages/HourlyKural.tsx"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword.tsx"));
 const Terms = lazy(() => import("./pages/Terms.tsx"));
 const Privacy = lazy(() => import("./pages/Privacy.tsx"));
+const RefundPolicy = lazy(() => import("./pages/RefundPolicy.tsx"));
+const Contact = lazy(() => import("./pages/Contact.tsx"));
+const DeliveryPolicy = lazy(() => import("./pages/DeliveryPolicy.tsx"));
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <UserDataProvider>
-            <ThemeProvider>
-              <HourlyKuralProvider>
+      <PwaProvider>
+        <BrowserRouter>
+          <NativeAppBridge />
+          <AuthProvider>
+            <UserDataProvider>
+              <ThemeProvider>
+                <HourlyKuralProvider>
               <Toaster />
               <Sonner />
               <Suspense
@@ -51,15 +58,19 @@ const App = () => (
                     <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/terms" element={<Terms />} />
                     <Route path="/privacy" element={<Privacy />} />
+                    <Route path="/refunds" element={<RefundPolicy />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/delivery" element={<DeliveryPolicy />} />
                     <Route path="*" element={<NotFound />} />
                   </Route>
                 </Routes>
               </Suspense>
-              </HourlyKuralProvider>
-            </ThemeProvider>
-          </UserDataProvider>
-        </AuthProvider>
-      </BrowserRouter>
+                </HourlyKuralProvider>
+              </ThemeProvider>
+            </UserDataProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </PwaProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

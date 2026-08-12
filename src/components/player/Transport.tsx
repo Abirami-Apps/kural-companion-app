@@ -1,4 +1,4 @@
-import { Loader2, Pause, Play, Repeat, SkipBack, SkipForward } from "lucide-react";
+import { Loader2, Pause, Play, Repeat1, SkipBack, SkipForward } from "lucide-react";
 import type { AudioState } from "@/hooks/useKuralPlayer";
 
 interface TransportProps {
@@ -6,12 +6,12 @@ interface TransportProps {
   audioState: AudioState;
   canPrev: boolean;
   canNext: boolean;
-  continuous: boolean;
+  loopOne: boolean;
   disabled?: boolean;
   onPrev: () => void;
   onNext: () => void;
   onToggle: () => void;
-  onToggleContinuous: () => void;
+  onToggleLoopOne: () => void;
 }
 
 export function Transport({
@@ -19,12 +19,12 @@ export function Transport({
   audioState,
   canPrev,
   canNext,
-  continuous,
+  loopOne,
   disabled = false,
   onPrev,
   onNext,
   onToggle,
-  onToggleContinuous,
+  onToggleLoopOne,
 }: TransportProps) {
   // "Loading" only while audio is genuinely loading, never as a resting state.
   const loading = audioState === "loading" && !isPlaying;
@@ -80,15 +80,16 @@ export function Transport({
 
       <button
         type="button"
-        onClick={onToggleContinuous}
+        onClick={onToggleLoopOne}
         disabled={disabled}
-        aria-pressed={continuous}
-        aria-label={continuous ? "Turn off continuous play" : "Turn on continuous play"}
+        aria-pressed={loopOne}
+        aria-label="Loop current kural"
+        title={loopOne ? "Loop one: on" : "Loop one: off — play the next Kural automatically"}
         className={`h-11 w-11 shrink-0 rounded-full transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 ${
-          continuous ? "text-gold-light" : "text-secondary-foreground/60 hover:text-secondary-foreground"
+          loopOne ? "text-gold-light" : "text-secondary-foreground/60 hover:text-secondary-foreground"
         }`}
       >
-        <Repeat className="w-5 h-5 mx-auto" aria-hidden="true" />
+        <Repeat1 className="w-5 h-5 mx-auto" aria-hidden="true" />
       </button>
     </div>
   );

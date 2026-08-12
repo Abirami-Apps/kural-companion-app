@@ -23,7 +23,7 @@ export default defineConfig({
   ],
   webServer: {
     command:
-      "VITE_AUTH_ENABLED=true VITE_SUBSCRIPTIONS_ENABLED=false VITE_CHECKOUT_ENABLED=false VITE_REVENUECAT_PURCHASE_URL= VITE_SUPABASE_URL=https://test.supabase.co VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_test_key npm run build && npm run preview -- --host 127.0.0.1 --port 4173",
+      "VITE_AUTH_ENABLED=true VITE_SUBSCRIPTIONS_ENABLED=false VITE_CHECKOUT_ENABLED=false VITE_SUPABASE_URL=https://test.supabase.co VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_test_key npm run build && npm run preview -- --host 127.0.0.1 --port 4173",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: false,
     timeout: 120_000,

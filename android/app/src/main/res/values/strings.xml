@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kural Companion</string>
+    <string name="title_activity_main">Kural Companion</string>
+    <string name="package_name">com.abiramiaudio.kuralcompanion</string>
+    <string name="custom_url_scheme">kuralcompanion</string>
+</resources>

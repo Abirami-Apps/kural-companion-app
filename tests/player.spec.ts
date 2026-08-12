@@ -28,6 +28,51 @@ test("home restores the last Kural that successfully started playing", async ({ 
   await expect(page.getByRole("button", { name: "Play audio" })).toBeVisible();
 });
 
+test("play continues automatically to the next Kural by default", async ({ page }) => {
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
+
+  await page.getByRole("button", { name: "Play audio" }).click();
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+  await page.locator("audio").dispatchEvent("ended");
+
+  await expect(page).toHaveURL(/\/kural\/142$/);
+  await waitForKural(page, 142);
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+});
+
+test("loop one repeats the current Kural instead of advancing", async ({ page }) => {
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
+
+  const loopOne = page.getByRole("button", { name: "Loop current kural" });
+  await loopOne.click();
+  await expect(loopOne).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByRole("button", { name: "Play audio" }).click();
+  const audio = page.locator("audio");
+  await audio.evaluate((element) => {
+    element.currentTime = 37;
+  });
+  await audio.dispatchEvent("ended");
+
+  await expect(page).toHaveURL(/\/kural\/141$/);
+  await waitForKural(page, 141);
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
+  await expect.poll(() => audio.evaluate((element) => element.currentTime)).toBe(0);
+});
+
+test("sequential playback stops safely after Kural 1330", async ({ page }) => {
+  await page.goto("/kural/1330");
+  await waitForKural(page, 1330);
+
+  await page.getByRole("button", { name: "Play audio" }).click();
+  await page.locator("audio").dispatchEvent("ended");
+
+  await expect(page).toHaveURL(/\/kural\/1330$/);
+  await expect(page.getByRole("button", { name: "Play audio" })).toBeVisible();
+});
+
 test("keypad entry updates the URL and browser history remains authoritative", async ({ page }) => {
   await page.goto("/");
   for (const digit of ["1", "3", "3", "0"]) {
@@ -46,10 +91,23 @@ test("keypad entry updates the URL and browser history remains authoritative", a
 
 test("compact layouts open an accessible keypad sheet", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/kural/1");
-  await waitForKural(page, 1);
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
 
-  await page.getByRole("button", { name: "Choose a Kural number, currently 1" }).click();
+  const portraitMain = await page.locator("#main").evaluate((main) => ({
+    clientHeight: main.clientHeight,
+    scrollHeight: main.scrollHeight,
+  }));
+  expect(portraitMain.scrollHeight).toBeLessThanOrEqual(portraitMain.clientHeight + 1);
+
+  const numberButton = page.getByRole("button", { name: "Choose a Kural number, currently 141" });
+  const numberButtonBox = await numberButton.boundingBox();
+  expect(numberButtonBox).not.toBeNull();
+  expect(numberButtonBox!.y).toBeGreaterThanOrEqual(0);
+  expect(numberButtonBox!.y + numberButtonBox!.height).toBeLessThanOrEqual(844);
+  await page.screenshot({ path: "artifacts/screenshots/390x844-player.png" });
+
+  await numberButton.click();
   const sheet = page.getByRole("dialog", { name: "Go to a Kural" });
   await expect(sheet).toBeVisible();
   await page.screenshot({ path: "artifacts/screenshots/390x844-keypad.png" });
@@ -63,6 +121,62 @@ test("compact layouts open an accessible keypad sheet", async ({ page }) => {
   await expect(page).toHaveURL(/\/kural\/100$/);
   await waitForKural(page, 100);
   await expect(sheet).toBeHidden();
+});
+
+test("landscape player and keypad remain fully visible", async ({ page }) => {
+  const viewport = { width: 844, height: 390 };
+  await page.setViewportSize(viewport);
+  await page.goto("/kural/141");
+  await waitForKural(page, 141);
+
+  const landscapeMain = await page.locator("#main").evaluate((main) => ({
+    clientHeight: main.clientHeight,
+    scrollHeight: main.scrollHeight,
+  }));
+  expect(landscapeMain.scrollHeight).toBeLessThanOrEqual(landscapeMain.clientHeight + 1);
+
+  const reading = page.getByRole("region", { name: "Kural verse" });
+  const controls = page.getByRole("region", { name: "Compact player controls" });
+  const readingBox = await reading.boundingBox();
+  const controlsBox = await controls.boundingBox();
+  expect(readingBox).not.toBeNull();
+  expect(controlsBox).not.toBeNull();
+  expect(controlsBox!.x).toBeGreaterThan(readingBox!.x + readingBox!.width - 1);
+  expect(Math.abs(controlsBox!.y - readingBox!.y)).toBeLessThanOrEqual(1);
+
+  const numberButton = page.getByRole("button", { name: "Choose a Kural number, currently 141" });
+  const numberButtonBox = await numberButton.boundingBox();
+  expect(numberButtonBox).not.toBeNull();
+  expect(numberButtonBox!.y + numberButtonBox!.height).toBeLessThanOrEqual(viewport.height);
+  await page.screenshot({ path: "artifacts/screenshots/844x390-player.png" });
+  await numberButton.click();
+
+  const sheet = page.getByRole("dialog", { name: "Go to a Kural" });
+  await expect(sheet).toBeVisible();
+  const clippedControls = await sheet.locator("button").evaluateAll(
+    (buttons, bounds) =>
+      buttons.flatMap((button) => {
+        const rect = button.getBoundingClientRect();
+        if (
+          rect.left >= -1 &&
+          rect.top >= -1 &&
+          rect.right <= bounds.width + 1 &&
+          rect.bottom <= bounds.height + 1
+        ) {
+          return [];
+        }
+        return [{
+          label: button.getAttribute("aria-label") || button.textContent?.trim(),
+          left: rect.left,
+          top: rect.top,
+          right: rect.right,
+          bottom: rect.bottom,
+        }];
+      }),
+    viewport,
+  );
+  expect(clippedControls, JSON.stringify(clippedControls, null, 2)).toEqual([]);
+  await page.screenshot({ path: "artifacts/screenshots/844x390-keypad.png" });
 });
 
 test("invalid kural links recover safely", async ({ page }) => {
@@ -198,7 +312,7 @@ test("connected auth and unfinished paid services are disclosed while all kurals
 
   await page.goto("/subscribe");
   await expect(page.getByText(/All 1,330 kurals are free to play right now/)).toBeVisible();
-  await expect(page.getByText(/Checkout is not connected/)).toBeVisible();
+  await expect(page.getByText(/plans are a preview until paid access is enabled/)).toBeVisible();
   await expect(page.getByRole("button", { name: /Monthly/ })).toBeDisabled();
 });
 
@@ -218,7 +332,7 @@ test("core routes emit no uncaught runtime errors", async ({ page }) => {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/reset-password", "/subscribe", "/terms", "/privacy"]) {
+  for (const route of ["/", "/kural/1330", "/favourites", "/chapters", "/hourly", "/login", "/reset-password", "/subscribe", "/terms", "/privacy", "/refunds", "/delivery", "/contact"]) {
     await page.goto(route);
     await expect(page.locator("main")).toBeVisible();
   }

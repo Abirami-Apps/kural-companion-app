@@ -1,8 +1,9 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { AppHeader } from "./AppHeader";
 import { AppFooter } from "./AppFooter";
 import { DebugPanel } from "@/components/debug/DebugPanel";
 import { useFitGuard } from "@/hooks/useFitGuard";
+import { OfflineBanner } from "@/components/pwa/PwaControls";
 
 /** Debug UI is never part of the production interface. */
 const showDebug =
@@ -11,7 +12,9 @@ const showDebug =
     new URLSearchParams(window.location.search).get("debug") === "1");
 
 export function AppLayout() {
-  // The redesigned main region scrolls naturally on compact/landscape screens.
+  const { pathname } = useLocation();
+  const isPlayerRoute = pathname === "/" || /^\/kural\/[^/]+\/?$/.test(pathname);
+
   // Keep live overflow diagnostics without shrinking 44px touch targets.
   useFitGuard(true, false);
 
@@ -24,7 +27,13 @@ export function AppLayout() {
         Skip to main content
       </a>
       <AppHeader />
-      <main id="main" className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <OfflineBanner />
+      <main
+        id="main"
+        className={`min-h-0 flex-1 overscroll-contain ${
+          isPlayerRoute ? "overflow-hidden" : "overflow-y-auto"
+        }`}
+      >
         <Outlet />
       </main>
       <AppFooter />
