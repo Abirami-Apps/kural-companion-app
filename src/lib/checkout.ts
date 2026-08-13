@@ -52,14 +52,6 @@ const UUID_PATTERN =
 const PROVIDER_ID_PATTERN = /^(order|sub)_[A-Za-z0-9]+$/;
 let scriptPromise: Promise<void> | null = null;
 
-function errorMessage(error: unknown, fallback: string): string {
-  if (error && typeof error === "object" && "message" in error) {
-    const message = String(error.message).trim();
-    if (message) return message;
-  }
-  return fallback;
-}
-
 export function parseCheckoutSession(input: unknown): RazorpayCheckoutSession {
   if (!input || typeof input !== "object") {
     throw new Error("The payment session response was invalid.");
@@ -142,7 +134,7 @@ export async function startRazorpayCheckout(args: {
   client: SupabaseClient;
   planId: CheckoutPlanId;
   email: string | null;
-}): Promise<"verified" | "dismissed"> {
+}): Promise<"verified" | "pending" | "dismissed"> {
   const response = await invoke<Record<string, unknown>>(
     args.client,
     "razorpay-checkout",
@@ -181,10 +173,10 @@ export async function startRazorpayCheckout(args: {
           ...result,
         }).then(
           () => finish(() => resolve("verified")),
-          (error) => finish(() => reject(new Error(errorMessage(
-            error,
-            "Payment was received, but verification is still pending.",
-          )))),
+          // Razorpay may deliver its signed webhook after the browser callback.
+          // A temporary verification-function failure must not tell a customer
+          // that a completed payment failed or encourage a duplicate purchase.
+          () => finish(() => resolve("pending")),
         );
       },
     });

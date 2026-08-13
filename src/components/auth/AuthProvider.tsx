@@ -85,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshEntitlement = useCallback(async () => {
     const expectedUserId = currentUserIdRef.current;
-    if (!subscriptionsEnabled || !client || !expectedUserId) return;
+    if (!subscriptionsEnabled || !client || !expectedUserId) return null;
 
     const request = ++entitlementRequestRef.current;
     setEntitlementState((current) => ({
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         entitlementRequestRef.current !== request ||
         currentUserIdRef.current !== expectedUserId
       ) {
-        return;
+        return null;
       }
       setEntitlementState({
         userId: expectedUserId,
@@ -112,12 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data,
         error: null,
       });
+      return data;
     } catch {
       if (
         entitlementRequestRef.current !== request ||
         currentUserIdRef.current !== expectedUserId
       ) {
-        return;
+        return null;
       }
       setEntitlementState({
         userId: expectedUserId,
@@ -125,6 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: { ...INACTIVE_PREMIUM_ENTITLEMENT },
         error: entitlementErrorMessage,
       });
+      return null;
     }
   }, [client]);
 
