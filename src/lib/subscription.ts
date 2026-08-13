@@ -22,6 +22,39 @@ export interface PremiumEntitlement {
   updatedAt: string | null;
 }
 
+export type EntitlementRefresh = () => Promise<PremiumEntitlement | null>;
+
+export async function waitForPremiumActivation(
+  refresh: EntitlementRefresh,
+  options: {
+    attempts?: number;
+    intervalMs?: number;
+    shouldContinue?: () => boolean;
+    sleep?: (milliseconds: number) => Promise<void>;
+  } = {},
+): Promise<boolean> {
+  const attempts = Math.max(1, options.attempts ?? 36);
+  const intervalMs = Math.max(0, options.intervalMs ?? 5_000);
+  const shouldContinue = options.shouldContinue ?? (() => true);
+  const sleep = options.sleep ?? ((milliseconds: number) =>
+    new Promise((resolve) => globalThis.setTimeout(resolve, milliseconds)));
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (attempt > 0) await sleep(intervalMs);
+    if (!shouldContinue()) return false;
+
+    let entitlement: PremiumEntitlement | null = null;
+    try {
+      entitlement = await refresh();
+    } catch {
+      // Keep polling through temporary network and backend delays.
+    }
+    if (entitlement?.active) return true;
+  }
+
+  return false;
+}
+
 interface PremiumEntitlementRow {
   status?: unknown;
   plan_key?: unknown;

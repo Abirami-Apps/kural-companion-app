@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, Check, Crown, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/theme/ThemeProvider";
 import { checkoutEnabled, subscriptionsEnabled } from "@/lib/features";
@@ -12,6 +12,7 @@ import {
   type CheckoutPlanId,
 } from "@/lib/checkout";
 import { supabase } from "@/lib/supabase";
+import { waitForPremiumActivation } from "@/lib/subscription";
 
 const plans = [
   {
@@ -61,11 +62,40 @@ const Subscribe = () => {
   } = useAuth();
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [purchaseStatus, setPurchaseStatus] = useState<
-    "idle" | "opening" | "verifying" | "verified" | "cancelling"
+    | "idle"
+    | "opening"
+    | "activating"
+    | "activation-delayed"
+    | "verified"
+    | "cancelling"
   >("idle");
+  const activationRunRef = useRef(0);
 
   const busy = purchaseStatus === "opening" ||
-    purchaseStatus === "verifying" || purchaseStatus === "cancelling";
+    purchaseStatus === "activating" || purchaseStatus === "cancelling";
+  const paymentPending = purchaseStatus === "activating" ||
+    purchaseStatus === "activation-delayed";
+
+  useEffect(() => () => {
+    activationRunRef.current += 1;
+  }, []);
+
+  const activatePremiumAccess = async () => {
+    const activationRun = ++activationRunRef.current;
+    setCheckoutError(null);
+    setPurchaseStatus("activating");
+
+    const activated = await waitForPremiumActivation(refreshEntitlement, {
+      shouldContinue: () => activationRunRef.current === activationRun,
+    });
+    if (activationRunRef.current !== activationRun) return;
+    if (activated) {
+      setPurchaseStatus("verified");
+      return;
+    }
+
+    setPurchaseStatus("activation-delayed");
+  };
 
   const startCheckout = async (planId: CheckoutPlanId) => {
     setCheckoutError(null);
@@ -86,9 +116,7 @@ const Subscribe = () => {
         setPurchaseStatus("idle");
         return;
       }
-      setPurchaseStatus("verifying");
-      await refreshEntitlement();
-      setPurchaseStatus("verified");
+      await activatePremiumAccess();
     } catch (error) {
       setPurchaseStatus("idle");
       setCheckoutError(
@@ -167,8 +195,10 @@ const Subscribe = () => {
               <p className="text-sm font-medium text-foreground">
                 {!user
                   ? "Sign in to check premium access"
-                  : purchaseStatus === "verifying"
-                    ? "Confirming your purchase…"
+                  : purchaseStatus === "activating"
+                    ? "Payment received. Activating your subscription…"
+                    : purchaseStatus === "activation-delayed"
+                      ? "Payment received. Activation is taking longer than expected"
                     : entitlementStatus === "loading"
                       ? "Verifying your subscription…"
                       : subscribed
@@ -187,12 +217,17 @@ const Subscribe = () => {
                     : ""}
                 </p>
               )}
-              {purchaseStatus === "verified" && !subscribed && (
+              {purchaseStatus === "activating" && (
                 <p className="mt-1 text-xs text-muted-foreground" role="status">
-                  Payment status refreshed. No active premium plan was found yet.
+                  We will refresh automatically. Please do not make another payment.
                 </p>
               )}
-              {entitlementError && (
+              {purchaseStatus === "activation-delayed" && !subscribed && (
+                <p className="mt-1 text-xs text-muted-foreground" role="status">
+                  Your payment is being processed. Try activation again in a moment, or contact support if it remains pending.
+                </p>
+              )}
+              {entitlementError && !paymentPending && (
                 <p className="mt-1 text-xs text-destructive" role="alert">
                   {entitlementError}
                 </p>
@@ -214,10 +249,18 @@ const Subscribe = () => {
                 variant="outline"
                 className="min-h-11 rounded-lg"
                 disabled={busy}
-                onClick={() => void refreshEntitlement()}
+                onClick={() => void (paymentPending
+                  ? activatePremiumAccess()
+                  : refreshEntitlement())}
               >
-                <RefreshCw className="h-4 w-4" aria-hidden="true" />
-                Refresh access
+                {purchaseStatus === "activating"
+                  ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  : <RefreshCw className="h-4 w-4" aria-hidden="true" />}
+                {purchaseStatus === "activating"
+                  ? "Activating…"
+                  : purchaseStatus === "activation-delayed"
+                    ? "Try activation again"
+                    : "Refresh access"}
               </Button>
             )}
             {user && subscribed && premiumEntitlement.planKey !== "lifetime" &&
@@ -247,7 +290,7 @@ const Subscribe = () => {
           >
             <button
               type="button"
-              disabled={!checkoutEnabled || subscribed || busy}
+              disabled={!checkoutEnabled || subscribed || busy || paymentPending}
               aria-describedby={!checkoutEnabled ? "checkout-status" : undefined}
               className={`w-full text-left rounded-xl p-5 border transition-all duration-150 active:scale-[0.98] ${
                 plan.popular

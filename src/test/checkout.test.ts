@@ -105,6 +105,32 @@ describe("Razorpay browser checkout", () => {
     })).resolves.toBe("dismissed");
     expect(invoke).toHaveBeenCalledTimes(1);
   });
+
+  it("treats a delayed verification response as pending after payment", async () => {
+    const invoke = vi.fn()
+      .mockResolvedValueOnce({ data: { ok: true, ...validSession }, error: null })
+      .mockResolvedValueOnce({
+        data: null,
+        error: { message: "Edge Function returned a non-2xx status code" },
+      });
+    const client = { functions: { invoke } } as unknown as SupabaseClient;
+    window.Razorpay = function RazorpayMock(options) {
+      return {
+        open: () => options.handler({
+          razorpay_payment_id: "pay_pending123",
+          razorpay_subscription_id: validSession.providerId,
+          razorpay_signature: "b".repeat(64),
+        }),
+        on: vi.fn(),
+      };
+    } as unknown as typeof window.Razorpay;
+
+    await expect(startRazorpayCheckout({
+      client,
+      planId: "yearly",
+      email: "reader@example.com",
+    })).resolves.toBe("pending");
+  });
 });
 
 describe("post-login navigation", () => {

@@ -35,7 +35,7 @@ export interface AuthContextValue {
   premiumEntitlement: PremiumEntitlement;
   entitlementStatus: EntitlementLoadStatus;
   entitlementError: string | null;
-  refreshEntitlement: () => Promise<void>;
+  refreshEntitlement: () => Promise<PremiumEntitlement | null>;
   signIn: (email: string, password: string) => Promise<AuthActionResult>;
   signUp: (email: string, password: string) => Promise<SignUpResult>;
   signOut: () => Promise<AuthActionResult>;
@@ -56,7 +56,7 @@ export const AuthContext = createContext<AuthContextValue>({
   premiumEntitlement: INACTIVE_PREMIUM_ENTITLEMENT,
   entitlementStatus: "disabled",
   entitlementError: null,
-  refreshEntitlement: async () => {},
+  refreshEntitlement: async () => null,
   signIn: unavailable,
   signUp: async () => ({
     error: "Account access is not configured for this build.",

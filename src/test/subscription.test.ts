@@ -5,6 +5,7 @@ import {
   INACTIVE_PREMIUM_ENTITLEMENT,
   isPremiumEntitlementActive,
   parsePremiumEntitlement,
+  waitForPremiumActivation,
 } from "@/lib/subscription";
 
 const now = Date.parse("2026-08-03T12:00:00.000Z");
@@ -125,5 +126,45 @@ describe("premium entitlement validation", () => {
     expect(client.rpc).toHaveBeenCalledWith("has_active_entitlement", {
       requested_entitlement: "premium",
     });
+  });
+});
+
+describe("premium activation polling", () => {
+  it("keeps retrying through delayed and failed refreshes until access is active", async () => {
+    const refresh = vi.fn()
+      .mockResolvedValueOnce(INACTIVE_PREMIUM_ENTITLEMENT)
+      .mockRejectedValueOnce(new Error("temporary network error"))
+      .mockResolvedValueOnce({
+        ...INACTIVE_PREMIUM_ENTITLEMENT,
+        active: true,
+        status: "active",
+      });
+    const sleep = vi.fn().mockResolvedValue(undefined);
+
+    await expect(waitForPremiumActivation(refresh, {
+      attempts: 4,
+      intervalMs: 5_000,
+      sleep,
+    })).resolves.toBe(true);
+    expect(refresh).toHaveBeenCalledTimes(3);
+    expect(sleep).toHaveBeenCalledTimes(2);
+    expect(sleep).toHaveBeenCalledWith(5_000);
+  });
+
+  it("stops safely when the page is no longer waiting", async () => {
+    const refresh = vi.fn().mockResolvedValue(INACTIVE_PREMIUM_ENTITLEMENT);
+    const sleep = vi.fn().mockResolvedValue(undefined);
+    let active = true;
+    refresh.mockImplementation(async () => {
+      active = false;
+      return INACTIVE_PREMIUM_ENTITLEMENT;
+    });
+
+    await expect(waitForPremiumActivation(refresh, {
+      attempts: 4,
+      shouldContinue: () => active,
+      sleep,
+    })).resolves.toBe(false);
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 });
