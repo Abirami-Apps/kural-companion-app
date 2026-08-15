@@ -10,6 +10,7 @@ import {
   authenticatedUser,
   createCheckoutSession,
   serviceClient,
+  trialEligible,
 } from "../_shared/supabase.ts";
 
 Deno.serve(async (request) => {
@@ -34,25 +35,49 @@ Deno.serve(async (request) => {
 
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     const definition = planDefinition(body?.planId);
+    const trialRequired = body?.trialRequired === true;
+    if (trialRequired && definition.planKey !== "monthly") {
+      return jsonResponse({ error: "The free trial is available only with the monthly plan." }, 400, cors);
+    }
     const environment = razorpayEnvironment();
-    const sessionId = await createCheckoutSession(client, {
+    if (trialRequired && !await trialEligible(client, { userId: user.id, environment })) {
+      return jsonResponse({
+        ok: true,
+        trialEligible: false,
+        planId: definition.planKey,
+      }, 200, cors);
+    }
+    const checkoutSession = await createCheckoutSession(client, {
       userId: user.id,
       planKey: definition.planKey,
       checkoutKind: definition.checkoutKind,
       environment,
       amount: definition.amount,
       currency: definition.currency,
+      trialDays: trialRequired ? definition.trialDays : 0,
     });
+    if (trialRequired && !checkoutSession.trialEndsAt) {
+      return jsonResponse({
+        ok: true,
+        trialEligible: false,
+        planId: definition.planKey,
+      }, 200, cors);
+    }
     const providerId = await createProviderCheckout({
       definition,
       userId: user.id,
-      sessionId,
+      sessionId: checkoutSession.sessionId,
+      trialEndsAt: checkoutSession.trialEndsAt,
     });
-    await attachProviderId(client, { sessionId, userId: user.id, providerId });
+    await attachProviderId(client, {
+      sessionId: checkoutSession.sessionId,
+      userId: user.id,
+      providerId,
+    });
 
     return jsonResponse({
       ok: true,
-      sessionId,
+      sessionId: checkoutSession.sessionId,
       keyId: publicKeyId(),
       checkoutKind: definition.checkoutKind,
       providerId,
@@ -60,6 +85,8 @@ Deno.serve(async (request) => {
       currency: definition.currency,
       planId: definition.planKey,
       description: definition.description,
+      trialEligible: Boolean(checkoutSession.trialEndsAt),
+      trialEndsAt: checkoutSession.trialEndsAt,
     }, 200, cors);
   } catch (error) {
     const invalidPlan = error instanceof Error &&

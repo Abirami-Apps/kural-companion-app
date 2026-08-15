@@ -1,7 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Grid3X3, Heart, Lock, Share2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import type { Kural } from "@/data/sample-kurals";
 import { useTheme } from "@/components/theme/ThemeProvider";
 
@@ -15,6 +14,7 @@ interface VerseDisplayProps {
   onNext: () => void;
   onChooseNumber: () => void;
   locked?: boolean;
+  onRequestPremium?: () => void;
 }
 
 export function VerseDisplay({
@@ -27,6 +27,7 @@ export function VerseDisplay({
   onNext,
   onChooseNumber,
   locked = false,
+  onRequestPremium,
 }: VerseDisplayProps) {
   const systemReduce = useReducedMotion();
   const { reducedMotion } = useTheme();
@@ -131,12 +132,13 @@ export function VerseDisplay({
               <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-foreground">
                 <Lock className="h-3.5 w-3.5" aria-hidden="true" /> Subscribers only
               </p>
-              <Link
-                to="/subscribe"
+              <button
+                type="button"
+                onClick={onRequestPremium}
                 className="mt-1 inline-flex min-h-11 items-center text-xs text-primary underline underline-offset-4"
               >
-                See subscription options
-              </Link>
+                Start free trial
+              </button>
             </div>
           ) : (
             kural.meaning && <Meaning text={kural.meaning} />

@@ -20,6 +20,7 @@ import { useHourlyKural } from "@/hooks/useHourlyKural";
 import { useUserData } from "@/hooks/useUserData";
 import type { HourlyPlaybackRequest } from "@/contexts/HourlyKuralContext";
 import artwork from "@/assets/logo.png";
+import { usePremiumPrompt } from "@/contexts/PremiumPromptContext";
 
 const SOFT_DELAY = 1000;
 
@@ -46,6 +47,7 @@ export function useKuralPlayer() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { openPremiumPrompt } = usePremiumPrompt();
   const {
     favourites,
     toggleFavourite: toggleSyncedFavourite,
@@ -108,7 +110,11 @@ export function useKuralPlayer() {
     }
     handledAutoplayLocationsRef.current.add(location.key);
     shouldPlayRef.current = true;
-  }, [autoplayRequested, invalidTarget, location.key]);
+    if (locked) {
+      openPremiumPrompt();
+      return;
+    }
+  }, [autoplayRequested, invalidTarget, location.key, locked, openPremiumPrompt]);
 
   const toggleFavourite = useCallback(() => {
     toggleSyncedFavourite(number);

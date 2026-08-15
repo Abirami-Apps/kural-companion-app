@@ -12,6 +12,7 @@ interface TransportProps {
   onNext: () => void;
   onToggle: () => void;
   onToggleLoopOne: () => void;
+  onLocked?: () => void;
 }
 
 export function Transport({
@@ -25,6 +26,7 @@ export function Transport({
   onNext,
   onToggle,
   onToggleLoopOne,
+  onLocked,
 }: TransportProps) {
   // "Loading" only while audio is genuinely loading, never as a resting state.
   const loading = audioState === "loading" && !isPlaying;
@@ -47,10 +49,12 @@ export function Transport({
 
       <button
         type="button"
-        onClick={onToggle}
-        disabled={disabled}
+        onClick={disabled && onLocked ? onLocked : onToggle}
+        disabled={disabled && !onLocked}
         aria-label={
-          audioState === "error"
+          disabled
+            ? "Unlock premium playback"
+            : audioState === "error"
             ? "Retry audio"
             : isPlaying
               ? "Pause audio"

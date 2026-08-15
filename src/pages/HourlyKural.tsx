@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
 import { formatHour, type HourlyLanguage, type HourlySelection } from "@/lib/hourly-kural";
+import { usePremiumPrompt } from "@/contexts/PremiumPromptContext";
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
 
@@ -30,6 +31,7 @@ const languageOptions: { id: HourlyLanguage; label: string }[] = [
 
 export default function HourlyKural() {
   const hourly = useHourlyKural();
+  const { openPremiumPrompt } = usePremiumPrompt();
 
   if (!hourly.premiumAccess) {
     return (
@@ -42,8 +44,8 @@ export default function HourlyKural() {
           <p className="mt-2 text-sm text-muted-foreground">
             Hourly Kural is included with Kural Companion Plus.
           </p>
-          <Button asChild className="mt-6 min-h-12 rounded-full px-6">
-            <Link to="/subscribe">View subscription plans</Link>
+          <Button type="button" className="mt-6 min-h-12 rounded-full px-6" onClick={openPremiumPrompt}>
+            Start free trial
           </Button>
         </section>
       </div>

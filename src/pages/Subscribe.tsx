@@ -20,7 +20,7 @@ const plans = [
     label: "Monthly",
     price: "₹99",
     period: "/month",
-    description: "Try premium for a month",
+    description: "3 days free for eligible new subscribers",
     popular: false,
   },
   {
@@ -36,15 +36,15 @@ const plans = [
     label: "Lifetime",
     price: "₹3,499",
     period: "one-time",
-    description: "Pay once, access forever",
+    description: "One-time purchase, no renewal",
     popular: false,
   },
 ];
 
 const features = [
+  "Complete Kural audio and meanings",
   "Hourly Kural clock and reminders",
-  "Cross-device favourites, appearance and Hourly Kural settings",
-  "Offline listening in the native apps (coming soon)",
+  "Premium access across supported devices",
 ];
 
 const Subscribe = () => {
@@ -61,6 +61,7 @@ const Subscribe = () => {
     refreshEntitlement,
   } = useAuth();
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [monthlyTrialUnavailable, setMonthlyTrialUnavailable] = useState(false);
   const [purchaseStatus, setPurchaseStatus] = useState<
     | "idle"
     | "opening"
@@ -79,6 +80,10 @@ const Subscribe = () => {
   useEffect(() => () => {
     activationRunRef.current += 1;
   }, []);
+
+  useEffect(() => {
+    setMonthlyTrialUnavailable(false);
+  }, [user?.id]);
 
   const activatePremiumAccess = async () => {
     const activationRun = ++activationRunRef.current;
@@ -111,9 +116,18 @@ const Subscribe = () => {
         client: supabase,
         planId,
         email: user.email,
+        requireTrial: planId === "monthly" && !monthlyTrialUnavailable,
       });
       if (result === "dismissed") {
         setPurchaseStatus("idle");
+        return;
+      }
+      if (result === "trial-unavailable") {
+        setMonthlyTrialUnavailable(true);
+        setPurchaseStatus("idle");
+        setCheckoutError(
+          "This account has already used its introductory trial. Select Monthly again to subscribe for ₹99/month.",
+        );
         return;
       }
       await activatePremiumAccess();
@@ -177,7 +191,7 @@ const Subscribe = () => {
         <p className="text-sm text-muted-foreground">
           {subscriptionsEnabled
             ? checkoutEnabled
-              ? "Choose a plan and pay through secure Razorpay checkout. Premium access stays connected to your signed-in account."
+              ? "Start with 3 days free on the monthly plan, or choose yearly or lifetime access."
               : "Premium access is verified securely through your account. Checkout is not enabled for this build, so these plans remain a preview."
             : "All 1,330 kurals are free to play right now. These plans are a preview until paid access is enabled."}
         </p>
@@ -202,7 +216,9 @@ const Subscribe = () => {
                     : entitlementStatus === "loading"
                       ? "Verifying your subscription…"
                       : subscribed
-                        ? "Kural Companion Plus is active"
+                        ? premiumEntitlement.status === "trialing"
+                          ? "Your Kural Companion Plus trial is active"
+                          : "Kural Companion Plus is active"
                         : entitlementStatus === "error"
                           ? "Subscription verification unavailable"
                           : "No active premium entitlement"}
@@ -213,7 +229,16 @@ const Subscribe = () => {
                     ? `${premiumEntitlement.planKey} plan`
                     : "Premium access"}
                   {premiumEntitlement.cancelAtPeriodEnd
-                    ? " · Ends after the current billing period"
+                    ? premiumEntitlement.status === "trialing"
+                      ? " · Ends when the free trial finishes"
+                      : " · Ends after the current billing period"
+                    : ""}
+                  {premiumEntitlement.status === "trialing" && premiumEntitlement.expiresAt
+                    ? ` · Trial ends ${new Intl.DateTimeFormat(undefined, {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }).format(new Date(premiumEntitlement.expiresAt))}`
                     : ""}
                 </p>
               )}
@@ -307,14 +332,24 @@ const Subscribe = () => {
                       <span className="text-[10px] font-medium uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full">Best Value</span>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {plan.id === "monthly" && monthlyTrialUnavailable
+                      ? "Monthly access; introductory trial already used"
+                      : plan.description}
+                  </p>
                 </div>
                 <div className="text-right shrink-0">
                   <span className="text-xl font-semibold text-foreground tabular-nums">{plan.price}</span>
                   <span className="text-xs text-muted-foreground block">{plan.period}</span>
                   {checkoutEnabled && !subscribed && (
                     <span className="mt-1 inline-flex text-[11px] font-medium text-primary">
-                      {user ? "Pay securely" : "Sign in to purchase"}
+                      {user
+                        ? plan.id === "monthly"
+                          ? monthlyTrialUnavailable
+                            ? "Subscribe for ₹99/month"
+                            : "Start free trial"
+                          : "Pay securely"
+                        : "Sign in to purchase"}
                     </span>
                   )}
                 </div>
@@ -337,8 +372,12 @@ const Subscribe = () => {
           {premiumEntitlement.planKey === "lifetime"
             ? "Your lifetime access is active."
             : premiumEntitlement.cancelAtPeriodEnd
-              ? "Renewal is cancelled. Premium access continues until the current paid period ends."
-              : "Your recurring plan is active. You can cancel its next renewal above."}
+              ? premiumEntitlement.status === "trialing"
+                ? "Renewal is cancelled. Premium access continues until the free trial ends."
+                : "Renewal is cancelled. Premium access continues until the current paid period ends."
+              : premiumEntitlement.status === "trialing"
+                ? "Your free trial is active. ₹99 monthly billing starts after the trial unless you cancel renewal."
+                : "Your recurring plan is active. You can cancel its next renewal above."}
         </p>
       )}
 

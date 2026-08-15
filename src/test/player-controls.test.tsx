@@ -38,7 +38,7 @@ describe("player controls", () => {
     );
     expect(screen.getByRole("button", { name: "Previous kural" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Next kural" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Play audio" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Unlock premium playback" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Loop current kural" })).toBeDisabled();
   });
 });

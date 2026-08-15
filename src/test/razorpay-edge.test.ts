@@ -52,11 +52,13 @@ describe("Razorpay server configuration", () => {
       checkoutKind: "subscription",
       amount: 9900,
       providerPlanId: "plan_monthly123",
+      trialDays: 3,
     });
     expect(planDefinition("lifetime")).toMatchObject({
       checkoutKind: "order",
       amount: 349900,
       providerPlanId: null,
+      trialDays: 0,
     });
     expect(() => planDefinition("discounted-lifetime")).toThrow("valid");
   });
@@ -157,6 +159,69 @@ describe("Razorpay webhook mapping", () => {
       providerId: "sub_123",
       state: "pending",
       expiresAt: null,
+    });
+  });
+
+  it("maps an authenticated future-start subscription to the free-trial window", () => {
+    const authorisedAt = 1_786_000_000;
+    const trialEndsAt = authorisedAt + (3 * 24 * 60 * 60);
+    expect(parseWebhookEvent({
+      created_at: authorisedAt,
+      event: "subscription.authenticated",
+      payload: {
+        subscription: { entity: {
+          id: "sub_trial123",
+          status: "authenticated",
+          start_at: trialEndsAt,
+        } },
+        payment: { entity: { id: "pay_auth123" } },
+      },
+    })).toMatchObject({
+      providerId: "sub_trial123",
+      state: "trialing",
+      paymentId: "pay_auth123",
+      startsAt: new Date(authorisedAt * 1_000).toISOString(),
+      expiresAt: new Date(trialEndsAt * 1_000).toISOString(),
+    });
+  });
+
+  it("keeps an authorised cancelled trial available until its promised end", () => {
+    const cancelledAt = 1_786_000_000;
+    const trialEndsAt = cancelledAt + (3 * 24 * 60 * 60);
+    expect(parseWebhookEvent({
+      created_at: cancelledAt,
+      event: "subscription.cancelled",
+      payload: {
+        subscription: { entity: {
+          id: "sub_trial123",
+          status: "cancelled",
+          customer_id: "cust_authorised123",
+          start_at: trialEndsAt,
+        } },
+      },
+    })).toMatchObject({
+      providerId: "sub_trial123",
+      state: "trialing",
+      expiresAt: new Date(trialEndsAt * 1_000).toISOString(),
+      cancelAtPeriodEnd: true,
+    });
+  });
+
+  it("does not grant a cancelled trial that was never authorised", () => {
+    const cancelledAt = 1_786_000_000;
+    expect(parseWebhookEvent({
+      created_at: cancelledAt,
+      event: "subscription.cancelled",
+      payload: {
+        subscription: { entity: {
+          id: "sub_abandoned123",
+          status: "cancelled",
+          start_at: cancelledAt + (3 * 24 * 60 * 60),
+        } },
+      },
+    })).toMatchObject({
+      providerId: "sub_abandoned123",
+      state: "expired",
     });
   });
 

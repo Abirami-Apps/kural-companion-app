@@ -35,7 +35,7 @@ const NAV_ITEMS = [
 export function AppHeader() {
   const [open, setOpen] = useState(false);
   const { settings: hourlySettings } = useHourlyKural();
-  const { user } = useAuth();
+  const { user, subscribed } = useAuth();
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `inline-flex items-center gap-2 rounded-full px-3 min-h-11 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
@@ -87,8 +87,10 @@ export function AppHeader() {
           {checkoutEnabled && (
             <Button asChild variant="default" className="hidden min-h-11 rounded-full nav:inline-flex">
               <Link to="/subscribe">
-                <Sparkles className="h-4 w-4" aria-hidden="true" />
-                <span>Subscribe</span>
+                {subscribed
+                  ? <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                  : <Sparkles className="h-4 w-4" aria-hidden="true" />}
+                <span>{subscribed ? "Plan" : "Subscribe"}</span>
               </Link>
             </Button>
           )}

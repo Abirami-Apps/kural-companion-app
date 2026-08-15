@@ -5,6 +5,7 @@ export type PlanKey = "monthly" | "yearly" | "lifetime";
 export type CheckoutKind = "order" | "subscription";
 export type BillingState =
   | "pending"
+  | "trialing"
   | "active"
   | "grace_period"
   | "paused"
@@ -19,6 +20,7 @@ export type PlanDefinition = {
   description: string;
   providerPlanId: string | null;
   totalCount: number | null;
+  trialDays: number;
 };
 
 export type RazorpayEntityState = {
@@ -75,6 +77,7 @@ export function planDefinition(value: unknown): PlanDefinition {
       description: "Kural Companion Plus Lifetime",
       providerPlanId: null,
       totalCount: null,
+      trialDays: 0,
     };
   }
   const envName = value === "monthly"
@@ -94,6 +97,7 @@ export function planDefinition(value: unknown): PlanDefinition {
       : "Kural Companion Plus Yearly",
     providerPlanId,
     totalCount: value === "monthly" ? 360 : 30,
+    trialDays: value === "monthly" ? 3 : 0,
   };
 }
 
@@ -208,6 +212,7 @@ export async function createProviderCheckout(args: {
   definition: PlanDefinition;
   userId: string;
   sessionId: string;
+  trialEndsAt: string | null;
 }): Promise<string> {
   const notes = {
     app: "kural_companion",
@@ -230,6 +235,10 @@ export async function createProviderCheckout(args: {
     return id;
   }
 
+  const trialEnd = args.trialEndsAt ? Date.parse(args.trialEndsAt) : Number.NaN;
+  if (args.trialEndsAt && (!Number.isFinite(trialEnd) || trialEnd <= Date.now())) {
+    throw new Error("The subscription trial window is invalid.");
+  }
   const subscription = await apiRequest("/subscriptions", {
     method: "POST",
     body: {
@@ -237,6 +246,7 @@ export async function createProviderCheckout(args: {
       total_count: args.definition.totalCount,
       quantity: 1,
       customer_notify: true,
+      ...(Number.isFinite(trialEnd) ? { start_at: Math.floor(trialEnd / 1_000) } : {}),
       notes,
     },
   });
@@ -245,16 +255,21 @@ export async function createProviderCheckout(args: {
   return id;
 }
 
-function subscriptionState(entity: UnknownRecord): RazorpayEntityState {
+function subscriptionState(
+  entity: UnknownRecord,
+  observedAt = new Date().toISOString(),
+): RazorpayEntityState {
   const providerId = text(entity.id);
   if (!providerId?.startsWith("sub_")) throw new Error("Subscription response is invalid.");
   const status = text(entity.status);
-  const startsAt = isoFromSeconds(entity.current_start) ?? isoFromSeconds(entity.start_at);
+  const currentStartsAt = isoFromSeconds(entity.current_start);
+  const scheduledStartsAt = isoFromSeconds(entity.start_at);
+  let startsAt = currentStartsAt ?? scheduledStartsAt;
   // Only the current paid billing period grants access. `end_at` can describe the
   // end of the entire multi-cycle subscription and must never be treated as the
   // current entitlement expiry.
-  const expiresAt = isoFromSeconds(entity.current_end);
-  const futureEnd = expiresAt ? Date.parse(expiresAt) > Date.now() : false;
+  let expiresAt = isoFromSeconds(entity.current_end);
+  const futureEnd = expiresAt ? Date.parse(expiresAt) > Date.parse(observedAt) : false;
   const scheduledChanges = record(entity.change_scheduled_at);
   const scheduledCancel = Boolean(entity.cancel_at_cycle_end) ||
     (entity.has_scheduled_changes === true &&
@@ -267,14 +282,39 @@ function subscriptionState(entity: UnknownRecord): RazorpayEntityState {
   if (status === "active") {
     state = expiresAt ? "active" : "pending";
   } else if (status === "authenticated") {
-    state = "pending";
+    const trialEnd = scheduledStartsAt ? Date.parse(scheduledStartsAt) : Number.NaN;
+    if (Number.isFinite(trialEnd) && trialEnd > Date.parse(observedAt)) {
+      state = "trialing";
+      startsAt = observedAt;
+      expiresAt = scheduledStartsAt;
+    } else {
+      state = "pending";
+    }
   } else if (status === "pending") {
     state = futureEnd ? "grace_period" : "pending";
   } else if (status === "paused" || status === "halted") {
     state = "paused";
   } else if (status === "cancelled" || status === "completed" || status === "expired") {
-    state = futureEnd ? "active" : "expired";
-    cancelAtPeriodEnd = futureEnd;
+    const trialEnd = scheduledStartsAt ? Date.parse(scheduledStartsAt) : Number.NaN;
+    const authorisedCustomer = text(entity.customer_id)?.startsWith("cust_") === true;
+    if (
+      status === "cancelled" &&
+      authorisedCustomer &&
+      Number.isFinite(trialEnd) &&
+      trialEnd > Date.parse(observedAt)
+    ) {
+      // Razorpay may cancel a future-start subscription immediately even when
+      // cycle-end cancellation is requested. A populated customer ID proves
+      // that the mandate was authorised, so keep the promised trial access
+      // until start_at while preventing the first recurring charge.
+      state = "trialing";
+      startsAt = observedAt;
+      expiresAt = scheduledStartsAt;
+      cancelAtPeriodEnd = true;
+    } else {
+      state = futureEnd ? "active" : "expired";
+      cancelAtPeriodEnd = futureEnd;
+    }
   } else {
     state = "pending";
   }
@@ -297,10 +337,11 @@ export async function verifyProviderPayment(args: {
   providerPlanId?: string | null;
 }): Promise<RazorpayEntityState> {
   const payment = await apiRequest(`/payments/${encodeURIComponent(args.paymentId)}`);
+  const paymentStatus = text(payment.status);
   if (
     text(payment.id) !== args.paymentId ||
-    text(payment.status) !== "captured" ||
-    integer(payment.amount) !== args.amount ||
+    (paymentStatus !== "captured" && paymentStatus !== "refunded") ||
+    (integer(payment.amount) ?? 0) <= 0 ||
     text(payment.currency) !== args.currency
   ) {
     throw new Error("The captured payment did not match this checkout session.");
@@ -312,6 +353,7 @@ export async function verifyProviderPayment(args: {
       text(payment.order_id) !== args.providerId ||
       text(order.id) !== args.providerId ||
       text(order.status) !== "paid" ||
+      integer(payment.amount) !== args.amount ||
       integer(order.amount_paid) !== args.amount ||
       text(order.currency) !== args.currency
     ) {
@@ -367,7 +409,7 @@ export function parseWebhookEvent(payload: unknown): RazorpayEntityState | null 
   const refund = record(record(payloadRecord?.refund)?.entity);
 
   if (event?.startsWith("subscription.") && subscription) {
-    const state = subscriptionState(subscription);
+    const state = subscriptionState(subscription, webhookTimestamp(payload));
     return { ...state, paymentId: text(payment?.id) };
   }
   if (event === "order.paid" && order) {

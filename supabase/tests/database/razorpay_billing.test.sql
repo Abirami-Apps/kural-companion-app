@@ -2,12 +2,18 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(18);
+select plan(27);
 
 select has_table(
   'kural_private',
   'billing_checkout_sessions',
   'private Razorpay checkout mapping table exists'
+);
+select has_column(
+  'kural_private',
+  'billing_checkout_sessions',
+  'trial_ends_at',
+  'checkout sessions record an introductory trial window'
 );
 select has_table(
   'kural_private',
@@ -32,7 +38,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'authenticated',
-    'public.create_razorpay_checkout_session(uuid,text,text,text,integer,text)',
+    'public.create_razorpay_checkout_session(uuid,text,text,text,integer,text,integer)',
     'execute'
   ),
   'browser users cannot create server billing sessions directly'
@@ -40,10 +46,18 @@ select ok(
 select ok(
   has_function_privilege(
     'service_role',
-    'public.create_razorpay_checkout_session(uuid,text,text,text,integer,text)',
+    'public.create_razorpay_checkout_session(uuid,text,text,text,integer,text,integer)',
     'execute'
   ),
   'service role can create server billing sessions'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'public.razorpay_trial_eligible(uuid,text)',
+    'execute'
+  ),
+  'browser users cannot query introductory trial eligibility directly'
 );
 
 insert into auth.users (
@@ -90,15 +104,68 @@ select results_eq(
 
 set local role service_role;
 
+reset role;
+
+insert into kural_private.billing_checkout_sessions (
+  user_id,
+  plan_key,
+  checkout_kind,
+  provider_id,
+  environment,
+  amount_subunits,
+  currency,
+  status,
+  payment_id,
+  expires_at
+) values (
+  '55555555-5555-4555-8555-555555555555',
+  'monthly',
+  'subscription',
+  'sub_existing123',
+  'TEST',
+  9900,
+  'INR',
+  'expired',
+  'pay_existing123',
+  now() - interval '1 day'
+);
+
+set local role service_role;
+
+select ok(
+  not public.razorpay_trial_eligible(
+    '55555555-5555-4555-8555-555555555555',
+    'TEST'
+  ),
+  'an existing or former paid subscriber is not eligible for an introductory trial'
+);
+
+reset role;
+
+delete from kural_private.billing_checkout_sessions
+where provider_id = 'sub_existing123';
+
+set local role service_role;
+
+select ok(
+  public.razorpay_trial_eligible(
+    '55555555-5555-4555-8555-555555555555',
+    'TEST'
+  ),
+  'a new account is eligible for its introductory trial'
+);
+
 create temporary table test_checkout as
-select public.create_razorpay_checkout_session(
+select session_id as id, trial_ends_at
+from public.create_razorpay_checkout_session(
   '55555555-5555-4555-8555-555555555555',
   'monthly',
   'subscription',
   'TEST',
   9900,
-  'INR'
-) as id;
+  'INR',
+  3
+);
 
 reset role;
 
@@ -107,6 +174,13 @@ select results_eq(
     where id = (select id from test_checkout)$$,
   $$values ('pending'::text, null::text)$$,
   'new checkout sessions are pending and have no provider ID'
+);
+
+select ok(
+  (select trial_ends_at > now() + interval '2 days 23 hours'
+    and trial_ends_at < now() + interval '3 days 1 hour'
+    from test_checkout),
+  'a new monthly subscriber receives a three-day trial window'
 );
 
 set local role service_role;
@@ -118,6 +192,27 @@ select lives_ok(
     'sub_test123'
   )$$,
   'the service attaches the server-created provider ID'
+);
+
+select ok(
+  public.apply_razorpay_checkout_state(
+    (select id from test_checkout),
+    '55555555-5555-4555-8555-555555555555',
+    'trialing',
+    'pay_trial123',
+    now() - interval '1 minute',
+    now() + interval '3 days',
+    false,
+    now() - interval '1 second'
+  ),
+  'an authenticated Razorpay trial is applied'
+);
+
+select results_eq(
+  $$select status, plan_key, source from public.user_entitlements
+    where user_id = '55555555-5555-4555-8555-555555555555'$$,
+  $$values ('trialing'::text, 'monthly'::text, 'razorpay'::text)$$,
+  'the trial grants premium access before the first recurring charge'
 );
 
 select ok(
@@ -140,6 +235,40 @@ select results_eq(
   $$values ('active'::text, 'monthly'::text, 'razorpay'::text)$$,
   'verified checkout grants the Razorpay entitlement'
 );
+
+set local role service_role;
+
+create temporary table repeated_trial as
+select session_id, trial_ends_at
+from public.create_razorpay_checkout_session(
+  '55555555-5555-4555-8555-555555555555',
+  'monthly',
+  'subscription',
+  'TEST',
+  9900,
+  'INR',
+  3
+);
+
+reset role;
+
+select is(
+  (select trial_ends_at from repeated_trial),
+  null::timestamptz,
+  'an account cannot receive a second introductory trial'
+);
+
+set local role service_role;
+
+select ok(
+  not public.razorpay_trial_eligible(
+    '55555555-5555-4555-8555-555555555555',
+    'TEST'
+  ),
+  'an account that used the trial is no longer eligible'
+);
+
+reset role;
 
 select ok(
   public.apply_razorpay_webhook_state(

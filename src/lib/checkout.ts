@@ -11,6 +11,8 @@ export type RazorpayCheckoutSession = {
   currency: "INR";
   planId: CheckoutPlanId;
   description: string;
+  trialEligible: boolean;
+  trialEndsAt: string | null;
 };
 
 type RazorpaySuccess = {
@@ -22,8 +24,8 @@ type RazorpaySuccess = {
 
 type RazorpayOptions = {
   key: string;
-  amount: number;
-  currency: string;
+  amount?: number;
+  currency?: string;
   name: string;
   description: string;
   order_id?: string;
@@ -66,6 +68,8 @@ export function parseCheckoutSession(input: unknown): RazorpayCheckoutSession {
     currency: value.currency as "INR",
     planId: value.planId as CheckoutPlanId,
     description: String(value.description ?? ""),
+    trialEligible: value.trialEligible === true,
+    trialEndsAt: typeof value.trialEndsAt === "string" ? value.trialEndsAt : null,
   };
   if (
     !UUID_PATTERN.test(session.sessionId) ||
@@ -76,13 +80,16 @@ export function parseCheckoutSession(input: unknown): RazorpayCheckoutSession {
     !Number.isInteger(session.amount) ||
     session.amount <= 0 ||
     session.currency !== "INR" ||
-    !session.description
+    !session.description ||
+    (session.trialEligible !== Boolean(session.trialEndsAt)) ||
+    (session.trialEndsAt !== null && !Number.isFinite(Date.parse(session.trialEndsAt)))
   ) {
     throw new Error("The payment session response was invalid.");
   }
   if (
     (session.checkoutKind === "order") !== session.providerId.startsWith("order_") ||
-    (session.planId === "lifetime") !== (session.checkoutKind === "order")
+    (session.planId === "lifetime") !== (session.checkoutKind === "order") ||
+    (session.trialEligible && session.planId !== "monthly")
   ) {
     throw new Error("The payment session response was invalid.");
   }
@@ -134,12 +141,19 @@ export async function startRazorpayCheckout(args: {
   client: SupabaseClient;
   planId: CheckoutPlanId;
   email: string | null;
-}): Promise<"verified" | "pending" | "dismissed"> {
+  requireTrial?: boolean;
+}): Promise<"verified" | "pending" | "dismissed" | "trial-unavailable"> {
   const response = await invoke<Record<string, unknown>>(
     args.client,
     "razorpay-checkout",
-    { planId: args.planId },
+    {
+      planId: args.planId,
+      ...(args.requireTrial ? { trialRequired: true } : {}),
+    },
   );
+  if (args.requireTrial && response.trialEligible === false) {
+    return "trial-unavailable";
+  }
   const session = parseCheckoutSession(response);
   await loadRazorpayCheckout();
 
@@ -156,12 +170,16 @@ export async function startRazorpayCheckout(args: {
     };
     const checkout = new window.Razorpay({
       key: session.keyId,
-      amount: session.amount,
-      currency: session.currency,
       name: "Kural Companion",
-      description: session.description,
+      description: session.trialEligible
+        ? "3-day free trial · then ₹99/month"
+        : session.description,
       ...(session.checkoutKind === "order"
-        ? { order_id: session.providerId }
+        ? {
+            order_id: session.providerId,
+            amount: session.amount,
+            currency: session.currency,
+          }
         : { subscription_id: session.providerId }),
       prefill: args.email ? { email: args.email } : undefined,
       readonly: args.email ? { email: true } : undefined,

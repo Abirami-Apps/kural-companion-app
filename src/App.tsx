@@ -11,6 +11,8 @@ import { AuthProvider } from "@/components/auth/AuthProvider";
 import { UserDataProvider } from "@/components/sync/UserDataProvider";
 import { PwaProvider } from "@/components/pwa/PwaProvider";
 import { NativeAppBridge } from "@/components/native/NativeAppBridge";
+import { PremiumPromptProvider } from "@/components/subscription/PremiumPromptProvider";
+
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Subscribe = lazy(() => import("./pages/Subscribe.tsx"));
 const Login = lazy(() => import("./pages/Login.tsx"));
@@ -36,36 +38,38 @@ const App = () => (
           <AuthProvider>
             <UserDataProvider>
               <ThemeProvider>
-                <HourlyKuralProvider>
-              <Toaster />
-              <Sonner />
-              <Suspense
-                fallback={
-                  <div className="flex min-h-screen items-center justify-center" role="status">
-                    Loading Kural Companion…
-                  </div>
-                }
-              >
-                <Routes>
-                  <Route element={<AppLayout />}>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/kural/:number" element={<Index />} />
-                    <Route path="/favourites" element={<Favourites />} />
-                    <Route path="/chapters" element={<Chapters />} />
-                    <Route path="/hourly" element={<HourlyKural />} />
-                    <Route path="/subscribe" element={<Subscribe />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/refunds" element={<RefundPolicy />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/delivery" element={<DeliveryPolicy />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Route>
-                </Routes>
-              </Suspense>
-                </HourlyKuralProvider>
+                <PremiumPromptProvider>
+                  <HourlyKuralProvider>
+                    <Toaster />
+                    <Sonner />
+                    <Suspense
+                      fallback={
+                        <div className="flex min-h-screen items-center justify-center" role="status">
+                          Loading Kural Companion…
+                        </div>
+                      }
+                    >
+                      <Routes>
+                        <Route element={<AppLayout />}>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/kural/:number" element={<Index />} />
+                          <Route path="/favourites" element={<Favourites />} />
+                          <Route path="/chapters" element={<Chapters />} />
+                          <Route path="/hourly" element={<HourlyKural />} />
+                          <Route path="/subscribe" element={<Subscribe />} />
+                          <Route path="/login" element={<Login />} />
+                          <Route path="/reset-password" element={<ResetPassword />} />
+                          <Route path="/terms" element={<Terms />} />
+                          <Route path="/privacy" element={<Privacy />} />
+                          <Route path="/refunds" element={<RefundPolicy />} />
+                          <Route path="/contact" element={<Contact />} />
+                          <Route path="/delivery" element={<DeliveryPolicy />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Route>
+                      </Routes>
+                    </Suspense>
+                  </HourlyKuralProvider>
+                </PremiumPromptProvider>
               </ThemeProvider>
             </UserDataProvider>
           </AuthProvider>

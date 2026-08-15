@@ -32,7 +32,8 @@ export async function createCheckoutSession(client: ServiceClient, args: {
   environment: RazorpayEnvironment;
   amount: number;
   currency: string;
-}): Promise<string> {
+  trialDays: number;
+}): Promise<{ sessionId: string; trialEndsAt: string | null }> {
   const { data, error } = await client.rpc("create_razorpay_checkout_session", {
     p_user_id: args.userId,
     p_plan_key: args.planKey,
@@ -40,9 +41,31 @@ export async function createCheckoutSession(client: ServiceClient, args: {
     p_environment: args.environment,
     p_amount_subunits: args.amount,
     p_currency: args.currency,
+    p_trial_days: args.trialDays,
   });
   rpcError(error, "Unable to create the checkout session.");
-  if (typeof data !== "string") throw new Error("Checkout session creation failed.");
+  const row = Array.isArray(data) && data.length ? data[0] as Record<string, unknown> : null;
+  if (typeof row?.session_id !== "string") {
+    throw new Error("Checkout session creation failed.");
+  }
+  return {
+    sessionId: row.session_id,
+    trialEndsAt: typeof row.trial_ends_at === "string" ? row.trial_ends_at : null,
+  };
+}
+
+export async function trialEligible(
+  client: ServiceClient,
+  args: { userId: string; environment: RazorpayEnvironment },
+): Promise<boolean> {
+  const { data, error } = await client.rpc("razorpay_trial_eligible", {
+    p_user_id: args.userId,
+    p_environment: args.environment,
+  });
+  rpcError(error, "Unable to verify introductory trial eligibility.");
+  if (typeof data !== "boolean") {
+    throw new Error("Trial eligibility response was invalid.");
+  }
   return data;
 }
 

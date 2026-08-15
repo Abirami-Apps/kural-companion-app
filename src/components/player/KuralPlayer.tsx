@@ -10,6 +10,7 @@ import { VerseDisplay } from "@/components/player/VerseDisplay";
 import { ShortcutsDialog } from "@/components/player/ShortcutsDialog";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { usePremiumPrompt } from "@/contexts/PremiumPromptContext";
 
 /**
  * The one and only player composition. Rendered by `/`, `/?k=123` and
@@ -17,6 +18,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
  */
 export function KuralPlayer() {
   const p = useKuralPlayer();
+  const { openPremiumPrompt } = usePremiumPrompt();
   const [keypadOpen, setKeypadOpen] = useState(false);
   const display = p.entry || String(p.number);
   const seekDisabled = !p.duration || p.locked;
@@ -91,6 +93,7 @@ export function KuralPlayer() {
       onNext={p.goNext}
       onToggle={p.togglePlay}
       onToggleLoopOne={() => p.setLoopOne((loopOne) => !loopOne)}
+      onLocked={openPremiumPrompt}
     />
   );
 
@@ -117,6 +120,7 @@ export function KuralPlayer() {
             onNext={p.goNext}
             onChooseNumber={() => setKeypadOpen(true)}
             locked={p.locked}
+            onRequestPremium={openPremiumPrompt}
           />
         </section>
 
@@ -175,12 +179,13 @@ export function KuralPlayer() {
             <div className="border-t border-secondary-foreground/15 pt-3">{transport}</div>
 
             {p.locked && (
-              <Link
-                to="/subscribe"
+              <button
+                type="button"
+                onClick={openPremiumPrompt}
                 className="inline-flex min-h-11 items-center justify-center text-xs text-secondary-foreground/75 underline underline-offset-4 hover:text-gold-light"
               >
-                See subscription options
-              </Link>
+                Start free trial
+              </button>
             )}
           </div>
         </aside>

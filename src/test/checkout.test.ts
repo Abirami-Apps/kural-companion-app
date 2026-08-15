@@ -12,6 +12,8 @@ const validSession = {
   currency: "INR",
   planId: "yearly",
   description: "Kural Companion Plus Yearly",
+  trialEligible: false,
+  trialEndsAt: null,
 };
 
 describe("Razorpay checkout session validation", () => {
@@ -52,11 +54,13 @@ describe("Razorpay browser checkout", () => {
   });
 
   it("verifies the provider callback through the authenticated Edge Function", async () => {
+    let checkoutOptions: ConstructorParameters<NonNullable<typeof window.Razorpay>>[0] | undefined;
     const invoke = vi.fn()
       .mockResolvedValueOnce({ data: { ok: true, ...validSession }, error: null })
       .mockResolvedValueOnce({ data: { ok: true }, error: null });
     const client = { functions: { invoke } } as unknown as SupabaseClient;
     window.Razorpay = function RazorpayMock(options) {
+      checkoutOptions = options;
       return {
         open: () => options.handler({
           razorpay_payment_id: "pay_123",
@@ -83,6 +87,67 @@ describe("Razorpay browser checkout", () => {
         razorpay_signature: "a".repeat(64),
       },
     });
+    expect(checkoutOptions).not.toHaveProperty("amount");
+  });
+
+  it("stops before opening checkout when the introductory trial was already used", async () => {
+    const invoke = vi.fn().mockResolvedValueOnce({
+      data: { ok: true, trialEligible: false, planId: "monthly" },
+      error: null,
+    });
+    const client = { functions: { invoke } } as unknown as SupabaseClient;
+
+    await expect(startRazorpayCheckout({
+      client,
+      planId: "monthly",
+      email: "reader@example.com",
+      requireTrial: true,
+    })).resolves.toBe("trial-unavailable");
+    expect(invoke).toHaveBeenCalledWith("razorpay-checkout", {
+      body: { planId: "monthly", trialRequired: true },
+    });
+    expect(window.Razorpay).toBeUndefined();
+  });
+
+  it("opens an eligible monthly trial without passing a recurring charge amount", async () => {
+    let checkoutOptions: ConstructorParameters<NonNullable<typeof window.Razorpay>>[0] | undefined;
+    const trialSession = {
+      ...validSession,
+      planId: "monthly",
+      providerId: "sub_trial123456",
+      amount: 9900,
+      description: "Kural Companion Plus Monthly",
+      trialEligible: true,
+      trialEndsAt: "2026-08-18T07:00:00.000Z",
+    };
+    const invoke = vi.fn()
+      .mockResolvedValueOnce({ data: { ok: true, ...trialSession }, error: null })
+      .mockResolvedValueOnce({ data: { ok: true }, error: null });
+    const client = { functions: { invoke } } as unknown as SupabaseClient;
+    window.Razorpay = function RazorpayMock(options) {
+      checkoutOptions = options;
+      return {
+        open: () => options.handler({
+          razorpay_payment_id: "pay_trial123",
+          razorpay_subscription_id: trialSession.providerId,
+          razorpay_signature: "c".repeat(64),
+        }),
+        on: vi.fn(),
+      };
+    } as unknown as typeof window.Razorpay;
+
+    await expect(startRazorpayCheckout({
+      client,
+      planId: "monthly",
+      email: "reader@example.com",
+      requireTrial: true,
+    })).resolves.toBe("verified");
+    expect(checkoutOptions).toMatchObject({
+      subscription_id: trialSession.providerId,
+      description: "3-day free trial · then ₹99/month",
+    });
+    expect(checkoutOptions).not.toHaveProperty("amount");
+    expect(checkoutOptions).not.toHaveProperty("currency");
   });
 
   it("does not verify or grant access when checkout is dismissed", async () => {
