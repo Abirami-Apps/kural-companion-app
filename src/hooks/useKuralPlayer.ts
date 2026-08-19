@@ -73,8 +73,9 @@ export function useKuralPlayer() {
   const playTokenRef = useRef(0);
   const activeHourlyRequestRef = useRef<HourlyPlaybackRequest | null>(null);
   const handledAutoplayLocationsRef = useRef(new Set<string>());
+  const promptedLockedNumberRef = useRef<number | null>(null);
 
-  const { canAccessKural, gatingActive } = useEntitlements();
+  const { canAccessKural, gatingActive, premiumPromptReady } = useEntitlements();
   const {
     playbackRequest: hourlyPlaybackRequest,
     markPlayerPlaybackStarted,
@@ -110,11 +111,26 @@ export function useKuralPlayer() {
     }
     handledAutoplayLocationsRef.current.add(location.key);
     shouldPlayRef.current = true;
-    if (locked) {
-      openPremiumPrompt();
+  }, [autoplayRequested, invalidTarget, location.key]);
+
+  // A locked Kural should always explain the next action instead of leaving
+  // the player looking inactive. Wait for signed-in access checks to finish so
+  // an existing subscriber never sees a false paywall while their session loads.
+  useLayoutEffect(() => {
+    if (!locked) {
+      promptedLockedNumberRef.current = null;
       return;
     }
-  }, [autoplayRequested, invalidTarget, location.key, locked, openPremiumPrompt]);
+    if (
+      invalidTarget ||
+      !premiumPromptReady ||
+      promptedLockedNumberRef.current === number
+    ) {
+      return;
+    }
+    promptedLockedNumberRef.current = number;
+    openPremiumPrompt();
+  }, [invalidTarget, locked, number, openPremiumPrompt, premiumPromptReady]);
 
   const toggleFavourite = useCallback(() => {
     toggleSyncedFavourite(number);

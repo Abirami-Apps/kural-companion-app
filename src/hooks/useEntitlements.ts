@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import { FREE_LIMIT, subscriptionsEnabled } from "@/lib/features";
 import { useAuth } from "@/hooks/useAuth";
+import type { EntitlementLoadStatus } from "@/lib/auth-context";
 import { isValidKuralNumber } from "@/lib/player-utils";
 
 export interface Entitlements {
@@ -12,6 +13,17 @@ export interface Entitlements {
   /** Premium features are open for preview until paid gating is configured. */
   premiumAccess: boolean;
   premiumPreview: boolean;
+  /** False while a signed-in account's paid access is still being checked. */
+  premiumPromptReady: boolean;
+}
+
+export function canShowPremiumPromptWith(opts: {
+  authLoading: boolean;
+  signedIn: boolean;
+  entitlementStatus: EntitlementLoadStatus;
+}): boolean {
+  if (opts.authLoading) return false;
+  return !opts.signedIn || opts.entitlementStatus === "ready";
 }
 
 export function canUsePremiumFeaturesWith(opts: {
@@ -37,10 +49,15 @@ export function canAccessKuralWith(
  * must go through this, so gating can never diverge between screens.
  */
 export function useEntitlements(): Entitlements {
-  const { subscribed } = useAuth();
+  const { subscribed, loading, signedIn, entitlementStatus } = useAuth();
   const premiumAccess = canUsePremiumFeaturesWith({
     subscriptionsEnabled,
     subscribed,
+  });
+  const premiumPromptReady = canShowPremiumPromptWith({
+    authLoading: loading,
+    signedIn,
+    entitlementStatus,
   });
 
   const canAccessKural = useCallback(
@@ -61,7 +78,8 @@ export function useEntitlements(): Entitlements {
       isLocked: (n: number) => !canAccessKural(n),
       premiumAccess,
       premiumPreview: !subscriptionsEnabled,
+      premiumPromptReady,
     }),
-    [canAccessKural, premiumAccess],
+    [canAccessKural, premiumAccess, premiumPromptReady],
   );
 }
