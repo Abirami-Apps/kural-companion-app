@@ -42,7 +42,11 @@ Deno.serve(async (request) => {
       eventTimestamp: new Date().toISOString(),
     });
     return jsonResponse({ ok: true }, 200, cors);
-  } catch {
+  } catch (error) {
+    console.error(
+      "Razorpay renewal cancellation failed:",
+      error instanceof Error ? error.message : "Unknown cancellation error",
+    );
     return jsonResponse(
       { error: "We could not cancel renewal. Please contact support." },
       503,

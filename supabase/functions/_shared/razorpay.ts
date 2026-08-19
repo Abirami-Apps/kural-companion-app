@@ -391,9 +391,22 @@ export async function verifyProviderPayment(args: {
 
 export async function cancelProviderSubscription(providerId: string): Promise<RazorpayEntityState> {
   if (!providerId.startsWith("sub_")) throw new Error("Subscription ID is invalid.");
+  const current = await apiRequest(`/subscriptions/${encodeURIComponent(providerId)}`);
+  const currentStart = isoFromSeconds(current.current_start);
+  const currentEnd = isoFromSeconds(current.current_end);
+  const hasActiveBillingCycle = Boolean(
+    currentStart && currentEnd && Date.parse(currentEnd) > Date.now(),
+  );
   const entity = await apiRequest(
     `/subscriptions/${encodeURIComponent(providerId)}/cancel`,
-    { method: "POST", body: { cancel_at_cycle_end: true } },
+    {
+      method: "POST",
+      // Razorpay rejects cycle-end cancellation while a future-start free
+      // trial is authenticated because no paid billing cycle exists yet.
+      // Cancelling that provider subscription immediately prevents the first
+      // charge; subscriptionState still preserves access through start_at.
+      body: { cancel_at_cycle_end: hasActiveBillingCycle },
+    },
   );
   const state = subscriptionState(entity);
   return { ...state, cancelAtPeriodEnd: true };

@@ -1,6 +1,7 @@
 import { webcrypto } from "node:crypto";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  cancelProviderSubscription,
   parseWebhookEvent,
   planDefinition,
   publicKeyId,
@@ -39,6 +40,9 @@ beforeEach(() => {
     env: { get: (name: string) => environment[name] },
   });
   vi.stubGlobal("crypto", webcrypto);
+  vi.stubGlobal("AbortSignal", {
+    timeout: () => new AbortController().signal,
+  });
 });
 
 afterEach(() => {
@@ -66,6 +70,63 @@ describe("Razorpay server configuration", () => {
   it("rejects a live key in a test deployment", () => {
     environment.RAZORPAY_KEY_ID = "rzp_live_1234567890";
     expect(() => publicKeyId()).toThrow("environment");
+  });
+});
+
+describe("Razorpay subscription cancellation", () => {
+  it("cancels an authenticated future-start trial immediately without removing trial access", async () => {
+    const trialEnd = Math.floor(Date.now() / 1_000) + (3 * 24 * 60 * 60);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        id: "sub_trial123",
+        status: "authenticated",
+        customer_id: "cust_trial123",
+        start_at: trialEnd,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        id: "sub_trial123",
+        status: "cancelled",
+        customer_id: "cust_trial123",
+        start_at: trialEnd,
+      }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(cancelProviderSubscription("sub_trial123")).resolves.toMatchObject({
+      state: "trialing",
+      expiresAt: new Date(trialEnd * 1_000).toISOString(),
+      cancelAtPeriodEnd: true,
+    });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      cancel_at_cycle_end: false,
+    });
+  });
+
+  it("keeps cycle-end cancellation for a subscription in an active paid period", async () => {
+    const now = Math.floor(Date.now() / 1_000);
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        id: "sub_active123",
+        status: "active",
+        current_start: now - 60,
+        current_end: now + 2_592_000,
+      }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({
+        id: "sub_active123",
+        status: "active",
+        current_start: now - 60,
+        current_end: now + 2_592_000,
+        has_scheduled_changes: true,
+        schedule_change_at: "cycle_end",
+      }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(cancelProviderSubscription("sub_active123")).resolves.toMatchObject({
+      state: "active",
+      cancelAtPeriodEnd: true,
+    });
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      cancel_at_cycle_end: true,
+    });
   });
 });
 

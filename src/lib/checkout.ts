@@ -128,7 +128,20 @@ async function invoke<T>(
   body: Record<string, unknown>,
 ): Promise<T> {
   const { data, error } = await client.functions.invoke(functionName, { body });
-  if (error) throw new Error(error.message);
+  if (error) {
+    const context = (error as { context?: unknown }).context;
+    if (context instanceof Response) {
+      const payload = await context.clone().json().catch(() => null) as unknown;
+      if (
+        payload &&
+        typeof payload === "object" &&
+        typeof (payload as { error?: unknown }).error === "string"
+      ) {
+        throw new Error((payload as { error: string }).error);
+      }
+    }
+    throw new Error(error.message);
+  }
   if (!data || data.ok !== true) {
     throw new Error(
       typeof data?.error === "string" ? data.error : "The payment request failed.",

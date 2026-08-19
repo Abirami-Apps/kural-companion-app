@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { parseCheckoutSession, startRazorpayCheckout } from "@/lib/checkout";
+import {
+  cancelRazorpayRenewal,
+  parseCheckoutSession,
+  startRazorpayCheckout,
+} from "@/lib/checkout";
 import { safeInternalPath } from "@/lib/navigation";
 
 const validSession = {
@@ -195,6 +199,26 @@ describe("Razorpay browser checkout", () => {
       planId: "yearly",
       email: "reader@example.com",
     })).resolves.toBe("pending");
+  });
+
+  it("shows the safe server cancellation error instead of a transport error", async () => {
+    const invoke = vi.fn().mockResolvedValueOnce({
+      data: null,
+      error: {
+        message: "Edge Function returned a non-2xx status code",
+        context: new Response(JSON.stringify({
+          error: "We could not cancel renewal. Please contact support.",
+        }), {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        }),
+      },
+    });
+    const client = { functions: { invoke } } as unknown as SupabaseClient;
+
+    await expect(cancelRazorpayRenewal(client)).rejects.toThrow(
+      "We could not cancel renewal. Please contact support.",
+    );
   });
 });
 
