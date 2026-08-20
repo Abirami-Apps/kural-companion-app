@@ -646,10 +646,11 @@
   }
 }
 
-/* Android landscape player shell: reserve the right 40% for the controls from
-   the very top of the app. The header and reading surface remain in the left
-   60%, so the keypad is no longer a floating card below a full-width header. */
-@media (min-width: 640px) and (max-width: 1179px) and (orientation: landscape) and (max-height: 500px) {
+/* Landscape tablet player shell: reserve the right 40% for the controls from
+   the very top of the app at every supported landscape height. The header and
+   reading surface remain in the left 60%, so the keypad never gets clipped by
+   the footer or a short main column. */
+@media (min-width: 640px) and (max-width: 1179px) and (orientation: landscape) {
   #app-root.player-shell {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr);
@@ -662,6 +663,27 @@
     grid-row: 1;
     align-self: start;
     min-width: 0;
+    overflow: hidden;
+  }
+
+  #app-root.player-shell > header > div {
+    min-width: 0;
+  }
+
+  /* At 1,100–1,179px the normal desktop nav becomes eligible by width, but
+     the landscape shell still reserves that space for the player. Use the
+     compact header controls in this split view so nav items cannot spill into
+     the right-hand card. */
+  #app-root.player-shell > header nav[aria-label="Main"] {
+    display: none !important;
+  }
+
+  #app-root.player-shell > header [class~="nav:inline-flex"] {
+    display: none !important;
+  }
+
+  #app-root.player-shell > header [class~="nav:hidden"] {
+    display: inline-flex !important;
   }
 
   #app-root.player-shell > main {
@@ -672,6 +694,12 @@
     height: calc(100% - 4.5rem);
     margin-top: 4.5rem;
     overflow: hidden;
+  }
+
+  /* The compact landscape shell uses the full viewport for the player. Keep
+     the footer out of the grid so it cannot overlap the transport controls. */
+  #app-root.player-shell > footer {
+    display: none;
   }
 
   #app-root.player-shell .player-page,
@@ -830,6 +858,43 @@
 
   #app-root.player-shell .control-card .tablet-portrait-locked {
     order: 5;
+  }
+}
+
+/* Very narrow landscape phones have just enough width for the portrait, the
+   chapter heading, and the four reading actions when the heading column gets
+   a little more room. Keep the action row on one line so it never drops over
+   the verse text. */
+@media (min-width: 640px) and (max-width: 760px) and (orientation: landscape) {
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-header {
+    grid-template-columns: minmax(5.5rem, 0.24fr) minmax(0, 0.76fr);
+    gap: 0.35rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-portrait {
+    min-height: 4rem;
+    height: 4rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header {
+    min-width: 0;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) {
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+    gap: 0.25rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > span {
+    flex-shrink: 0;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > div {
+    flex-shrink: 0;
   }
 }
 
