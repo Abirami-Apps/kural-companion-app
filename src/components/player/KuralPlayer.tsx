@@ -108,7 +108,7 @@ export function KuralPlayer() {
       <div className="mx-auto grid h-full min-h-0 w-full max-w-[1280px] grid-rows-[minmax(0,1fr)_auto] gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3 short:gap-2 short:px-2 short:py-2 wide:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)] wide:grid-rows-1 wide:items-stretch split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:grid-rows-1 split:items-stretch studio:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.85fr)] studio:grid-rows-1 studio:items-stretch studio:gap-6 studio:px-8 studio:py-8">
         <section
           aria-label="Kural verse"
-          className="reading-panel h-full min-h-0 min-w-0 overflow-hidden rounded-[1.35rem] border border-border/80 bg-card px-3 py-3 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:rounded-[1.5rem] sm:px-5 sm:py-4 short:px-3 short:py-2 studio:px-8 studio:py-6"
+          className="reading-panel h-full min-h-0 min-w-0 overflow-hidden rounded-[1.35rem] border border-border/80 px-3 py-3 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:rounded-[1.5rem] sm:px-5 sm:py-4 short:px-3 short:py-2 studio:px-8 studio:py-6"
         >
           <VerseDisplay
             kural={p.current}

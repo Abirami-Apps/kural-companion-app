@@ -280,6 +280,34 @@
   background: hsl(var(--background));
 }
 
+/* A warmer reading surface keeps the player expressive without competing with
+   the Tamil verse. The Valluvar artwork is layered independently in the
+   player so it can be hidden on very small layouts without reflowing controls. */
+.reading-panel {
+  background:
+    radial-gradient(circle at 88% 12%, hsl(var(--primary) / 0.14), transparent 28%),
+    linear-gradient(145deg, hsl(var(--card)), hsl(var(--accent) / 0.12) 58%, hsl(var(--card)));
+}
+
+.valluvar-art img {
+  filter: drop-shadow(0 18px 28px hsl(var(--primary) / 0.14));
+}
+
+[data-theme='midnight'] .reading-panel {
+  background:
+    radial-gradient(circle at 88% 12%, hsl(var(--primary) / 0.18), transparent 30%),
+    linear-gradient(145deg, hsl(var(--card)), hsl(var(--accent) / 0.2) 58%, hsl(var(--card)));
+}
+
+[data-theme='midnight'] .valluvar-art img {
+  opacity: 0.12;
+  mix-blend-mode: screen;
+}
+
+[data-contrast='high'] .valluvar-art {
+  display: none;
+}
+
 .reading-divider {
   display: flex;
   align-items: center;

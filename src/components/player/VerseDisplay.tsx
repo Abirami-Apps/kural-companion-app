@@ -57,8 +57,30 @@ export function VerseDisplay({
           exit={reduce ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: reduce ? 0 : 0.28, ease: [0.22, 1, 0.36, 1] }}
           aria-label={`Kural ${kural.number}, chapter ${kural.chapter}`}
-          className="flex h-full min-w-0 flex-col"
+          className="relative flex h-full min-w-0 flex-col"
         >
+          <div
+            className="valluvar-art pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[38%] max-w-[22rem] items-end justify-end overflow-hidden xl:flex"
+            aria-hidden="true"
+          >
+            <img
+              src="/valluvar.png"
+              alt=""
+              className="h-[94%] w-full object-contain object-bottom opacity-[0.2] saturate-[1.2]"
+            />
+          </div>
+          <div
+            className="valluvar-art pointer-events-none absolute right-0 top-0 z-0 flex h-32 w-28 items-start justify-end overflow-hidden sm:h-36 sm:w-32 xl:hidden"
+            aria-hidden="true"
+          >
+            <img
+              src="/valluvar.png"
+              alt=""
+              className="h-full w-full object-contain object-top opacity-[0.16] saturate-[1.2]"
+            />
+          </div>
+
+          <div className="relative z-10 flex h-full min-w-0 flex-col">
           <div className="flex flex-col items-center text-center">
             <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 font-tamil text-xs text-muted-foreground sm:text-sm wide:short:!text-[12px]">
               <span>{kural.section}</span>
@@ -196,6 +218,7 @@ export function VerseDisplay({
             <span className="sr-only" role="status">
               {copied ? "Kural copied to clipboard" : ""}
             </span>
+          </div>
           </div>
         </motion.article>
       </AnimatePresence>
