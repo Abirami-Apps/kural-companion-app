@@ -148,14 +148,26 @@ export function KuralPlayer() {
           className="control-card tablet-portrait-control-card mobile-landscape-control-card hidden min-w-0 flex-col justify-center rounded-[1.5rem] bg-secondary px-5 py-5 text-secondary-foreground shadow-[0_28px_70px_-42px_hsl(var(--navy)/0.9)] wide:flex studio:col-start-3 studio:flex studio:px-5 studio:py-6"
         >
           <div className="tablet-portrait-control-layout mx-auto flex w-full max-w-[390px] flex-col gap-4">
-            <div className="tablet-portrait-readout">
-              <NumberReadout
-                display={display}
-                pending={p.pending}
-                softDelay={p.softDelay}
-                onBackspace={p.backspace}
-                onKeyboard={() => p.setShortcutsOpen(true)}
-              />
+            <div className="tablet-portrait-top-row">
+              <div className="tablet-portrait-readout">
+                <NumberReadout
+                  display={display}
+                  pending={p.pending}
+                  softDelay={p.softDelay}
+                  onBackspace={p.backspace}
+                  onKeyboard={() => p.setShortcutsOpen(true)}
+                />
+              </div>
+
+              <div className="tablet-portrait-shuffle flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={p.shuffle}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/70 transition hover:bg-secondary-foreground/[0.06] hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+                >
+                  <Shuffle className="h-4 w-4" aria-hidden="true" /> Surprise me
+                </button>
+              </div>
             </div>
 
             <div className="tablet-portrait-status flex min-h-[22px] items-center justify-center gap-2 text-center text-xs text-secondary-foreground/70" lang="en">
@@ -187,16 +199,6 @@ export function KuralPlayer() {
 
             <div className="tablet-portrait-keypad">
               <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onSubmit={p.submitEntry} />
-            </div>
-
-            <div className="tablet-portrait-shuffle flex items-center justify-center">
-              <button
-                type="button"
-                onClick={p.shuffle}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/70 transition hover:bg-secondary-foreground/[0.06] hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
-              >
-                <Shuffle className="h-4 w-4" aria-hidden="true" /> Surprise me
-              </button>
             </div>
 
             <div className="tablet-portrait-transport border-t border-secondary-foreground/15 pt-3">{transport}</div>
