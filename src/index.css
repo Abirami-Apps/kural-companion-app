@@ -418,15 +418,52 @@
     gap: 0.35rem;
   }
 
-  .mobile-landscape-control-card .tablet-portrait-readout,
   .mobile-landscape-control-card .tablet-portrait-status,
-  .mobile-landscape-control-card .tablet-portrait-recents,
-  .mobile-landscape-control-card .tablet-portrait-shuffle {
+  .mobile-landscape-control-card .tablet-portrait-recents {
     display: none;
   }
 
+  /* Keep the two orientation-independent discovery controls available when
+     a desktop window is resized into a short, landscape viewport. They were
+     previously hidden to save space, which made the number and Surprise Me
+     action disappear even though the rest of the player remained visible. */
+  .mobile-landscape-control-card .tablet-portrait-readout {
+    display: block;
+  }
+
+  .mobile-landscape-control-card .tablet-portrait-readout > div {
+    gap: 0.25rem;
+  }
+
+  .mobile-landscape-control-card .tablet-portrait-readout > div > div {
+    min-height: 2.55rem;
+    border-radius: 0.8rem;
+  }
+
+  .mobile-landscape-control-card .tablet-portrait-readout > div > button {
+    height: 2.55rem;
+    width: 2.55rem;
+    border-radius: 0.8rem;
+  }
+
+  .mobile-landscape-control-card .tablet-portrait-readout .digital-display {
+    font-size: 1.1rem;
+  }
+
+  .mobile-landscape-control-card .tablet-portrait-shuffle {
+    display: flex;
+    min-height: 2rem;
+  }
+
+  .mobile-landscape-control-card .tablet-portrait-shuffle button {
+    min-height: 2rem;
+    gap: 0.3rem;
+    padding: 0.1rem 0.45rem;
+    font-size: 0.62rem;
+  }
+
   .mobile-landscape-control-card .tablet-portrait-progress {
-    min-height: 2.25rem;
+    min-height: 2rem;
     gap: 0.35rem;
     font-size: 0.62rem;
   }
@@ -436,14 +473,14 @@
   }
 
   .mobile-landscape-control-card .tablet-portrait-keypad .grid button {
-    height: 2.45rem;
-    min-height: 2.45rem;
+    height: 2.2rem;
+    min-height: 2.2rem;
     border-radius: 0.8rem;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
   }
 
   .mobile-landscape-control-card .tablet-portrait-transport {
-    padding-top: 0.2rem;
+    padding-top: 0.1rem;
   }
 }
 
