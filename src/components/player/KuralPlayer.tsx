@@ -216,14 +216,28 @@ export function KuralPlayer() {
         <section aria-label="Compact player controls" className="tablet-portrait-compact min-h-0 wide:hidden studio:hidden">
           <div className="h-full rounded-[1.35rem] bg-secondary px-3 py-2 text-secondary-foreground shadow-[0_24px_60px_-38px_hsl(var(--navy)/0.9)] sm:rounded-[1.5rem] sm:px-4 sm:py-3 short:px-3 short:py-2">
             <div className="mx-auto flex h-full max-w-2xl flex-col justify-center gap-0.5 sm:gap-1">
+              <div className="mobile-portrait-number-readout">
+                <NumberReadout
+                  display={display}
+                  pending={p.pending}
+                  softDelay={p.softDelay}
+                  onBackspace={p.backspace}
+                />
+              </div>
               {progress}
               <div className="mobile-portrait-keypad">
-                <p className="mb-1 text-center text-[0.62rem] uppercase tracking-[0.18em] text-secondary-foreground/55">
-                  Kural number
-                </p>
                 <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onSubmit={p.submitEntry} />
               </div>
               <div className="flex min-h-11 items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={p.shuffle}
+                  aria-label="Surprise me"
+                  className="mobile-portrait-surprise hidden min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-secondary-foreground/20 px-2 text-[0.62rem] font-medium text-secondary-foreground/80 transition hover:border-gold-light/60 hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+                >
+                  <Shuffle className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Surprise</span>
+                </button>
                 <button
                   type="button"
                   onClick={() => setKeypadOpen(true)}

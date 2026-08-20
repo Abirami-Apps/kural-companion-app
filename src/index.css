@@ -305,6 +305,11 @@
   display: none;
 }
 
+.mobile-portrait-number-readout,
+.mobile-portrait-surprise {
+  display: none;
+}
+
 /* The wide player gives Tiruvalluvar his own visual column so the reading
    surface stays calm and the keypad never competes with the verse. */
 .valluvar-panel {
@@ -568,6 +573,31 @@
     display: none !important;
   }
 
+  .mobile-portrait-number-readout {
+    display: block;
+  }
+
+  .mobile-portrait-number-readout > div {
+    gap: 0.35rem;
+  }
+
+  .mobile-portrait-number-readout > div > div {
+    min-height: 3rem;
+    border-radius: 1rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .mobile-portrait-number-readout > div > button {
+    height: 3rem;
+    width: 3rem;
+    border-radius: 1rem;
+  }
+
+  .mobile-portrait-number-readout .digital-display {
+    font-size: 1.25rem;
+  }
+
   .mobile-portrait-keypad {
     display: block;
     padding: 0.1rem 0 0.15rem;
@@ -582,6 +612,10 @@
     min-height: 2.5rem;
     border-radius: 0.85rem;
     font-size: 0.85rem;
+  }
+
+  .mobile-portrait-surprise {
+    display: inline-flex;
   }
 
   .tablet-layout-header {
