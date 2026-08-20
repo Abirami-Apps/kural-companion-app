@@ -642,6 +642,80 @@
   }
 }
 
+/* Android landscape player shell: reserve the right 40% for the controls from
+   the very top of the app. The header and reading surface remain in the left
+   60%, so the keypad is no longer a floating card below a full-width header. */
+@media (min-width: 640px) and (max-width: 1179px) and (orientation: landscape) and (max-height: 500px) {
+  #app-root.player-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  #app-root.player-shell > header {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: start;
+    min-width: 0;
+  }
+
+  #app-root.player-shell > main {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    min-height: 0;
+    height: calc(100% - 4.5rem);
+    margin-top: 4.5rem;
+    overflow: hidden;
+  }
+
+  #app-root.player-shell .player-page,
+  #app-root.player-shell .player-grid {
+    height: 100%;
+    min-height: 0;
+  }
+
+  #app-root.player-shell .player-grid {
+    display: block;
+    padding: 0.35rem 0.4rem 0.4rem;
+  }
+
+  #app-root.player-shell .reading-panel {
+    height: 100%;
+    width: 100%;
+  }
+
+  #app-root.player-shell .control-card {
+    position: fixed;
+    z-index: 30;
+    top: var(--safe-top);
+    right: var(--safe-right);
+    bottom: var(--safe-bottom);
+    left: auto;
+    display: flex !important;
+    width: 40vw;
+    max-width: none;
+    min-height: 0;
+    border-radius: 1.15rem 0 0 1.15rem;
+    padding: 0.3rem 0.45rem;
+  }
+
+  #app-root.player-shell .control-card > div {
+    max-width: none;
+    gap: 0.25rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .meaning-box {
+    padding: 0.3rem 0.5rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .meaning-box p {
+    font-size: 0.72rem;
+    line-height: 1.18;
+  }
+}
+
 /* Portrait tablets have enough room for the complete player. Keep the
    keypad visible so the main surface does not end with an under-filled
    transport strip, while phones continue to use the compact player. */
