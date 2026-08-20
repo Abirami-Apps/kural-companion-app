@@ -301,6 +301,16 @@
     linear-gradient(160deg, hsl(var(--secondary)), hsl(var(--navy)) 72%);
 }
 
+/* The wide and split landscape rules support tablets below the studio
+   breakpoint. At studio widths this explicit rule must win so the player is
+   always 25% artwork / 50% reading / 25% controls. */
+@media (min-width: 1180px) {
+  .player-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+  }
+}
+
 [data-theme='midnight'] .valluvar-panel {
   background:
     radial-gradient(circle at 50% 24%, hsl(var(--primary) / 0.16), transparent 38%),
