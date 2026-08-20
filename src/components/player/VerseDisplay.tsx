@@ -60,7 +60,7 @@ export function VerseDisplay({
           className="relative flex h-full min-w-0 flex-col"
         >
           <div
-            className="valluvar-art pointer-events-none absolute right-0 top-0 z-0 flex h-32 w-28 items-start justify-end overflow-hidden sm:h-36 sm:w-32 studio:hidden"
+            className="valluvar-art tablet-valluvar-art pointer-events-none absolute right-0 top-0 z-0 flex h-32 w-28 items-start justify-end overflow-hidden sm:h-36 sm:w-32 studio:hidden"
             aria-hidden="true"
           >
             <img
@@ -71,64 +71,69 @@ export function VerseDisplay({
           </div>
 
           <div className="relative z-10 flex h-full min-w-0 flex-col">
-          <div className="flex flex-col items-center text-center">
-            <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 font-tamil text-xs text-muted-foreground sm:text-sm wide:short:!text-[12px]">
-              <span>{kural.section}</span>
-              <span className="h-4 w-px bg-border" aria-hidden="true" />
-              <h1 className="font-semibold text-primary">
-                {kural.chapterNumber}. {kural.chapter}
-              </h1>
+          <div className="tablet-layout-header">
+            <div className="tablet-layout-portrait" aria-hidden="true">
+              <img src="/valluvar.png" alt="" />
             </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:mt-3 short:mt-1 short:gap-1.5 studio:mt-4">
-              <span className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-1.5 font-tamil text-sm font-semibold text-primary-foreground shadow-sm wide:short:min-h-[44px] wide:short:text-[14px]">
-                குறள் {kural.number}
-              </span>
-              <button
-                type="button"
-                onClick={onChooseNumber}
-                aria-label={`Choose a Kural number, currently ${kural.number}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary/45 bg-background/40 px-4 text-xs font-semibold text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring wide:short:min-h-[44px] wide:short:px-3 wide:short:text-[12px] studio:hidden"
-              >
-                <Grid3X3 className="h-4 w-4" aria-hidden="true" />
-                <span className="wide:short:hidden">Enter number</span>
-                <span className="hidden wide:short:inline">No.</span>
-              </button>
-              <div className="hidden items-center gap-1 wide:short:flex studio:hidden">
+            <div className="tablet-verse-header flex flex-col items-center text-center">
+              <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 font-tamil text-xs text-muted-foreground sm:text-sm wide:short:!text-[12px]">
+                <span>{kural.section}</span>
+                <span className="h-4 w-px bg-border" aria-hidden="true" />
+                <h1 className="font-semibold text-primary">
+                  {kural.chapterNumber}. {kural.chapter}
+                </h1>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:mt-3 short:mt-1 short:gap-1.5 studio:mt-4">
+                <span className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-1.5 font-tamil text-sm font-semibold text-primary-foreground shadow-sm wide:short:min-h-[44px] wide:short:text-[14px]">
+                  குறள் {kural.number}
+                </span>
                 <button
                   type="button"
-                  onClick={onToggleFavourite}
-                  aria-pressed={isFavourite}
-                  aria-label={
-                    isFavourite
-                      ? `Remove kural ${kural.number} from favourites`
-                      : `Add kural ${kural.number} to favourites`
-                  }
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring wide:short:h-[44px] wide:short:w-[44px]"
+                  onClick={onChooseNumber}
+                  aria-label={`Choose a Kural number, currently ${kural.number}`}
+                  className="choose-number-button inline-flex min-h-11 items-center gap-2 rounded-full border border-primary/45 bg-background/40 px-4 text-xs font-semibold text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring wide:short:min-h-[44px] wide:short:px-3 wide:short:text-[12px] studio:hidden"
                 >
-                  <Heart
-                    className={`h-4 w-4 ${isFavourite ? "fill-primary text-primary" : ""}`}
-                    aria-hidden="true"
-                  />
+                  <Grid3X3 className="h-4 w-4" aria-hidden="true" />
+                  <span className="wide:short:hidden">Enter number</span>
+                  <span className="hidden wide:short:inline">No.</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={share}
-                  aria-label={`Share kural ${kural.number}`}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring wide:short:h-[44px] wide:short:w-[44px]"
-                >
-                  {copied ? (
-                    <Check className="h-4 w-4 text-primary" aria-hidden="true" />
-                  ) : (
-                    <Share2 className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </button>
+                <div className="hidden items-center gap-1 wide:short:flex studio:hidden">
+                  <button
+                    type="button"
+                    onClick={onToggleFavourite}
+                    aria-pressed={isFavourite}
+                    aria-label={
+                      isFavourite
+                        ? `Remove kural ${kural.number} from favourites`
+                        : `Add kural ${kural.number} to favourites`
+                    }
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring wide:short:h-[44px] wide:short:w-[44px]"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${isFavourite ? "fill-primary text-primary" : ""}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={share}
+                    aria-label={`Share kural ${kural.number}`}
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-border text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring wide:short:h-[44px] wide:short:w-[44px]"
+                  >
+                    {copied ? (
+                      <Check className="h-4 w-4 text-primary" aria-hidden="true" />
+                    ) : (
+                      <Share2 className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="reading-divider my-2 sm:my-3 short:my-1 studio:my-3" aria-hidden="true" />
 
-          <div className="flex min-h-14 flex-1 items-center px-1 py-0.5 sm:min-h-20 sm:px-3 short:min-h-12 short:px-1 short:py-0 studio:min-h-28 studio:px-5 studio:py-2">
+          <div className="verse-text-wrap flex min-h-14 flex-1 items-center px-1 py-0.5 sm:min-h-20 sm:px-3 short:min-h-12 short:px-1 short:py-0 studio:min-h-28 studio:px-5 studio:py-2">
             {/* The source text carries a hard line break. Never re-wrap:
                 both source lines stay nowrap and share one auto-fitted size. */}
             <VerseLines text={kural.tamil} />
@@ -156,7 +161,7 @@ export function VerseDisplay({
             kural.meaning && <Meaning text={kural.meaning} />
           )}
 
-          <div className="mt-2 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] items-center gap-1.5 border-t border-border/70 pt-2 sm:mt-3 sm:gap-2 sm:pt-3 short:mt-1 short:pt-1 wide:short:hidden studio:mt-3 studio:grid studio:pt-3">
+          <div className="reading-nav mt-2 grid shrink-0 grid-cols-[minmax(0,1fr)_auto_auto_minmax(0,1fr)] items-center gap-1.5 border-t border-border/70 pt-2 sm:mt-3 sm:gap-2 sm:pt-3 short:mt-1 short:pt-1 wide:short:hidden studio:mt-3 studio:grid studio:pt-3">
             <button
               type="button"
               onClick={onPrev}
