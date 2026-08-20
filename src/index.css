@@ -721,6 +721,15 @@
   #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap {
     flex-basis: 4.4rem;
     min-height: 4.4rem;
+    flex-grow: 0;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel article {
+    justify-content: space-evenly;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel article > .relative.z-10 {
+    justify-content: space-evenly;
   }
 
   #app-root.player-shell .mobile-landscape-reading-panel .meaning-box {
@@ -751,6 +760,7 @@
     min-height: 2rem;
     gap: 0.35rem;
     font-size: 0.6rem;
+    order: 2;
   }
 
   #app-root.player-shell .control-card .tablet-portrait-progress input {
@@ -769,8 +779,13 @@
     font-size: 0.78rem;
   }
 
+  #app-root.player-shell .control-card .tablet-portrait-keypad {
+    order: 3;
+  }
+
   #app-root.player-shell .control-card .tablet-portrait-shuffle {
     min-height: 1.7rem;
+    order: 1;
   }
 
   #app-root.player-shell .control-card .tablet-portrait-shuffle button {
@@ -780,6 +795,7 @@
 
   #app-root.player-shell .control-card .tablet-portrait-transport {
     padding-top: 0.3rem;
+    order: 4;
   }
 
   #app-root.player-shell .control-card .tablet-portrait-transport button {
@@ -790,6 +806,10 @@
   #app-root.player-shell .control-card .tablet-portrait-transport button:nth-child(2) {
     height: 2.85rem;
     width: 2.85rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-locked {
+    order: 5;
   }
 }
 
