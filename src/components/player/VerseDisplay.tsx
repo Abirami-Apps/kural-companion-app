@@ -60,17 +60,7 @@ export function VerseDisplay({
           className="relative flex h-full min-w-0 flex-col"
         >
           <div
-            className="valluvar-art pointer-events-none absolute inset-y-0 right-0 z-0 hidden w-[38%] max-w-[22rem] items-end justify-end overflow-hidden xl:flex"
-            aria-hidden="true"
-          >
-            <img
-              src="/valluvar.png"
-              alt=""
-              className="h-[94%] w-full object-contain object-bottom opacity-[0.2] saturate-[1.2]"
-            />
-          </div>
-          <div
-            className="valluvar-art pointer-events-none absolute right-0 top-0 z-0 flex h-32 w-28 items-start justify-end overflow-hidden sm:h-36 sm:w-32 xl:hidden"
+            className="valluvar-art pointer-events-none absolute right-0 top-0 z-0 flex h-32 w-28 items-start justify-end overflow-hidden sm:h-36 sm:w-32 studio:hidden"
             aria-hidden="true"
           >
             <img

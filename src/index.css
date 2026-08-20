@@ -293,6 +293,24 @@
   filter: drop-shadow(0 18px 28px hsl(var(--primary) / 0.14));
 }
 
+/* The wide player gives Tiruvalluvar his own visual column so the reading
+   surface stays calm and the keypad never competes with the verse. */
+.valluvar-panel {
+  background:
+    radial-gradient(circle at 50% 24%, hsl(var(--primary) / 0.18), transparent 38%),
+    linear-gradient(160deg, hsl(var(--secondary)), hsl(var(--navy)) 72%);
+}
+
+[data-theme='midnight'] .valluvar-panel {
+  background:
+    radial-gradient(circle at 50% 24%, hsl(var(--primary) / 0.16), transparent 38%),
+    linear-gradient(160deg, hsl(var(--card)), hsl(var(--background)) 72%);
+}
+
+[data-contrast='high'] .valluvar-panel {
+  background: hsl(var(--background));
+}
+
 [data-theme='midnight'] .reading-panel {
   background:
     radial-gradient(circle at 88% 12%, hsl(var(--primary) / 0.18), transparent 30%),

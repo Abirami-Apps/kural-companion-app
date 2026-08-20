@@ -105,10 +105,22 @@ export function KuralPlayer() {
 
   return (
     <div id="player" className="player-page h-full min-h-0 w-full overflow-hidden">
-      <div className="mx-auto grid h-full min-h-0 w-full max-w-[1280px] grid-rows-[minmax(0,1fr)_auto] gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3 short:gap-2 short:px-2 short:py-2 wide:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)] wide:grid-rows-1 wide:items-stretch split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:grid-rows-1 split:items-stretch studio:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.85fr)] studio:grid-rows-1 studio:items-stretch studio:gap-6 studio:px-8 studio:py-8">
+      <div className="mx-auto grid h-full min-h-0 w-full grid-rows-[minmax(0,1fr)_auto] gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3 short:gap-2 short:px-2 short:py-2 wide:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)] wide:grid-rows-1 wide:items-stretch split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:grid-rows-1 split:items-stretch studio:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] studio:grid-rows-1 studio:items-stretch studio:gap-4 studio:px-5 studio:py-5">
+        <aside
+          aria-label="Tiruvalluvar portrait"
+          className="valluvar-panel hidden min-h-0 min-w-0 items-end justify-center overflow-hidden rounded-[1.5rem] border border-border/80 shadow-[0_24px_70px_-46px_hsl(var(--navy)/0.9)] studio:col-start-1 studio:flex"
+        >
+          <img
+            src="/valluvar.png"
+            alt="திருவள்ளுவர்"
+            className="h-full w-full object-contain object-bottom drop-shadow-[0_20px_26px_hsl(var(--navy)/0.55)]"
+            loading="eager"
+          />
+        </aside>
+
         <section
           aria-label="Kural verse"
-          className="reading-panel h-full min-h-0 min-w-0 overflow-hidden rounded-[1.35rem] border border-border/80 px-3 py-3 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:rounded-[1.5rem] sm:px-5 sm:py-4 short:px-3 short:py-2 studio:px-8 studio:py-6"
+          className="reading-panel h-full min-h-0 min-w-0 overflow-hidden rounded-[1.35rem] border border-border/80 px-3 py-3 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:rounded-[1.5rem] sm:px-5 sm:py-4 short:px-3 short:py-2 studio:col-start-2 studio:px-8 studio:py-6"
         >
           <VerseDisplay
             kural={p.current}
@@ -126,7 +138,7 @@ export function KuralPlayer() {
 
         <aside
           aria-label="Player controls"
-          className="control-card hidden min-w-0 flex-col justify-center rounded-[1.5rem] bg-secondary px-7 py-8 text-secondary-foreground shadow-[0_28px_70px_-42px_hsl(var(--navy)/0.9)] studio:flex"
+          className="control-card hidden min-w-0 flex-col justify-center rounded-[1.5rem] bg-secondary px-5 py-5 text-secondary-foreground shadow-[0_28px_70px_-42px_hsl(var(--navy)/0.9)] studio:col-start-3 studio:flex studio:px-5 studio:py-6"
         >
           <div className="mx-auto flex w-full max-w-[390px] flex-col gap-4">
             <NumberReadout

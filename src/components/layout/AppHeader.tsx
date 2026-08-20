@@ -46,7 +46,7 @@ export function AppHeader() {
 
   return (
     <header className="z-40 shrink-0 border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      <div className="mx-auto flex min-h-[64px] w-full max-w-[1280px] items-center gap-3 px-4 py-1.5 sm:px-6 nav:px-8">
+      <div className="flex min-h-[64px] w-full items-center gap-3 px-4 py-1.5 sm:px-6 nav:px-8">
         <Link
           to="/"
           className="flex min-h-11 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
