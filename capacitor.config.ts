@@ -1,5 +1,6 @@
 /// <reference types="@capacitor/app" />
 /// <reference types="@capacitor/keyboard" />
+/// <reference types="@capacitor/local-notifications" />
 /// <reference types="@capacitor/splash-screen" />
 /// <reference types="@capacitor/status-bar" />
 
@@ -28,6 +29,9 @@ const config: CapacitorConfig = {
       resize: "native",
       style: "dark",
       resizeOnFullScreen: true,
+    },
+    LocalNotifications: {
+      presentationOptions: ["badge", "sound", "banner", "list"],
     },
     SplashScreen: {
       launchShowDuration: 1200,

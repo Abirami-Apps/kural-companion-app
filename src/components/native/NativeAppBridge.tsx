@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { App as CapacitorApp } from "@capacitor/app";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import { Keyboard, KeyboardResize } from "@capacitor/keyboard";
+import { LocalNotifications } from "@capacitor/local-notifications";
 import { SplashScreen } from "@capacitor/splash-screen";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -56,6 +57,10 @@ export function NativeAppBridge() {
           } else {
             await CapacitorApp.minimizeApp();
           }
+        }),
+        LocalNotifications.addListener("localNotificationActionPerformed", ({ notification }) => {
+          const url = notification.extra?.url;
+          if (typeof url === "string") openRoute(url);
         }),
       ]);
 
