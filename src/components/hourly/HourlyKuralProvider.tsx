@@ -10,6 +10,12 @@ import {
 } from "@/contexts/HourlyKuralContext";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { useOptionalUserData } from "@/hooks/useUserData";
+import { isNativeApp } from "@/lib/native";
+import {
+  checkNativeNotificationPermission,
+  requestNativeNotificationPermission,
+  scheduleNativeHourlyNotification,
+} from "@/lib/native-notifications";
 import { FAVS_KEY, readNumberList } from "@/lib/player-utils";
 import {
   HOURLY_LAST_KURAL_KEY,
@@ -32,7 +38,11 @@ const readLastKural = () => {
 };
 
 const readNotificationPermission = (): HourlyNotificationPermission =>
-  typeof Notification === "undefined" ? "unsupported" : Notification.permission;
+  isNativeApp
+    ? "default"
+    : typeof Notification === "undefined"
+      ? "unsupported"
+      : Notification.permission;
 
 export function HourlyKuralProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -62,6 +72,17 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       /* storage can be unavailable in private browsing */
     }
   }, [settings, userData]);
+
+  useEffect(() => {
+    if (!isNativeApp) return;
+    let active = true;
+    void checkNativeNotificationPermission().then((permission) => {
+      if (active) setNotificationPermission(permission);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const updateSettings = useCallback(
     (patch: Partial<HourlyKuralSettings>) => {
@@ -218,13 +239,31 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       const kural = getKural(number);
       if (!kural) return;
       rememberKural(number);
-      if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+
       const content = hourlyNotificationContent({
         date,
         language: settings.language,
         number,
         chapter: kural.chapter,
       });
+
+      if (isNativeApp) {
+        const scheduled = await scheduleNativeHourlyNotification({
+          title: content.title,
+          body: content.body,
+          number,
+        });
+        setNotificationMessage(
+          scheduled
+            ? isTest
+              ? "Test reminder scheduled. Check your device notifications."
+              : "Hourly reminder scheduled on this device."
+            : "This device cannot schedule the reminder yet. Hourly playback still works while the app is open.",
+        );
+        return;
+      }
+
+      if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
 
       try {
         const options: NotificationOptions = {
@@ -338,6 +377,21 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   );
 
   const requestNotificationPermission = useCallback(async () => {
+    if (isNativeApp) {
+      const permission = await requestNativeNotificationPermission();
+      setNotificationPermission(permission);
+      setNotificationMessage(
+        permission === "granted"
+          ? "Notifications are on. Send a test reminder to preview one."
+          : permission === "denied"
+            ? "Notifications are blocked. Allow them in this device's Settings."
+            : permission === "unsupported"
+              ? "Notifications are not available on this device yet."
+              : null,
+      );
+      return permission;
+    }
+
     if (typeof Notification === "undefined") {
       setNotificationPermission("unsupported");
       setNotificationMessage("Notifications are not available on this device yet.");

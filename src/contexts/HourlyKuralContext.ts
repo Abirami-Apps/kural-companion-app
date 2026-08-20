@@ -2,7 +2,7 @@ import { createContext } from "react";
 import type { HourlyKuralSettings } from "@/lib/hourly-kural";
 
 export type HourlyPlaybackStatus = "idle" | "announcing" | "loading" | "playing" | "error";
-export type HourlyNotificationPermission = NotificationPermission | "unsupported";
+export type HourlyNotificationPermission = "granted" | "denied" | "default" | "unsupported";
 
 export interface HourlyPlaybackRequest {
   id: number;
