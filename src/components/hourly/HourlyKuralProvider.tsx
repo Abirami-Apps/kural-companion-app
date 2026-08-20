@@ -17,6 +17,7 @@ import {
   HOURLY_SETTINGS_KEY,
   chooseHourlyKuralNumber,
   getNextHourlyOccurrence,
+  hourlyNotificationContent,
   hourlyRunKey,
   isHourActive,
   readHourlySettings,
@@ -49,6 +50,7 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   const [playbackRequest, setPlaybackRequest] = useState<HourlyPlaybackRequest | null>(null);
   const [notificationPermission, setNotificationPermission] =
     useState<HourlyNotificationPermission>(readNotificationPermission);
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(null);
   const playbackRequestRef = useRef<HourlyPlaybackRequest | null>(null);
   const requestIdRef = useRef(0);
   const handoffTokenRef = useRef(0);
@@ -211,25 +213,66 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   );
 
   const showNotification = useCallback(
-    (date: Date) => {
+    async (date: Date, isTest = false) => {
       const number = chooseNumber();
       const kural = getKural(number);
       if (!kural) return;
       rememberKural(number);
       if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-      const notification = new Notification(
-        settings.language === "ta" ? "மணிக்குறள் தயாராக உள்ளது" : "Your Hourly Kural is ready",
-        {
-          body: `${timeAnnouncement(date, settings.language)} · குறள் ${number} · ${kural.chapter}`,
-          icon: "/logo.png",
+      const content = hourlyNotificationContent({
+        date,
+        language: settings.language,
+        number,
+        chapter: kural.chapter,
+      });
+
+      try {
+        const options: NotificationOptions = {
+          body: content.body,
+          icon: "/pwa-192.png",
           tag: "hourly-kural",
-        },
-      );
-      notification.onclick = () => {
-        window.focus();
-        handoffToMainPlayer(number, settings.includeMeaning);
-        notification.close();
-      };
+          lang: settings.language === "ta" ? "ta-IN" : "en-IN",
+          data: {
+            url: `/kural/${number}?autoplay=1`,
+          },
+        };
+        let registration = "serviceWorker" in navigator
+          ? await navigator.serviceWorker.getRegistration()
+          : undefined;
+
+        if (!registration?.active && "serviceWorker" in navigator) {
+          registration = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise<undefined>((resolve) => window.setTimeout(resolve, 1_000)),
+          ]);
+        }
+
+        let deliveredByWorker = false;
+        if (registration?.active) {
+          try {
+            await registration.showNotification(content.title, options);
+            deliveredByWorker = true;
+          } catch {
+            /* Fall back to the window Notification API below. */
+          }
+        }
+
+        if (!deliveredByWorker) {
+          const notification = new Notification(content.title, options);
+          notification.onclick = () => {
+            window.focus();
+            handoffToMainPlayer(number, settings.includeMeaning);
+            notification.close();
+          };
+        }
+        if (isTest) {
+          setNotificationMessage("Test reminder sent. Check your device notifications.");
+        }
+      } catch {
+        setNotificationMessage(
+          "This device cannot show the reminder from the browser. Hourly playback still works while the app is open.",
+        );
+      }
     },
     [chooseNumber, handoffToMainPlayer, rememberKural, settings.includeMeaning, settings.language],
   );
@@ -241,7 +284,7 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       if (localStorage.getItem(runStorageKey) === key) return;
       localStorage.setItem(runStorageKey, key);
       if (document.visibilityState === "visible") await playHourlyKural(date);
-      else showNotification(date);
+      else await showNotification(date);
     },
     [playHourlyKural, showNotification, userData],
   );
@@ -297,12 +340,31 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
   const requestNotificationPermission = useCallback(async () => {
     if (typeof Notification === "undefined") {
       setNotificationPermission("unsupported");
+      setNotificationMessage("Notifications are not available on this device yet.");
       return "unsupported" as const;
     }
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
-    return permission;
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      setNotificationMessage(
+        permission === "granted"
+          ? "Notifications are on. Send a test reminder to preview one."
+          : permission === "denied"
+            ? "Notifications are blocked. Allow them in this site's browser settings."
+            : null,
+      );
+      return permission;
+    } catch {
+      setNotificationPermission("unsupported");
+      setNotificationMessage("Notifications are not available on this device yet.");
+      return "unsupported" as const;
+    }
   }, []);
+
+  const sendTestNotification = useCallback(async () => {
+    setNotificationMessage(null);
+    await showNotification(new Date(), true);
+  }, [showNotification]);
 
   const testNow = useCallback(async () => {
     if (!isHourActive(new Date().getHours(), settings.startHour, settings.endHour)) {
@@ -324,7 +386,9 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       lastKuralNumber,
       playbackRequest,
       notificationPermission,
+      notificationMessage,
       requestNotificationPermission,
+      sendTestNotification,
       testNow,
       stopPlayback,
       markPlayerPlaybackStarted,
@@ -337,12 +401,14 @@ export function HourlyKuralProvider({ children }: { children: React.ReactNode })
       lastKuralNumber,
       markPlayerPlaybackStarted,
       nextRun,
+      notificationMessage,
       notificationPermission,
       playbackRequest,
       premiumAccess,
       premiumPreview,
       reportPlayerPlaybackError,
       requestNotificationPermission,
+      sendTestNotification,
       setEnabled,
       settings,
       status,

@@ -12,6 +12,11 @@ export interface HourlyKuralSettings {
   includeMeaning: boolean;
 }
 
+export interface HourlyNotificationContent {
+  title: string;
+  body: string;
+}
+
 export const HOURLY_SETTINGS_KEY = "kural:hourly-settings";
 export const HOURLY_LAST_KURAL_KEY = "kural:hourly-last-kural";
 export const HOURLY_LAST_RUN_KEY = "kural:hourly-last-run";
@@ -122,6 +127,28 @@ export function timeAnnouncement(date: Date, language: HourlyLanguage): string {
   }
   const period = hour < 5 ? "இரவு" : hour < 12 ? "காலை" : hour < 16 ? "மதியம்" : hour < 19 ? "மாலை" : "இரவு";
   return `இப்போது ${period} ${TAMIL_HOURS[hour12]} மணி.`;
+}
+
+export function hourlyNotificationContent({
+  date,
+  language,
+  number,
+  chapter,
+}: {
+  date: Date;
+  language: HourlyLanguage;
+  number: number;
+  chapter: string;
+}): HourlyNotificationContent {
+  const title = language === "ta"
+    ? `மணிக்குறள் · குறள் ${number}`
+    : `Hourly Kural · Kural ${number}`;
+  const action = language === "ta" ? "கேட்கத் தட்டவும்." : "Tap to listen.";
+
+  return {
+    title,
+    body: `${timeAnnouncement(date, language)} ${chapter} · ${action}`,
+  };
 }
 
 export function chooseHourlyKuralNumber({

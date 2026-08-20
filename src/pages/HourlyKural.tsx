@@ -13,7 +13,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
-import { formatHour, type HourlyLanguage, type HourlySelection } from "@/lib/hourly-kural";
+import { getKural } from "@/data/sample-kurals";
+import {
+  formatHour,
+  hourlyNotificationContent,
+  type HourlyLanguage,
+  type HourlySelection,
+} from "@/lib/hourly-kural";
 import { usePremiumPrompt } from "@/contexts/PremiumPromptContext";
 
 const HOURS = Array.from({ length: 24 }, (_, hour) => hour);
@@ -67,6 +73,20 @@ export default function HourlyKural() {
     playing: "Playing in the main Kural player…",
     error: "Playback needs attention",
   }[hourly.status];
+  const previewNumber = hourly.lastKuralNumber ?? 1;
+  const previewKural = getKural(previewNumber);
+  const notificationPreview = hourlyNotificationContent({
+    date: hourly.nextRun ?? new Date(),
+    language: hourly.settings.language,
+    number: previewNumber,
+    chapter: previewKural?.chapter ?? "திருக்குறள்",
+  });
+  const permissionLabel = {
+    granted: "On",
+    default: "Not enabled",
+    denied: "Blocked",
+    unsupported: "Unavailable",
+  }[hourly.notificationPermission];
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8" lang="en">
@@ -264,12 +284,37 @@ export default function HourlyKural() {
               <div className="min-w-0 flex-1">
                 <h2 className="font-semibold text-foreground">Background reminders</h2>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  When the app is not visible, a notification replaces automatic web playback.
-                </p>
-                <p className="mt-3 text-xs font-medium text-foreground">
-                  Permission: {hourly.notificationPermission}
+                  Get a reminder when Kural Companion is in the background.
                 </p>
               </div>
+            </div>
+
+            <div
+              className="mt-4 flex gap-3 rounded-2xl border border-border/80 bg-muted/45 p-3.5 shadow-sm"
+              aria-label="Hourly Kural notification preview"
+            >
+              <img
+                src="/pwa-192.png"
+                alt=""
+                className="h-11 w-11 shrink-0 rounded-xl"
+                aria-hidden="true"
+              />
+              <div className="min-w-0">
+                <p className="text-[0.68rem] font-medium uppercase tracking-[0.1em] text-muted-foreground">
+                  Kural Companion · Reminder preview
+                </p>
+                <p className="mt-1 text-sm font-semibold leading-snug text-foreground">
+                  {notificationPreview.title}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {notificationPreview.body}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-3 text-xs">
+              <span className="text-muted-foreground">Notification permission</span>
+              <span className="font-semibold text-foreground">{permissionLabel}</span>
             </div>
             {hourly.notificationPermission === "default" && (
               <Button
@@ -278,17 +323,33 @@ export default function HourlyKural() {
                 onClick={() => void hourly.requestNotificationPermission()}
                 className="mt-4 min-h-11 w-full rounded-xl"
               >
-                <Bell className="h-4 w-4" aria-hidden="true" /> Allow notifications
+                <Bell className="h-4 w-4" aria-hidden="true" /> Turn on reminders
+              </Button>
+            )}
+            {hourly.notificationPermission === "granted" && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void hourly.sendTestNotification()}
+                className="mt-4 min-h-11 w-full rounded-xl"
+              >
+                <Bell className="h-4 w-4" aria-hidden="true" /> Send test reminder
               </Button>
             )}
             {hourly.notificationPermission === "denied" && (
               <p className="mt-4 rounded-xl bg-muted/55 p-3 text-xs text-muted-foreground">
-                Notifications are blocked in this browser. You can re-enable them in the site settings.
+                Notifications are blocked. Allow them in this site's browser settings.
               </p>
             )}
             {hourly.notificationPermission === "unsupported" && (
               <p className="mt-4 rounded-xl bg-muted/55 p-3 text-xs text-muted-foreground">
-                This browser does not expose notification permission to the app.
+                Notifications are not available on this device yet. Hourly playback still works
+                while the app is open.
+              </p>
+            )}
+            {hourly.notificationMessage && (
+              <p className="mt-3 text-xs leading-relaxed text-muted-foreground" role="status">
+                {hourly.notificationMessage}
               </p>
             )}
           </section>
@@ -297,8 +358,8 @@ export default function HourlyKural() {
 
       <p className="mt-5 flex gap-2 rounded-2xl border border-border/70 bg-background/45 p-4 text-xs leading-relaxed text-muted-foreground">
         <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-        Web browsers cannot guarantee sound from a closed or suspended tab. The native iOS, Android
-        and TV releases will use their platform notification and playback services for the most reliable experience.
+        Keep Kural Companion open for automatic playback. When it is in the background, reminder
+        delivery depends on your device and browser settings.
       </p>
     </div>
   );

@@ -3,6 +3,7 @@ import {
   DEFAULT_HOURLY_SETTINGS,
   chooseHourlyKuralNumber,
   getNextHourlyOccurrence,
+  hourlyNotificationContent,
   hourlyRunKey,
   isHourActive,
   parseHourlySettings,
@@ -56,6 +57,32 @@ describe("Hourly Kural scheduling", () => {
     expect(hourlyRunKey(date)).toBe("2026-08-02T07");
     expect(timeAnnouncement(date, "ta")).toContain("காலை ஏழு மணி");
     expect(timeAnnouncement(date, "en")).toContain("seven o'clock in the morning");
+  });
+
+  it("creates concise Tamil and English notification copy", () => {
+    const date = new Date(2026, 7, 2, 7, 0, 0);
+    expect(
+      hourlyNotificationContent({
+        date,
+        language: "ta",
+        number: 141,
+        chapter: "ஒழுக்கமுடைமை",
+      }),
+    ).toEqual({
+      title: "மணிக்குறள் · குறள் 141",
+      body: "இப்போது காலை ஏழு மணி. ஒழுக்கமுடைமை · கேட்கத் தட்டவும்.",
+    });
+    expect(
+      hourlyNotificationContent({
+        date,
+        language: "en",
+        number: 141,
+        chapter: "ஒழுக்கமுடைமை",
+      }),
+    ).toEqual({
+      title: "Hourly Kural · Kural 141",
+      body: "It is seven o'clock in the morning. ஒழுக்கமுடைமை · Tap to listen.",
+    });
   });
 
   it("selects sequential, favourite and bounded random Kurals", () => {

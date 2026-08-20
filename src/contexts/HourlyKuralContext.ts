@@ -22,7 +22,9 @@ export interface HourlyKuralContextValue {
   lastKuralNumber: number | null;
   playbackRequest: HourlyPlaybackRequest | null;
   notificationPermission: HourlyNotificationPermission;
+  notificationMessage: string | null;
   requestNotificationPermission: () => Promise<HourlyNotificationPermission>;
+  sendTestNotification: () => Promise<void>;
   testNow: () => Promise<void>;
   stopPlayback: () => void;
   markPlayerPlaybackStarted: (requestId: number) => void;

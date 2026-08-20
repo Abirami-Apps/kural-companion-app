@@ -8,6 +8,7 @@ export default tseslint.config(
   {
     ignores: [
       "dist",
+      "dev-dist/**",
       "playwright-report",
       "test-results",
       "artifacts",

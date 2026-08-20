@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { VitePWA } from "vite-plugin-pwa";
 
 const nativeBuild = process.env.VITE_NATIVE_BUILD === "true";
+const pwaDev = process.env.VITE_PWA_DEV === "true";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -25,6 +26,7 @@ export default defineConfig(({ mode }) => ({
         "favicon.svg",
         "logo.png",
         "apple-touch-icon.png",
+        "notification-sw.js",
         "fonts/*.woff2",
       ],
       manifest: {
@@ -84,6 +86,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        importScripts: ["/notification-sw.js"],
         globPatterns: ["**/*.{js,css,html,png,svg,woff2,json}"],
         // Social previews are not needed for the installed offline reader.
         globIgnores: ["og.png"],
@@ -113,6 +116,9 @@ export default defineConfig(({ mode }) => ({
             },
           },
         ],
+      },
+      devOptions: {
+        enabled: pwaDev,
       },
     }),
   ].filter(Boolean),

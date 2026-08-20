@@ -245,6 +245,8 @@ test("Hourly Kural premium preview saves its schedule", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("switch", { name: "Enable Hourly Kural schedule" })).toBeChecked();
   await expect(page.getByRole("button", { name: "English" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Hourly Kural notification preview")).toContainText("Hourly Kural");
+  await expect(page.getByText("Notification permission")).toBeVisible();
 });
 
 test("Hourly Kural hands playback to the existing main player", async ({ page }) => {
@@ -273,6 +275,12 @@ test("Hourly Kural hands playback to the existing main player", async ({ page })
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
   await expect(page.locator("audio")).toHaveCount(1);
+});
+
+test("notification links open the selected Kural with autoplay", async ({ page }) => {
+  await page.goto("/kural/141?autoplay=1");
+  await waitForKural(page, 141);
+  await expect(page.getByRole("button", { name: "Pause audio" })).toBeVisible();
 });
 
 test("player shortcuts never hijack typing in the sign-in form", async ({ page }) => {

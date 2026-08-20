@@ -62,8 +62,10 @@ export function useKuralPlayer() {
   const lastPlayedKey = deviceKey(LAST_PLAYED_KEY);
   const number = parsedTarget ?? (hasTarget ? 1 : readPersistedKuralNumber(lastPlayedKey) ?? 1);
   const current = getKural(number) as Kural;
+  const notificationAutoplayRequested = searchParams.get("autoplay") === "1";
   const autoplayRequested =
-    (location.state as { autoplay?: boolean } | null)?.autoplay === true;
+    (location.state as { autoplay?: boolean } | null)?.autoplay === true ||
+    notificationAutoplayRequested;
   const autoplayRequestKey = autoplayRequested ? location.key : null;
 
   const audioRef = useRef<HTMLAudioElement>(null);

@@ -21,6 +21,16 @@ test("web app manifest exposes installable Kural Companion metadata", async ({ r
   ]));
 });
 
+test("service worker includes the Hourly Kural notification click handler", async ({ request }) => {
+  const worker = await request.get("/sw.js");
+  expect(worker.ok()).toBeTruthy();
+  expect(await worker.text()).toContain("notification-sw.js");
+
+  const notificationWorker = await request.get("/notification-sw.js");
+  expect(notificationWorker.ok()).toBeTruthy();
+  expect(await notificationWorker.text()).toContain("notificationclick");
+});
+
 test("installed app keeps all Kural text available offline", async ({ page, context }) => {
   await page.goto("/kural/1");
   await waitForKural(page, 1);
