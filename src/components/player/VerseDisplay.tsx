@@ -246,7 +246,11 @@ function VerseLines({ text }: { text: string }) {
       const base = parseFloat(getComputedStyle(els[0]).fontSize);
       const widest = Math.max(...els.map((el) => el.scrollWidth));
       if (!widest) return;
-      const next = widest > available ? Math.max(14, (base * available) / widest) : base;
+      const compactLandscape = window.matchMedia(
+        "(orientation: landscape) and (max-width: 1179px)",
+      ).matches;
+      const minimum = compactLandscape ? 10 : 14;
+      const next = widest > available ? Math.max(minimum, (base * available) / widest) : base;
       els.forEach((el) => (el.style.fontSize = `${next}px`));
     };
 

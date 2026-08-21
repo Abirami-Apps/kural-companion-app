@@ -821,6 +821,10 @@
     flex-grow: 0;
   }
 
+  #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap [data-fit-probe="verse-line"] {
+    line-height: 1.35 !important;
+  }
+
   #app-root.player-shell .mobile-landscape-reading-panel article {
     justify-content: space-evenly;
   }
