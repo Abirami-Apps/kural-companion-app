@@ -1483,7 +1483,7 @@
    webview whose CSS viewport differs from the screenshot pixel width. Keep
    the header full width, then give the reading and control lanes explicit
    ownership of the remaining height. */
-@media (min-width: 480px) and (max-width: 1179px) and (orientation: landscape) {
+@media (min-width: 360px) and (max-width: 1179px) and (orientation: landscape) {
   #app-root.player-shell {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1520,7 +1520,7 @@
 
   #app-root.player-shell .player-grid {
     display: grid;
-    grid-template-columns: minmax(0, 3fr) minmax(clamp(12.5rem, 40vw, 24rem), 2fr);
+    grid-template-columns: minmax(0, 3fr) minmax(clamp(11rem, 40vw, 24rem), 2fr);
     grid-template-rows: minmax(0, 1fr);
     align-items: stretch;
     gap: clamp(0.35rem, 1vw, 0.75rem);
@@ -1553,9 +1553,193 @@
     height: 100%;
   }
 
+  /* The compact bottom player is the portrait-only fallback. In landscape
+     the bounded grid above is the single source of controls. */
+  #app-root.player-shell .tablet-portrait-compact {
+    display: none !important;
+  }
+
   #app-root.player-shell .mobile-landscape-reading-panel,
   #app-root.player-shell .mobile-landscape-control-card {
     min-width: 0;
     min-height: 0;
+  }
+}
+
+/* Keep the same two lanes on narrow landscape phone viewports, but compress
+   the controls to their bounded height. This branch is important for iOS
+   webviews whose logical width can be half the screenshot pixel width. */
+@media (min-width: 360px) and (max-width: 559px) and (orientation: landscape) {
+  #app-root.player-shell .player-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(11rem, 2fr);
+    gap: 0.3rem;
+    padding: 0.25rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel {
+    padding: 0.2rem 0.3rem;
+    border-radius: 0.9rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-header {
+    display: grid;
+    grid-template-columns: minmax(4rem, 0.28fr) minmax(0, 0.72fr);
+    gap: 0.25rem;
+    min-height: 3.75rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-portrait {
+    display: flex;
+    height: 3.75rem;
+    min-height: 3.75rem;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header {
+    min-width: 0;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:first-child {
+    gap: 0.15rem;
+    font-size: 0.58rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) {
+    gap: 0.2rem;
+    margin-top: 0.1rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > span,
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header .choose-number-button {
+    min-height: 1.75rem !important;
+    height: 1.75rem;
+    padding: 0 0.4rem;
+    font-size: 0.62rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > div button {
+    height: 1.75rem;
+    width: 1.75rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > div svg {
+    height: 0.68rem;
+    width: 0.68rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .reading-divider {
+    margin-top: 0.1rem;
+    margin-bottom: 0.1rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap {
+    flex-basis: 3.5rem;
+    min-height: 3.5rem;
+    padding: 0;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap [data-fit-probe="verse-line"] {
+    line-height: 1.2 !important;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .meaning-box {
+    min-height: 2rem;
+    padding: 0.15rem 0.25rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .meaning-box p {
+    font-size: 0.52rem;
+    line-height: 1.05;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .reading-nav {
+    display: none;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card {
+    justify-content: flex-start;
+    overflow: hidden;
+    padding: 0.25rem 0.3rem;
+    border-radius: 0.9rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card > div {
+    gap: 0.15rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-status,
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-recents {
+    display: none;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-top-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.15rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-readout > div {
+    gap: 0.15rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-readout > div > div,
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-readout > div > button {
+    min-height: 1.85rem !important;
+    height: 1.85rem;
+    border-radius: 0.55rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-readout .digital-display {
+    font-size: 0.78rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-shuffle button {
+    min-height: 1.5rem;
+    padding: 0 0.2rem;
+    gap: 0.1rem;
+    font-size: 0.44rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-shuffle svg {
+    height: 0.65rem;
+    width: 0.65rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-progress {
+    min-height: 1.35rem;
+    gap: 0.15rem;
+    font-size: 0.48rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-progress input {
+    height: 1.35rem;
+    min-height: 1.35rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-keypad .grid {
+    gap: 0.15rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-keypad .grid button {
+    height: 1.45rem;
+    min-height: 1.45rem;
+    border-radius: 0.45rem;
+    font-size: 0.62rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-transport {
+    padding-top: 0.05rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-transport button {
+    height: 1.9rem;
+    width: 1.9rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-transport button:nth-child(2) {
+    height: 2.25rem;
+    width: 2.25rem;
   }
 }
