@@ -1476,3 +1476,86 @@
   animation-duration: 0.01ms !important;
   transition-duration: 0.01ms !important;
 }
+
+/* Landscape phones and tablets use one bounded grid instead of a fixed
+   overlay. The previous fixed right card was visually close to a split
+   layout, but its 40vw width could cover the reading column in a native
+   webview whose CSS viewport differs from the screenshot pixel width. Keep
+   the header full width, then give the reading and control lanes explicit
+   ownership of the remaining height. */
+@media (min-width: 480px) and (max-width: 1179px) and (orientation: landscape) {
+  #app-root.player-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  #app-root.player-shell > header {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 20;
+  }
+
+  #app-root.player-shell > main {
+    grid-column: 1;
+    grid-row: 2;
+    height: auto;
+    min-height: 0;
+    margin-top: 0;
+    overflow: hidden;
+  }
+
+  #app-root.player-shell > footer {
+    display: none;
+  }
+
+  #app-root.player-shell .player-page,
+  #app-root.player-shell .player-grid {
+    height: 100%;
+    min-height: 0;
+  }
+
+  #app-root.player-shell .player-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(clamp(12.5rem, 40vw, 24rem), 2fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    gap: clamp(0.35rem, 1vw, 0.75rem);
+    padding: clamp(0.25rem, 1vw, 0.65rem);
+  }
+
+  #app-root.player-shell .reading-panel {
+    grid-column: 1;
+    grid-row: 1;
+    height: 100%;
+    width: 100%;
+  }
+
+  #app-root.player-shell .control-card {
+    grid-column: 2;
+    grid-row: 1;
+    position: static;
+    inset: auto;
+    z-index: auto;
+    display: flex !important;
+    width: auto;
+    height: 100%;
+    min-height: 0;
+    max-width: none;
+  }
+
+  #app-root.player-shell .control-card > div {
+    max-width: none;
+    min-width: 0;
+    height: 100%;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel,
+  #app-root.player-shell .mobile-landscape-control-card {
+    min-width: 0;
+    min-height: 0;
+  }
+}
