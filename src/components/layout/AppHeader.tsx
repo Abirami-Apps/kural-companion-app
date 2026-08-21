@@ -81,7 +81,7 @@ export function AppHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1 nav:ml-2">
+        <div className="header-actions ml-auto flex items-center gap-1 nav:ml-2">
           <ConnectivityBadge className="hidden nav:inline-flex" />
           <InstallAppButton className="hidden nav:inline-flex" />
           {checkoutEnabled && (
@@ -105,7 +105,7 @@ export function AppHeader() {
             <AppearancePanel />
           </span>
 
-          <Button asChild variant="ghost" size="icon" className="h-11 w-11 nav:hidden">
+          <Button asChild variant="ghost" size="icon" className="landscape-favourite-trigger h-11 w-11 nav:hidden">
             <Link to="/favourites" aria-label="Open favourites">
               <Heart className="h-5 w-5" aria-hidden="true" />
             </Link>
@@ -113,7 +113,7 @@ export function AppHeader() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11 nav:hidden" aria-label="Open menu">
+              <Button variant="ghost" size="icon" className="landscape-menu-trigger h-11 w-11 nav:hidden" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
