@@ -335,7 +335,7 @@
 /* Tablet landscape gets a complete right-hand player instead of an empty
    transport rail. The small portrait and header alignment keep the reading
    card balanced without stealing space from the verse. */
-@media (min-width: 640px) and (max-width: 1179px) and (orientation: landscape) {
+@media (min-width: 560px) and (max-width: 1179px) and (orientation: landscape) {
   .tablet-valluvar-art {
     display: none;
   }
@@ -650,7 +650,7 @@
    the very top of the app at every supported landscape height. The header and
    reading surface remain in the left 60%, so the keypad never gets clipped by
    the footer or a short main column. */
-@media (min-width: 640px) and (max-width: 1179px) and (orientation: landscape) {
+@media (min-width: 560px) and (max-width: 1179px) and (orientation: landscape) {
   #app-root.player-shell {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr);
@@ -755,6 +755,43 @@
 
   #app-root.player-shell .mobile-landscape-reading-panel {
     padding: 0.45rem 0.65rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-valluvar-art {
+    display: none;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-header {
+    display: grid;
+    grid-template-columns: minmax(5.5rem, 0.3fr) minmax(0, 0.7fr);
+    align-items: center;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-portrait {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  #app-root.player-shell .tablet-portrait-compact {
+    display: none !important;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .reading-nav {
+    display: none;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > div[class~="wide:short:flex"] {
+    display: flex;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .choose-number-button [class~="wide:short:hidden"] {
+    display: none;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .choose-number-button [class~="hidden"][class~="wide:short:inline"] {
+    display: inline;
   }
 
   #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-header,
@@ -865,7 +902,7 @@
    chapter heading, and the four reading actions when the heading column gets
    a little more room. Keep the action row on one line so it never drops over
    the verse text. */
-@media (min-width: 640px) and (max-width: 760px) and (orientation: landscape) {
+@media (min-width: 560px) and (max-width: 760px) and (orientation: landscape) {
   #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-header {
     grid-template-columns: minmax(5.5rem, 0.24fr) minmax(0, 0.76fr);
     gap: 0.35rem;
@@ -895,6 +932,204 @@
 
   #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > div {
     flex-shrink: 0;
+  }
+}
+
+/* Give the 560–639px landscape lane a few extra pixels for the complete
+   number readout. The keypad remains touchable while the LCD value never
+   loses its trailing digits beside the delete/keyboard actions. */
+@media (min-width: 560px) and (max-width: 639px) and (orientation: landscape) {
+  #app-root.player-shell .control-card {
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-top-row {
+    gap: 0.15rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout > div {
+    gap: 0.1rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout > div > div {
+    gap: 0.1rem;
+    padding-left: 0.2rem;
+    padding-right: 0.2rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout > div > button {
+    min-height: 1.6rem !important;
+    height: 1.6rem;
+    width: 1.6rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout .digital-display {
+    font-size: 0.7rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-shuffle button {
+    gap: 0.1rem;
+    padding-left: 0.15rem;
+    padding-right: 0.15rem;
+    font-size: 0.44rem;
+  }
+}
+
+/* Android landscape can report only ~250–300 CSS pixels of height after the
+   status/navigation bars. Use a dedicated compact lane at that height so the
+   entire keypad and transport stay visible instead of being cut off. */
+@media (min-width: 560px) and (max-width: 1179px) and (orientation: landscape) and (max-height: 300px) {
+  #app-root.player-shell .control-card {
+    padding: 0.2rem 0.35rem;
+  }
+
+  #app-root.player-shell .control-card > div {
+    gap: 0;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout > div {
+    gap: 0.2rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout > div > div,
+  #app-root.player-shell .control-card .tablet-portrait-readout > div > button {
+    min-height: 1.8rem !important;
+    height: 1.8rem;
+    border-radius: 0.55rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout .digital-display {
+    font-size: 0.82rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout .text-xs {
+    font-size: 0.52rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-readout svg {
+    height: 0.75rem;
+    width: 0.75rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-shuffle {
+    min-height: 1.35rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-shuffle button {
+    min-height: 1.35rem;
+    gap: 0.15rem;
+    padding: 0.05rem 0.25rem;
+    font-size: 0.5rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-shuffle svg {
+    height: 0.7rem;
+    width: 0.7rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-progress {
+    min-height: 1.25rem;
+    gap: 0.2rem;
+    font-size: 0.5rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-progress input {
+    height: 1.25rem;
+    min-height: 1.25rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-keypad .grid {
+    gap: 0.15rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-keypad .grid button {
+    height: 1.35rem;
+    min-height: 1.35rem;
+    border-radius: 0.45rem;
+    font-size: 0.65rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-transport {
+    padding-top: 0.1rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-transport button {
+    height: 2rem;
+    width: 2rem;
+  }
+
+  #app-root.player-shell .control-card .tablet-portrait-transport button:nth-child(2) {
+    height: 2.35rem;
+    width: 2.35rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel {
+    padding: 0.2rem 0.35rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-header,
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-portrait {
+    min-height: 3.35rem;
+    height: 3.35rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-layout-header {
+    gap: 0.25rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:first-child {
+    gap: 0.2rem;
+    font-size: 0.6rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) {
+    gap: 0.2rem;
+    margin-top: 0.1rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > span,
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header .choose-number-button {
+    min-height: 1.8rem !important;
+    height: 1.8rem;
+    padding-left: 0.45rem;
+    padding-right: 0.45rem;
+    font-size: 0.65rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > div button {
+    height: 1.8rem;
+    width: 1.8rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .tablet-verse-header > div:nth-child(2) > div svg {
+    height: 0.7rem;
+    width: 0.7rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .reading-divider {
+    margin-top: 0.1rem;
+    margin-bottom: 0.1rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap {
+    flex-basis: 3.65rem;
+    min-height: 3.65rem;
+    padding: 0;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap [data-fit-probe="verse-line"] {
+    line-height: 1.2 !important;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .meaning-box {
+    min-height: 2rem;
+    padding: 0.15rem 0.3rem;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .meaning-box p {
+    font-size: 0.54rem;
+    line-height: 1.05;
   }
 }
 
