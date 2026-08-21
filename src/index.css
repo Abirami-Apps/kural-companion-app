@@ -818,7 +818,14 @@
   #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap {
     flex-basis: 4.4rem;
     min-height: 4.4rem;
+    min-width: 0;
+    width: 100%;
     flex-grow: 0;
+  }
+
+  #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap > p {
+    min-width: 0;
+    max-width: 100%;
   }
 
   #app-root.player-shell .mobile-landscape-reading-panel .verse-text-wrap [data-fit-probe="verse-line"] {

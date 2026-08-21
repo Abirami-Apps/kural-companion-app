@@ -121,7 +121,7 @@ export function VerseDisplay({
 
           <div className="reading-divider my-2 sm:my-3 short:my-1 studio:my-3" aria-hidden="true" />
 
-          <div className="verse-text-wrap flex min-h-14 flex-1 items-center px-1 py-0.5 sm:min-h-20 sm:px-3 short:min-h-12 short:px-1 short:py-0 studio:min-h-28 studio:px-5 studio:py-2">
+          <div className="verse-text-wrap flex min-h-14 min-w-0 flex-1 items-center px-1 py-0.5 sm:min-h-20 sm:px-3 short:min-h-12 short:px-1 short:py-0 studio:min-h-28 studio:px-5 studio:py-2">
             {/* The source text carries a hard line break. Never re-wrap:
                 both source lines stay nowrap and share one auto-fitted size. */}
             <VerseLines text={kural.tamil} />
