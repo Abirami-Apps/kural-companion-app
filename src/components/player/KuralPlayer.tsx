@@ -137,7 +137,6 @@ export function KuralPlayer() {
             canNext={p.canNext}
             onPrev={p.goPrev}
             onNext={p.goNext}
-            onChooseNumber={() => setKeypadOpen(true)}
             locked={p.locked}
             onRequestPremium={openPremiumPrompt}
           />

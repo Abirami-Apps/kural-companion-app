@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Grid3X3, Heart, Lock, Share2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Heart, Lock, Share2 } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import type { Kural } from "@/data/sample-kurals";
 import { useTheme } from "@/components/theme/ThemeProvider";
@@ -12,7 +12,6 @@ interface VerseDisplayProps {
   canNext: boolean;
   onPrev: () => void;
   onNext: () => void;
-  onChooseNumber: () => void;
   locked?: boolean;
   onRequestPremium?: () => void;
 }
@@ -25,7 +24,6 @@ export function VerseDisplay({
   canNext,
   onPrev,
   onNext,
-  onChooseNumber,
   locked = false,
   onRequestPremium,
 }: VerseDisplayProps) {
@@ -87,16 +85,6 @@ export function VerseDisplay({
                 <span className="inline-flex min-h-11 items-center rounded-full bg-primary px-4 py-1.5 font-tamil text-sm font-semibold text-primary-foreground shadow-sm wide:short:min-h-[44px] wide:short:text-[14px]">
                   குறள் {kural.number}
                 </span>
-                <button
-                  type="button"
-                  onClick={onChooseNumber}
-                  aria-label={`Choose a Kural number, currently ${kural.number}`}
-                  className="choose-number-button inline-flex min-h-11 items-center gap-2 rounded-full border border-primary/45 bg-background/40 px-4 text-xs font-semibold text-primary transition hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring wide:short:min-h-[44px] wide:short:px-3 wide:short:text-[12px] studio:hidden"
-                >
-                  <Grid3X3 className="h-4 w-4" aria-hidden="true" />
-                  <span className="wide:short:hidden">Enter number</span>
-                  <span className="hidden wide:short:inline">No.</span>
-                </button>
                 <div className="hidden items-center gap-1 wide:short:flex studio:hidden">
                   <button
                     type="button"
