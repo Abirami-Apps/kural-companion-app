@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Kural API · Admin</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; color: #172033; background: #f4f6fa; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #172033; color: #fff; padding: 22px max(20px, calc((100vw - 1280px) / 2)); }
+    header h1 { margin: 0 0 4px; font-size: 22px; }
+    header p { margin: 0; color: #b9c3d6; font-size: 13px; }
+    main { width: min(1280px, calc(100% - 32px)); margin: 20px auto 48px; }
+    .card { background: #fff; border: 1px solid #dce2ed; border-radius: 14px; padding: 18px; box-shadow: 0 6px 22px rgba(23,32,51,.05); }
+    .toolbar, .actions, .pager { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .toolbar { margin-bottom: 14px; }
+    input, select, textarea, button { font: inherit; }
+    input, select, textarea { width: 100%; border: 1px solid #cdd5e3; border-radius: 9px; padding: 10px 11px; color: #172033; background: #fff; }
+    input:focus, select:focus, textarea:focus { outline: 3px solid #b9d0ff; border-color: #3974e8; }
+    button { border: 0; border-radius: 9px; padding: 10px 14px; cursor: pointer; background: #2463d4; color: #fff; font-weight: 650; }
+    button.secondary { color: #22304a; background: #e9edf5; }
+    button.danger { background: #c43c45; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .token-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin-top: 12px; }
+    .notice { margin: 12px 0 0; min-height: 20px; color: #58657b; font-size: 13px; }
+    .notice.error { color: #b12632; }
+    .notice.ok { color: #1d754d; }
+    .layout { display: grid; grid-template-columns: minmax(300px, .8fr) minmax(460px, 1.2fr); gap: 16px; align-items: start; }
+    .list-card { min-width: 0; }
+    .list { max-height: 720px; overflow: auto; border: 1px solid #e1e6ef; border-radius: 10px; }
+    .row { display: grid; grid-template-columns: 62px 1fr; gap: 10px; width: 100%; text-align: left; border-radius: 0; border-bottom: 1px solid #edf0f5; background: #fff; color: #172033; font-weight: 400; }
+    .row:last-child { border-bottom: 0; }
+    .row:hover, .row.active { background: #eff5ff; }
+    .row .num { color: #2463d4; font-variant-numeric: tabular-nums; font-weight: 750; }
+    .row .text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row small { display: block; margin-top: 3px; color: #728099; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pager { justify-content: space-between; margin-top: 12px; color: #68758a; font-size: 13px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    label { display: grid; gap: 5px; color: #56637a; font-size: 12px; font-weight: 700; }
+    label.full { grid-column: 1 / -1; }
+    textarea { min-height: 92px; resize: vertical; }
+    .form-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .form-head h2 { margin: 0; font-size: 18px; }
+    .muted { color: #728099; font-size: 12px; }
+    .import-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: end; margin-top: 14px; }
+    .import-row label { min-width: 0; }
+    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .list { max-height: 360px; } }
+    @media (max-width: 560px) { main { width: min(100% - 20px, 1280px); margin-top: 10px; } .card { padding: 13px; } .form-grid { grid-template-columns: 1fr; } label.full { grid-column: auto; } .token-row, .import-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <header><h1>Kural API · Admin</h1><p>Private editor for the Hostinger MySQL database. Your token stays in this browser session.</p></header>
+  <main>
+    <section class="card" aria-labelledby="connection-title">
+      <strong id="connection-title">Secure connection</strong>
+      <div class="token-row"><input id="token" type="password" autocomplete="off" placeholder="Paste X-Admin-Token"><button id="connect">Connect</button></div>
+      <p id="notice" class="notice" role="status"></p>
+    </section>
+    <section class="layout" style="margin-top:16px">
+      <div class="card list-card">
+        <div class="toolbar"><input id="search" placeholder="Search number, Tamil text, meaning or chapter" aria-label="Search Kurals"><button id="searchButton" class="secondary">Search</button></div>
+        <div id="list" class="list" aria-live="polite"></div>
+        <div class="pager"><span id="count">Connect to load data</span><span class="actions"><button id="previous" class="secondary">Previous</button><button id="next" class="secondary">Next</button></span></div>
+      </div>
+      <div class="card">
+        <div class="form-head"><div><h2 id="editor-title">Select a Kural</h2><span class="muted">Save changes to create a revision snapshot.</span></div><button id="save" disabled>Save</button></div>
+        <div id="editor" class="form-grid"><p class="muted">After connecting, choose a row from the list.</p></div>
+      </div>
+    </section>
+    <section class="card" style="margin-top:16px">
+      <strong>Export and import</strong>
+      <p class="muted">JSON preserves every database column. CSV is convenient for spreadsheet editing. Imports are upserts by default; replace mode requires all 1,330 Kurals.</p>
+      <div class="actions" style="margin-top:12px"><button id="exportJson" class="secondary">Export JSON</button><button id="exportCsv" class="secondary">Export CSV</button></div>
+      <div class="import-row"><label>File<input id="file" type="file" accept=".json,.csv,application/json,text/csv"></label><label>Mode<select id="mode"><option value="upsert">Upsert (safe)</option><option value="replace">Replace full table</option></select></label><button id="import">Import</button></div>
+    </section>
+  </main>
+  <script>
+    const state = { token: sessionStorage.getItem('kural-admin-token') || '', rows: [], page: 0, limit: 50, query: '', selected: null };
+    const fields = [
+      ['kuralno', 'Number', 'number'], ['kuralsort', 'Sort code', 'text'], ['adikaramno', 'Chapter number', 'number'], ['adikaramsort', 'Chapter sort', 'text'], ['kural_range', 'Kural range', 'text'],
+      ['pirivu', 'Section', 'text'], ['paal', 'Paal', 'text'], ['iyal', 'Iyal', 'text'], ['adikaram', 'Chapter title', 'text'], ['kural', 'Tamil Kural', 'area'], ['TamilPiriyan_urai', 'TamilPiriyan meaning', 'area'], ['general_urai', 'General meaning', 'area'],
+      ['English_couplet', 'English couplet', 'area'], ['transliteration', 'Transliteration', 'area'], ['chapter', 'Chapter label', 'text'], ['section', 'Chapter label code', 'text'], ['athigaram', 'Display chapter', 'text'], ['Kalaingar_Urai', 'Kalaignar commentary', 'area'],
+      ['Parimezhalagar_Urai', 'Parimelazhagar commentary', 'area'], ['M_Varadharajanar', 'M. Varadarajan commentary', 'area'], ['Solomon_Pappaiya', 'Solomon Pappaiya commentary', 'area'], ['line1', 'Line 1', 'area'], ['line2', 'Line 2', 'area'], ['audio_url', 'Audio URL', 'text'], ['legacy_audio_url', 'Legacy audio URL', 'text']
+    ];
+    const $ = (id) => document.getElementById(id);
+    const notice = (message, kind = '') => { $('notice').textContent = message; $('notice').className = `notice ${kind}`; };
+    const headers = () => ({ 'X-Admin-Token': state.token, Accept: 'application/json' });
+    async function api(path, options = {}) {
+      const response = await fetch(path, { ...options, headers: { ...headers(), ...(options.headers || {}) } });
+      if (!response.ok) { let detail = `Request failed (${response.status})`; try { detail = (await response.json()).error || detail; } catch {} throw new Error(detail); }
+      return response;
+    }
+    function renderList(data, pagination) {
+      state.rows = data; $('list').innerHTML = data.map((row) => `<button class="row ${state.selected === row.kuralno ? 'active' : ''}" data-number="${row.kuralno}"><span class="num">${String(row.kuralno).padStart(4, '0')}</span><span class="text">${escapeHtml(row.kural || '')}<small>${escapeHtml(row.athigaram || row.chapter || '')}</small></span></button>`).join('') || '<p class="muted" style="padding:14px">No matching Kurals.</p>';
+      $('count').textContent = `${pagination.total} records · ${pagination.offset + 1}-${Math.min(pagination.offset + data.length, pagination.total)}`;
+      $('previous').disabled = state.page === 0; $('next').disabled = pagination.offset + data.length >= pagination.total;
+      document.querySelectorAll('.row').forEach((button) => button.addEventListener('click', () => select(Number(button.dataset.number))));
+    }
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' }[char]));
+    async function load() { if (!state.token) return; try { const params = new URLSearchParams({ limit: String(state.limit), offset: String(state.page * state.limit) }); if (state.query) params.set('q', state.query); const payload = await (await api(`/admin/kurals?${params}`)).json(); renderList(payload.data || [], payload.pagination || { total: 0, offset: 0 }); notice('Connected. Select a row to edit.', 'ok'); } catch (error) { notice(error.message, 'error'); } }
+    async function select(number) { try { const payload = await (await api(`/kurals/${number}`)).json(); const row = state.rows.find((item) => item.kuralno === number) || {}; const merged = { ...row, ...apiToRaw(payload.data || {}) }; state.selected = number; renderEditor(merged); document.querySelectorAll('.row').forEach((button) => button.classList.toggle('active', Number(button.dataset.number) === number)); } catch (error) { notice(error.message, 'error'); } }
+    const apiToRaw = (value) => ({ kuralno: value.number, kural: value.tamil, TamilPiriyan_urai: value.meaning, general_urai: value.generalMeaning, English_couplet: value.englishCouplet, transliteration: value.transliteration, adikaramno: value.chapterNumber, pirivu: value.section, paal: value.paal, iyal: value.iyal, adikaram: value.chapterTitle || value.chapter, section: value.chapterLabel, line1: value.line1, line2: value.line2, audio_url: value.audioUrl, legacy_audio_url: value.legacyAudioUrl });
+    function renderEditor(row) { $('editor-title').textContent = `Edit Kural ${row.kuralno}`; $('save').disabled = false; $('editor').innerHTML = fields.map(([key, label, type]) => type === 'area' ? `<label class="full">${label}<textarea data-field="${key}"></textarea></label>` : `<label>${label}<input data-field="${key}" type="${type === 'number' ? 'number' : 'text'}"></label>`).join(''); fields.forEach(([key]) => { const input = document.querySelector(`[data-field="${key}"]`); if (input) input.value = row[key] ?? ''; }); }
+    const valueOf = (key) => document.querySelector(`[data-field="${key}"]`)?.value ?? '';
+    async function save() { if (!state.selected) return; const body = { number: state.selected, tamil: valueOf('kural'), meaning: valueOf('TamilPiriyan_urai'), generalMeaning: valueOf('general_urai'), englishCouplet: valueOf('English_couplet'), transliteration: valueOf('transliteration'), chapter: valueOf('athigaram') || valueOf('chapter'), chapterNumber: valueOf('adikaramno'), section: valueOf('pirivu'), paal: valueOf('paal'), iyal: valueOf('iyal'), chapterTitle: valueOf('adikaram'), chapterLabel: valueOf('section'), line1: valueOf('line1'), line2: valueOf('line2'), audioUrl: valueOf('audio_url'), legacyAudioUrl: valueOf('legacy_audio_url'), kuralsort: valueOf('kuralsort'), adikaramsort: valueOf('adikaramsort'), kural_range: valueOf('kural_range'), Kalaingar_Urai: valueOf('Kalaingar_Urai'), Parimezhalagar_Urai: valueOf('Parimezhalagar_Urai'), M_Varadharajanar: valueOf('M_Varadharajanar'), Solomon_Pappaiya: valueOf('Solomon_Pappaiya') }; try { await api(`/admin/kurals/${state.selected}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); notice('Saved. A revision snapshot was created.', 'ok'); await load(); await select(state.selected); } catch (error) { notice(error.message, 'error'); } }
+    async function exportFile(format) { try { const response = await api(`/admin/export?format=${format}`); const blob = await response.blob(); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `kurals-export.${format}`; link.click(); URL.revokeObjectURL(link.href); notice(`Exported ${format.toUpperCase()}.`, 'ok'); } catch (error) { notice(error.message, 'error'); } }
+    async function importFile() { const file = $('file').files[0]; if (!file) return notice('Choose a JSON or CSV file first.', 'error'); try { let body = await file.text(); const type = file.name.toLowerCase().endsWith('.csv') ? 'text/csv' : 'application/json'; if (type === 'application/json') { const parsed = JSON.parse(body); const data = Array.isArray(parsed) ? parsed : parsed.data; body = JSON.stringify({ mode: $('mode').value, data }); } const result = await (await api(`/admin/import?mode=${encodeURIComponent($('mode').value)}`, { method: 'POST', headers: { 'Content-Type': type }, body })).json(); notice(`Import complete: ${result.updated || 0} updated, ${result.inserted || 0} inserted, ${result.deleted || 0} deleted.`, 'ok'); await load(); } catch (error) { notice(error.message, 'error'); } }
+    $('token').value = state.token; $('connect').onclick = () => { state.token = $('token').value.trim(); if (state.token) sessionStorage.setItem('kural-admin-token', state.token); load(); }; $('searchButton').onclick = () => { state.query = $('search').value.trim(); state.page = 0; load(); }; $('search').onkeydown = (event) => { if (event.key === 'Enter') $('searchButton').click(); }; $('previous').onclick = () => { state.page--; load(); }; $('next').onclick = () => { state.page++; load(); }; $('save').onclick = save; $('exportJson').onclick = () => exportFile('json'); $('exportCsv').onclick = () => exportFile('csv'); $('import').onclick = importFile; if (state.token) load();
+  </script>
+</body>
+</html>
