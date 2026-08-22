@@ -1,0 +1,13 @@
+Options -Indexes
+
+RewriteEngine On
+
+# Keep the configuration and database schema private if they are ever uploaded
+# alongside the public API files.
+<FilesMatch "^(config\\.php|schema\\.sql)$">
+  Require all denied
+</FilesMatch>
+
+# Route /health and /kurals/... to the single API entry point.
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ api.php [QSA,L]
