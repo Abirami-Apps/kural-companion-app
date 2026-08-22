@@ -1743,3 +1743,20 @@
     width: 2.25rem;
   }
 }
+
+/* Keep the mobile menu in the header action flow. A fixed left offset makes
+   the trigger land on top of the logo when a native webview reports a narrow
+   landscape CSS width. */
+@media (min-width: 360px) and (max-width: 1179px) and (orientation: landscape) {
+  #app-root.player-shell > header .header-actions {
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  #app-root.player-shell > header .landscape-menu-trigger {
+    position: static !important;
+    left: auto;
+    top: auto;
+    z-index: auto;
+  }
+}
