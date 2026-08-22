@@ -19,6 +19,7 @@
     "native:run:ios": "npm run native:sync:ios && npx cap run ios",
     "native:run:android": "npm run native:sync:android && npx cap run android",
     "native:doctor": "npx cap doctor",
+    "db:build:hostinger": "node scripts/build-hostinger-sql.mjs",
     "build:dev": "vite build --mode development",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "lint": "eslint .",

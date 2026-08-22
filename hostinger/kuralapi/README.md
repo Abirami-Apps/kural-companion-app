@@ -6,12 +6,12 @@ This folder is the PHP 8/PDO API for `api.abirami.app`.
 2. Copy `config.example.php` to `config.php` on the server only.
 3. Fill in the Hostinger MySQL database name, username and password in `config.php`.
 4. Set a long random `admin_token`; do not commit or share it.
-5. Back up the existing database before importing the supplied
-   `kural_website_clean_final.sql` file.
-6. Import that SQL file in phpMyAdmin. It creates the `kural_website` table
-   with all 1,330 records and the additional commentary fields.
-7. Import `revisions.sql` to enable the protected correction endpoint's audit
-   history.
+5. Back up the existing database before importing the final SQL file.
+6. Generate the project-ready file locally with:
+   `npm run db:build:hostinger -- /Users/sathishguptha/Downloads/kural_website_clean_final.sql /private/tmp/kural-companion-hostinger.sql`
+7. Import `/private/tmp/kural-companion-hostinger.sql` in phpMyAdmin. It
+   resets `kural_website`, imports all 1,330 records and creates
+   `kural_revisions` for correction history.
 
 Test these URLs after upload:
 
