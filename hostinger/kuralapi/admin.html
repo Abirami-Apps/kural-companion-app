@@ -12,6 +12,15 @@
     header { background: #172033; color: #fff; padding: 14px max(20px, calc((100vw - 1280px) / 2)); }
     header h1 { margin: 0 0 4px; font-size: 22px; }
     header p { margin: 0; color: #b9c3d6; font-size: 13px; }
+    .header-inner { width: min(1440px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(220px, .7fr) minmax(560px, 1.3fr); gap: 18px; align-items: center; }
+    .header-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 10px; align-items: start; }
+    .header-controls .token-row, .header-controls .search-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; margin: 0; }
+    .header-controls input { min-width: 0; padding: 7px 9px; border: 1px solid #52627d; color: #fff; background: #25334e; }
+    .header-controls input::placeholder { color: #b9c3d6; }
+    .header-controls button.secondary { color: #fff; background: #3a4b69; }
+    .header-controls .notice { grid-column: 1 / -1; margin: 0; min-height: 16px; color: #b9c3d6; }
+    .header-controls .notice.ok { color: #8ce0af; }
+    .header-controls .notice.error { color: #ff9ba5; }
     main { width: min(1440px, calc(100% - 24px)); margin: 12px auto 24px; }
     .card { background: #fff; border: 1px solid #dce2ed; border-radius: 12px; padding: 12px; box-shadow: 0 6px 22px rgba(23,32,51,.05); }
     .toolbar, .actions, .pager { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
@@ -56,21 +65,24 @@
     .save-bar { position: sticky; bottom: 0; z-index: 2; display: flex; justify-content: flex-end; padding-top: 8px; margin-top: 8px; background: linear-gradient(transparent, #fff 35%); }
     .import-row label { min-width: 0; }
     @media (max-width: 1180px) { .layout { grid-template-columns: minmax(220px, .48fr) minmax(620px, 1.52fr); } .form-grid, .form-section { grid-template-columns: repeat(3, minmax(0, 1fr)); } label.content-field { grid-column: span 2; } }
-    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .list { max-height: 300px; } .form-grid, .form-section { grid-template-columns: repeat(2, minmax(0, 1fr)); } label.content-field { grid-column: span 2; } }
-    @media (max-width: 560px) { main { width: min(100% - 20px, 1280px); margin-top: 10px; } .card { padding: 13px; } .form-grid, .form-section { grid-template-columns: 1fr; } label.full, label.content-field { grid-column: auto; } .token-row, .import-row { grid-template-columns: 1fr; } .save-bar { position: static; background: none; } }
+    @media (max-width: 860px) { .header-inner { grid-template-columns: 1fr; gap: 10px; } .header-controls { grid-template-columns: 1fr; } .header-controls .notice { grid-column: auto; } .layout { grid-template-columns: 1fr; } .list { max-height: 300px; } .form-grid, .form-section { grid-template-columns: repeat(2, minmax(0, 1fr)); } label.content-field { grid-column: span 2; } }
+    @media (max-width: 560px) { header { padding: 12px 10px; } main { width: min(100% - 20px, 1280px); margin-top: 10px; } .card { padding: 13px; } .form-grid, .form-section { grid-template-columns: 1fr; } label.full, label.content-field { grid-column: auto; } .header-controls .token-row, .header-controls .search-row, .import-row { grid-template-columns: 1fr; } .save-bar { position: static; background: none; } }
   </style>
 </head>
 <body>
-  <header><h1>Kural API · Admin</h1><p>Private editor for the Hostinger MySQL database. Your token stays in this browser session.</p></header>
+  <header>
+    <div class="header-inner">
+      <div><h1>Kural API · Admin</h1><p>Private editor for the Hostinger MySQL database. Your token stays in this browser session.</p></div>
+      <div class="header-controls">
+        <div class="token-row"><input id="token" type="password" autocomplete="off" placeholder="Paste X-Admin-Token"><button id="connect">Connect</button></div>
+        <div class="search-row"><input id="search" placeholder="Search number, Tamil text, meaning or chapter" aria-label="Search Kurals"><button id="searchButton" class="secondary">Search</button></div>
+        <p id="notice" class="notice" role="status"></p>
+      </div>
+    </div>
+  </header>
   <main>
-    <section class="card" aria-labelledby="connection-title">
-      <strong id="connection-title">Secure connection</strong>
-      <div class="token-row"><input id="token" type="password" autocomplete="off" placeholder="Paste X-Admin-Token"><button id="connect">Connect</button></div>
-      <p id="notice" class="notice" role="status"></p>
-    </section>
     <section class="layout" style="margin-top:16px">
       <div class="card list-card">
-        <div class="toolbar"><input id="search" placeholder="Search number, Tamil text, meaning or chapter" aria-label="Search Kurals"><button id="searchButton" class="secondary">Search</button></div>
         <div id="list" class="list" aria-live="polite"></div>
         <div class="pager"><span id="count">Connect to load data</span><span class="actions"><button id="previous" class="secondary">Previous</button><button id="next" class="secondary">Next</button></span></div>
       </div>
