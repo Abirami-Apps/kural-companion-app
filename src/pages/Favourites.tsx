@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
-import { getKural } from "@/data/sample-kurals";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserData } from "@/hooks/useUserData";
+import { useKuralLibrary } from "@/hooks/useKuralLibrary";
 
 const Favourites = () => {
   const { user } = useAuth();
   const { favourites: favs, syncStatus, syncError, retrySync } = useUserData();
+  const { getKural } = useKuralLibrary();
 
   const storageLabel = user
     ? syncStatus === "synced"

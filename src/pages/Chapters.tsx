@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAllKurals, SECTIONS } from "@/data/sample-kurals";
+import { SECTIONS } from "@/data/sample-kurals";
 import { Button } from "@/components/ui/button";
+import { useKuralLibrary } from "@/hooks/useKuralLibrary";
 
 interface ChapterEntry {
   number: number;
@@ -13,10 +14,11 @@ interface ChapterEntry {
 
 const Chapters = () => {
   const [section, setSection] = useState<string>("all");
+  const { kurals } = useKuralLibrary();
 
   const chapters = useMemo<ChapterEntry[]>(() => {
     const map = new Map<number, ChapterEntry>();
-    getAllKurals().forEach((k) => {
+    kurals.forEach((k) => {
       const existing = map.get(k.chapterNumber);
       if (existing) existing.count += 1;
       else
@@ -29,7 +31,7 @@ const Chapters = () => {
         });
     });
     return [...map.values()].sort((a, b) => a.number - b.number);
-  }, []);
+  }, [kurals]);
 
   const visible = section === "all" ? chapters : chapters.filter((c) => c.section === section);
 

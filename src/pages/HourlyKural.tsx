@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useHourlyKural } from "@/hooks/useHourlyKural";
-import { getKural } from "@/data/sample-kurals";
+import { useKuralLibrary } from "@/hooks/useKuralLibrary";
 import {
   formatHour,
   hourlyNotificationContent,
@@ -38,6 +38,7 @@ const languageOptions: { id: HourlyLanguage; label: string }[] = [
 export default function HourlyKural() {
   const hourly = useHourlyKural();
   const { openPremiumPrompt } = usePremiumPrompt();
+  const { getKural } = useKuralLibrary();
 
   if (!hourly.premiumAccess) {
     return (

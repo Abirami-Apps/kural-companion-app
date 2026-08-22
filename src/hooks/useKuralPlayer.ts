@@ -21,6 +21,7 @@ import { useUserData } from "@/hooks/useUserData";
 import type { HourlyPlaybackRequest } from "@/contexts/HourlyKuralContext";
 import artwork from "@/assets/logo.png";
 import { usePremiumPrompt } from "@/contexts/PremiumPromptContext";
+import { fetchKuralFromApi } from "@/lib/kural-api";
 
 const SOFT_DELAY = 1000;
 
@@ -61,7 +62,9 @@ export function useKuralPlayer() {
   const invalidTarget = hasTarget && parsedTarget === null;
   const lastPlayedKey = deviceKey(LAST_PLAYED_KEY);
   const number = parsedTarget ?? (hasTarget ? 1 : readPersistedKuralNumber(lastPlayedKey) ?? 1);
-  const current = getKural(number) as Kural;
+  const fallbackCurrent = getKural(number) as Kural;
+  const [remoteCurrent, setRemoteCurrent] = useState<Kural | undefined>();
+  const current = remoteCurrent?.number === number ? remoteCurrent : fallbackCurrent;
   const notificationAutoplayRequested = searchParams.get("autoplay") === "1";
   const autoplayRequested =
     (location.state as { autoplay?: boolean } | null)?.autoplay === true ||
@@ -98,6 +101,19 @@ export function useKuralPlayer() {
     () => typeof window !== "undefined" && !!localStorage.getItem(HINT_KEY),
   );
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+
+  // Show the bundled record immediately, then replace it with the corrected
+  // Hostinger record when the network is available. Abort stale route loads so
+  // a slow response can never overwrite a newer Kural.
+  useEffect(() => {
+    setRemoteCurrent(undefined);
+    if (invalidTarget) return;
+    const controller = new AbortController();
+    void fetchKuralFromApi(number, controller.signal).then((remote) => {
+      if (!controller.signal.aborted && remote) setRemoteCurrent(remote);
+    });
+    return () => controller.abort();
+  }, [invalidTarget, number]);
 
   const isFavourite = favourites.includes(number);
   const canPrev = prevNumber(number) !== null;
