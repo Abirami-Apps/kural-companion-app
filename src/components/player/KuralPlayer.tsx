@@ -63,7 +63,7 @@ export function KuralPlayer() {
   ) : null;
 
   const progress = (
-    <div className="flex w-full items-center gap-2.5 text-[0.7rem] text-secondary-foreground/80">
+    <div className="tablet-portrait-progress flex w-full items-center gap-2.5 text-[0.7rem] text-secondary-foreground/80">
       <span className="w-9 tabular-nums">{formatTime(p.progress)}</span>
       <input
         type="range"
@@ -105,10 +105,29 @@ export function KuralPlayer() {
 
   return (
     <div id="player" className="player-page h-full min-h-0 w-full overflow-hidden">
-      <div className="mx-auto grid h-full min-h-0 w-full max-w-[1280px] grid-rows-[minmax(0,1fr)_auto] gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3 short:gap-2 short:px-2 short:py-2 wide:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)] wide:grid-rows-1 wide:items-stretch split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:grid-rows-1 split:items-stretch studio:grid-cols-[minmax(0,1.65fr)_minmax(360px,0.85fr)] studio:grid-rows-1 studio:items-stretch studio:gap-6 studio:px-8 studio:py-8">
+      <div className="player-grid mx-auto grid h-full min-h-0 w-full grid-rows-[minmax(0,1fr)_auto] gap-2 px-2 py-2 sm:gap-3 sm:px-4 sm:py-3 short:gap-2 short:px-2 short:py-2 wide:grid-cols-[minmax(0,1.45fr)_minmax(260px,0.75fr)] wide:grid-rows-1 wide:items-stretch split:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.75fr)] split:grid-rows-1 split:items-stretch studio:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)] studio:grid-rows-1 studio:items-stretch studio:gap-4 studio:px-5 studio:py-5">
+        <aside
+          aria-label="Tiruvalluvar portrait"
+          className="valluvar-panel relative hidden min-h-0 min-w-0 items-center justify-center overflow-hidden rounded-[1.5rem] border border-border/80 shadow-[0_24px_70px_-46px_hsl(var(--navy)/0.9)] studio:col-start-1 studio:flex"
+        >
+          <div className="pointer-events-none absolute inset-x-0 top-5 z-10 text-center text-secondary-foreground/75 studio:top-7">
+            <p className="font-tamil text-sm tracking-wide studio:text-base">திருவள்ளுவர்</p>
+            <span className="mx-auto mt-2 block h-px w-16 bg-gold-light/60" aria-hidden="true" />
+          </div>
+          <img
+            src="/valluvar.png"
+            alt="திருவள்ளுவர்"
+            className="h-[74%] w-auto max-w-none object-contain object-center drop-shadow-[0_20px_26px_hsl(var(--navy)/0.55)]"
+            loading="eager"
+          />
+          <div className="pointer-events-none absolute inset-x-0 bottom-5 z-10 text-center text-[0.68rem] uppercase tracking-[0.24em] text-secondary-foreground/60 studio:bottom-7 studio:text-xs">
+            அறம்&nbsp; · &nbsp;பொருள்&nbsp; · &nbsp;இன்பம்
+          </div>
+        </aside>
+
         <section
           aria-label="Kural verse"
-          className="reading-panel h-full min-h-0 min-w-0 overflow-hidden rounded-[1.35rem] border border-border/80 bg-card px-3 py-3 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:rounded-[1.5rem] sm:px-5 sm:py-4 short:px-3 short:py-2 studio:px-8 studio:py-6"
+          className="reading-panel mobile-landscape-reading-panel h-full min-h-0 min-w-0 overflow-hidden rounded-[1.35rem] border border-border/80 px-3 py-3 shadow-[0_24px_70px_-50px_hsl(var(--navy)/0.65)] sm:rounded-[1.5rem] sm:px-5 sm:py-4 short:px-3 short:py-2 studio:col-start-2 studio:px-8 studio:py-6"
         >
           <VerseDisplay
             kural={p.current}
@@ -118,7 +137,6 @@ export function KuralPlayer() {
             canNext={p.canNext}
             onPrev={p.goPrev}
             onNext={p.goNext}
-            onChooseNumber={() => setKeypadOpen(true)}
             locked={p.locked}
             onRequestPremium={openPremiumPrompt}
           />
@@ -126,23 +144,37 @@ export function KuralPlayer() {
 
         <aside
           aria-label="Player controls"
-          className="control-card hidden min-w-0 flex-col justify-center rounded-[1.5rem] bg-secondary px-7 py-8 text-secondary-foreground shadow-[0_28px_70px_-42px_hsl(var(--navy)/0.9)] studio:flex"
+          className="control-card tablet-portrait-control-card mobile-landscape-control-card hidden min-w-0 flex-col justify-center rounded-[1.5rem] bg-secondary px-5 py-5 text-secondary-foreground shadow-[0_28px_70px_-42px_hsl(var(--navy)/0.9)] wide:flex studio:col-start-3 studio:flex studio:px-5 studio:py-6"
         >
-          <div className="mx-auto flex w-full max-w-[390px] flex-col gap-4">
-            <NumberReadout
-              display={display}
-              pending={p.pending}
-              softDelay={p.softDelay}
-              onBackspace={p.backspace}
-              onKeyboard={() => p.setShortcutsOpen(true)}
-            />
+          <div className="tablet-portrait-control-layout mx-auto flex w-full max-w-[390px] flex-col gap-4">
+            <div className="tablet-portrait-top-row">
+              <div className="tablet-portrait-readout">
+                <NumberReadout
+                  display={display}
+                  pending={p.pending}
+                  softDelay={p.softDelay}
+                  onBackspace={p.backspace}
+                  onKeyboard={() => p.setShortcutsOpen(true)}
+                />
+              </div>
 
-            <div className="flex min-h-[22px] items-center justify-center gap-2 text-center text-xs text-secondary-foreground/70" lang="en">
+              <div className="tablet-portrait-shuffle flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={p.shuffle}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/70 transition hover:bg-secondary-foreground/[0.06] hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+                >
+                  <Shuffle className="h-4 w-4" aria-hidden="true" /> Surprise me
+                </button>
+              </div>
+            </div>
+
+            <div className="tablet-portrait-status flex min-h-[22px] items-center justify-center gap-2 text-center text-xs text-secondary-foreground/70" lang="en">
               {status}
             </div>
 
             {p.recents.length > 1 && (
-              <nav aria-label="Recently played" className="flex items-center justify-center gap-2 overflow-x-auto pb-1">
+              <nav aria-label="Recently played" className="tablet-portrait-recents flex items-center justify-center gap-2 overflow-x-auto pb-1">
                 {p.recents.map((number) => (
                   <button
                     key={number}
@@ -164,25 +196,17 @@ export function KuralPlayer() {
 
             {progress}
 
-            <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onSubmit={p.submitEntry} />
-
-            <div className="flex items-center justify-center">
-              <button
-                type="button"
-                onClick={p.shuffle}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-xs text-secondary-foreground/70 transition hover:bg-secondary-foreground/[0.06] hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
-              >
-                <Shuffle className="h-4 w-4" aria-hidden="true" /> Surprise me
-              </button>
+            <div className="tablet-portrait-keypad">
+              <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onSubmit={p.submitEntry} />
             </div>
 
-            <div className="border-t border-secondary-foreground/15 pt-3">{transport}</div>
+            <div className="tablet-portrait-transport border-t border-secondary-foreground/15 pt-3">{transport}</div>
 
             {p.locked && (
               <button
                 type="button"
                 onClick={openPremiumPrompt}
-                className="inline-flex min-h-11 items-center justify-center text-xs text-secondary-foreground/75 underline underline-offset-4 hover:text-gold-light"
+                className="tablet-portrait-locked inline-flex min-h-11 items-center justify-center text-xs text-secondary-foreground/75 underline underline-offset-4 hover:text-gold-light"
               >
                 Start free trial
               </button>
@@ -190,11 +214,42 @@ export function KuralPlayer() {
           </div>
         </aside>
 
-        <section aria-label="Compact player controls" className="min-h-0 studio:hidden">
+        <section aria-label="Compact player controls" className="tablet-portrait-compact min-h-0 wide:hidden studio:hidden">
           <div className="h-full rounded-[1.35rem] bg-secondary px-3 py-2 text-secondary-foreground shadow-[0_24px_60px_-38px_hsl(var(--navy)/0.9)] sm:rounded-[1.5rem] sm:px-4 sm:py-3 short:px-3 short:py-2">
             <div className="mx-auto flex h-full max-w-2xl flex-col justify-center gap-0.5 sm:gap-1">
+              <div className="mobile-portrait-number-readout">
+                <NumberReadout
+                  display={display}
+                  pending={p.pending}
+                  softDelay={p.softDelay}
+                  onBackspace={p.backspace}
+                />
+              </div>
               {progress}
-              <div className="min-h-11">{transport}</div>
+              <div className="mobile-portrait-keypad">
+                <Keypad onDigit={p.pressDigit} onClear={p.clearEntry} onSubmit={p.submitEntry} />
+              </div>
+              <div className="flex min-h-11 items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={p.shuffle}
+                  aria-label="Surprise me"
+                  className="mobile-portrait-surprise hidden min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-secondary-foreground/20 px-2 text-[0.62rem] font-medium text-secondary-foreground/80 transition hover:border-gold-light/60 hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+                >
+                  <Shuffle className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>Surprise</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setKeypadOpen(true)}
+                  aria-label="Enter a Kural number"
+                  className="mobile-number-entry-button hidden min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-secondary-foreground/20 px-3 text-[0.68rem] font-medium text-secondary-foreground/80 transition hover:border-gold-light/60 hover:text-gold-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+                >
+                  <Keyboard className="h-4 w-4" aria-hidden="true" />
+                  <span className="mobile-number-entry-label">Enter number</span>
+                </button>
+                <div className="min-w-0 flex-1">{transport}</div>
+              </div>
               {status && (
                 <div className="flex min-h-5 items-center justify-center gap-2 text-center text-[0.68rem] text-secondary-foreground/70" lang="en">
                   {status}

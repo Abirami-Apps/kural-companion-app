@@ -17,6 +17,7 @@ artifacts
 *.local
 supabase/.env.billing
 supabase/.env.billing.live
+hostinger/kuralapi/config.php
 
 # Editor directories and files
 .vscode/*

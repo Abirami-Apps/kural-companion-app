@@ -4,10 +4,21 @@ export interface Kural {
   number: number;
   tamil: string;
   meaning?: string;
+  generalMeaning?: string;
+  englishCouplet?: string;
+  transliteration?: string;
   chapter: string;
   chapterNumber: number;
   section: string;
+  paal?: string;
+  iyal?: string;
+  chapterTitle?: string;
+  chapterLabel?: string;
+  line1?: string;
+  line2?: string;
   audioUrl?: string;
+  legacyAudioUrl?: string;
+  updatedAt?: string | null;
 }
 
 interface RawKural {

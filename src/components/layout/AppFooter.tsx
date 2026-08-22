@@ -6,7 +6,7 @@ export function AppFooter() {
 
   return (
     <footer className="hidden shrink-0 border-t border-border/70 bg-background/80 nav:block">
-      <div className="mx-auto flex min-h-12 w-full max-w-[1280px] items-center justify-between gap-4 px-8">
+      <div className="flex min-h-12 w-full items-center justify-between gap-4 px-8">
         <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Kural Companion</p>
         <nav aria-label="Footer" className="flex items-center gap-4 text-xs">
           <Link to="/hourly" className="inline-flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-primary">

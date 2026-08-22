@@ -46,7 +46,7 @@ export function AppHeader() {
 
   return (
     <header className="z-40 shrink-0 border-b border-border/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      <div className="mx-auto flex min-h-[64px] w-full max-w-[1280px] items-center gap-3 px-4 py-1.5 sm:px-6 nav:px-8">
+      <div className="flex min-h-[64px] w-full items-center gap-3 px-4 py-1.5 sm:px-6 nav:px-8">
         <Link
           to="/"
           className="flex min-h-11 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -81,7 +81,7 @@ export function AppHeader() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1 nav:ml-2">
+        <div className="header-actions ml-auto flex items-center gap-1 nav:ml-2">
           <ConnectivityBadge className="hidden nav:inline-flex" />
           <InstallAppButton className="hidden nav:inline-flex" />
           {checkoutEnabled && (
@@ -105,7 +105,7 @@ export function AppHeader() {
             <AppearancePanel />
           </span>
 
-          <Button asChild variant="ghost" size="icon" className="h-11 w-11 nav:hidden">
+          <Button asChild variant="ghost" size="icon" className="landscape-favourite-trigger h-11 w-11 nav:hidden">
             <Link to="/favourites" aria-label="Open favourites">
               <Heart className="h-5 w-5" aria-hidden="true" />
             </Link>
@@ -113,7 +113,7 @@ export function AppHeader() {
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-11 w-11 nav:hidden" aria-label="Open menu">
+              <Button variant="ghost" size="icon" className="landscape-menu-trigger h-11 w-11 nav:hidden" aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
