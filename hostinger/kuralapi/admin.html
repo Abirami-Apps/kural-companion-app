@@ -27,7 +27,7 @@
     .notice { margin: 12px 0 0; min-height: 20px; color: #58657b; font-size: 13px; }
     .notice.error { color: #b12632; }
     .notice.ok { color: #1d754d; }
-    .layout { display: grid; grid-template-columns: minmax(300px, .8fr) minmax(460px, 1.2fr); gap: 16px; align-items: start; }
+    .layout { display: grid; grid-template-columns: minmax(260px, .62fr) minmax(620px, 1.38fr); gap: 16px; align-items: start; }
     .list-card { min-width: 0; }
     .list { max-height: 720px; overflow: auto; border: 1px solid #e1e6ef; border-radius: 10px; }
     .row { display: grid; grid-template-columns: 62px 1fr; gap: 10px; width: 100%; text-align: left; border-radius: 0; border-bottom: 1px solid #edf0f5; background: #fff; color: #172033; font-weight: 400; }
@@ -37,17 +37,26 @@
     .row .text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .row small { display: block; margin-top: 3px; color: #728099; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pager { justify-content: space-between; margin-top: 12px; color: #68758a; font-size: 13px; }
-    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .editor-card { min-width: 0; }
+    .editor-note { margin: 3px 0 0; color: #728099; font-size: 12px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .form-section { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 4px; padding-top: 14px; border-top: 1px solid #e6eaf1; }
+    .form-section:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+    .form-section h3 { grid-column: 1 / -1; margin: 0 0 1px; color: #26334b; font-size: 13px; letter-spacing: .01em; }
     label { display: grid; gap: 5px; color: #56637a; font-size: 12px; font-weight: 700; }
     label.full { grid-column: 1 / -1; }
-    textarea { min-height: 92px; resize: vertical; }
+    label.content-field { grid-column: span 3; }
+    textarea { min-height: 68px; resize: vertical; }
+    label.content-field textarea { min-height: 82px; }
     .form-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
     .form-head h2 { margin: 0; font-size: 18px; }
     .muted { color: #728099; font-size: 12px; }
     .import-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: end; margin-top: 14px; }
+    .save-bar { position: sticky; bottom: 0; z-index: 2; display: flex; justify-content: flex-end; padding-top: 12px; margin-top: 14px; background: linear-gradient(transparent, #fff 35%); }
     .import-row label { min-width: 0; }
-    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .list { max-height: 360px; } }
-    @media (max-width: 560px) { main { width: min(100% - 20px, 1280px); margin-top: 10px; } .card { padding: 13px; } .form-grid { grid-template-columns: 1fr; } label.full { grid-column: auto; } .token-row, .import-row { grid-template-columns: 1fr; } }
+    @media (max-width: 1080px) { .layout { grid-template-columns: minmax(240px, .55fr) minmax(500px, 1.45fr); } .form-grid, .form-section { grid-template-columns: repeat(2, minmax(0, 1fr)); } label.content-field { grid-column: span 2; } }
+    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .list { max-height: 360px; } .form-grid, .form-section { grid-template-columns: repeat(2, minmax(0, 1fr)); } label.content-field { grid-column: span 2; } }
+    @media (max-width: 560px) { main { width: min(100% - 20px, 1280px); margin-top: 10px; } .card { padding: 13px; } .form-grid, .form-section { grid-template-columns: 1fr; } label.full, label.content-field { grid-column: auto; } .token-row, .import-row { grid-template-columns: 1fr; } .save-bar { position: static; background: none; } }
   </style>
 </head>
 <body>
@@ -64,9 +73,10 @@
         <div id="list" class="list" aria-live="polite"></div>
         <div class="pager"><span id="count">Connect to load data</span><span class="actions"><button id="previous" class="secondary">Previous</button><button id="next" class="secondary">Next</button></span></div>
       </div>
-      <div class="card">
-        <div class="form-head"><div><h2 id="editor-title">Select a Kural</h2><span class="muted">Save changes to create a revision snapshot.</span></div><button id="save" disabled>Save</button></div>
+      <div class="card editor-card">
+        <div class="form-head"><div><h2 id="editor-title">Select a Kural</h2><p class="editor-note">All editable database fields are shown together below — no tabs or separate screens.</p></div></div>
         <div id="editor" class="form-grid"><p class="muted">After connecting, choose a row from the list.</p></div>
+        <div class="save-bar"><button id="save" disabled>Save all fields</button></div>
       </div>
     </section>
     <section class="card" style="margin-top:16px">
@@ -102,7 +112,18 @@
     async function load() { if (!state.token) return; try { const params = new URLSearchParams({ limit: String(state.limit), offset: String(state.page * state.limit) }); if (state.query) params.set('q', state.query); const payload = await (await api(`/admin/kurals?${params}`)).json(); renderList(payload.data || [], payload.pagination || { total: 0, offset: 0 }); notice('Connected. Select a row to edit.', 'ok'); } catch (error) { notice(error.message, 'error'); } }
     async function select(number) { try { const payload = await (await api(`/kurals/${number}`)).json(); const row = state.rows.find((item) => item.kuralno === number) || {}; const merged = { ...row, ...apiToRaw(payload.data || {}) }; state.selected = number; renderEditor(merged); document.querySelectorAll('.row').forEach((button) => button.classList.toggle('active', Number(button.dataset.number) === number)); } catch (error) { notice(error.message, 'error'); } }
     const apiToRaw = (value) => ({ kuralno: value.number, kural: value.tamil, TamilPiriyan_urai: value.meaning, general_urai: value.generalMeaning, English_couplet: value.englishCouplet, transliteration: value.transliteration, adikaramno: value.chapterNumber, pirivu: value.section, paal: value.paal, iyal: value.iyal, adikaram: value.chapterTitle || value.chapter, section: value.chapterLabel, line1: value.line1, line2: value.line2, audio_url: value.audioUrl, legacy_audio_url: value.legacyAudioUrl });
-    function renderEditor(row) { $('editor-title').textContent = `Edit Kural ${row.kuralno}`; $('save').disabled = false; $('editor').innerHTML = fields.map(([key, label, type]) => type === 'area' ? `<label class="full">${label}<textarea data-field="${key}"></textarea></label>` : `<label>${label}<input data-field="${key}" type="${type === 'number' ? 'number' : 'text'}"></label>`).join(''); fields.forEach(([key]) => { const input = document.querySelector(`[data-field="${key}"]`); if (input) input.value = row[key] ?? ''; }); }
+    function renderEditor(row) {
+      $('editor-title').textContent = `Edit Kural ${row.kuralno}`;
+      $('save').disabled = false;
+      const groups = [
+        ['Identity & classification', fields.slice(0, 9)],
+        ['Kural text & meanings', fields.slice(9, 16)],
+        ['Commentary', fields.slice(16, 21)],
+        ['Audio & lines', fields.slice(21)]
+      ];
+      $('editor').innerHTML = groups.map(([title, group]) => `<section class="form-section"><h3>${title}</h3>${group.map(([key, label, type]) => type === 'area' ? `<label class="content-field">${label}<textarea data-field="${key}"></textarea></label>` : `<label>${label}<input data-field="${key}" type="${type === 'number' ? 'number' : 'text'}"></label>`).join('')}</section>`).join('');
+      fields.forEach(([key]) => { const input = document.querySelector(`[data-field="${key}"]`); if (input) input.value = row[key] ?? ''; });
+    }
     const valueOf = (key) => document.querySelector(`[data-field="${key}"]`)?.value ?? '';
     async function save() { if (!state.selected) return; const body = { number: state.selected, tamil: valueOf('kural'), meaning: valueOf('TamilPiriyan_urai'), generalMeaning: valueOf('general_urai'), englishCouplet: valueOf('English_couplet'), transliteration: valueOf('transliteration'), chapter: valueOf('athigaram') || valueOf('chapter'), chapterNumber: valueOf('adikaramno'), section: valueOf('pirivu'), paal: valueOf('paal'), iyal: valueOf('iyal'), chapterTitle: valueOf('adikaram'), chapterLabel: valueOf('section'), line1: valueOf('line1'), line2: valueOf('line2'), audioUrl: valueOf('audio_url'), legacyAudioUrl: valueOf('legacy_audio_url'), kuralsort: valueOf('kuralsort'), adikaramsort: valueOf('adikaramsort'), kural_range: valueOf('kural_range'), Kalaingar_Urai: valueOf('Kalaingar_Urai'), Parimezhalagar_Urai: valueOf('Parimezhalagar_Urai'), M_Varadharajanar: valueOf('M_Varadharajanar'), Solomon_Pappaiya: valueOf('Solomon_Pappaiya') }; try { await api(`/admin/kurals/${state.selected}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); notice('Saved. A revision snapshot was created.', 'ok'); await load(); await select(state.selected); } catch (error) { notice(error.message, 'error'); } }
     async function exportFile(format) { try { const response = await api(`/admin/export?format=${format}`); const blob = await response.blob(); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `kurals-export.${format}`; link.click(); URL.revokeObjectURL(link.href); notice(`Exported ${format.toUpperCase()}.`, 'ok'); } catch (error) { notice(error.message, 'error'); } }
