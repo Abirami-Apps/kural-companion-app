@@ -22,5 +22,9 @@ https://api.abirami.app/kurals/1
 
 The API maps `TamilPiriyan_urai` to the app's `meaning` field and keeps the
 additional translations/commentaries available for future UI work. The React
-app should continue using its bundled JSON as an offline fallback until the API
-has been tested on web, iOS and Android.
+app now requests this API for the current Kural, Chapters, Favourites and
+Hourly preview, while retaining the bundled JSON as an offline fallback.
+
+The browser-side API origin is configured with `VITE_KURAL_API_URL` (the
+default is `https://api.abirami.app`). This is a public read-only URL; never
+place database credentials or the admin token in a `VITE_*` variable.
