@@ -477,8 +477,8 @@
   }
 
   .mobile-landscape-control-card .tablet-portrait-keypad .grid button {
-    height: 2.2rem;
-    min-height: 2.2rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
     border-radius: 0.8rem;
     font-size: 0.82rem;
   }
@@ -616,8 +616,8 @@
   }
 
   .mobile-landscape-control-card .tablet-portrait-keypad .grid button {
-    height: 1.7rem;
-    min-height: 1.7rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
     border-radius: 0.55rem;
     font-size: 0.72rem;
   }
@@ -651,6 +651,19 @@
    reading surface remain in the left 60%, so the keypad never gets clipped by
    the footer or a short main column. */
 @media (min-width: 560px) and (max-width: 1179px) and (orientation: landscape) {
+  /* Compact landscape still honours the 44px minimum touch target. The
+     surrounding lanes absorb the extra height instead of shrinking controls
+     into unreliable tap targets. */
+  .mobile-landscape-reading-panel button,
+  .mobile-landscape-control-card button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .mobile-landscape-control-card input[type='range'] {
+    min-height: 44px;
+  }
+
   #app-root.player-shell {
     display: grid;
     grid-template-columns: minmax(0, 3fr) minmax(16rem, 2fr);
@@ -881,8 +894,8 @@
   }
 
   #app-root.player-shell .control-card .tablet-portrait-keypad .grid button {
-    height: 2rem;
-    min-height: 2rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
     border-radius: 0.65rem;
     font-size: 0.78rem;
   }
@@ -1070,8 +1083,8 @@
   }
 
   #app-root.player-shell .control-card .tablet-portrait-keypad .grid button {
-    height: 1.35rem;
-    min-height: 1.35rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
     border-radius: 0.45rem;
     font-size: 0.65rem;
   }
@@ -1273,6 +1286,18 @@
    heading composition so the reading card has a clear focal point instead of
    a faint corner watermark. */
 @media (max-width: 639px) and (orientation: portrait) {
+  /* Keep the app shell fixed while allowing the compact reading card to
+     reveal its navigation actions on the shortest phone heights. */
+  .reading-panel {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .reading-panel::-webkit-scrollbar {
+    display: none;
+  }
+
   .tablet-valluvar-art {
     display: none;
   }
@@ -1320,8 +1345,8 @@
   }
 
   .mobile-portrait-keypad .grid button {
-    height: 2.5rem;
-    min-height: 2.5rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
     border-radius: 0.85rem;
     font-size: 0.85rem;
   }
@@ -1566,6 +1591,22 @@
   }
 }
 
+/* Final compact-landscape guard: later visual-tuning rules may tighten gaps,
+   but interactive controls never shrink below the accessible 44px target. */
+@media (min-width: 560px) and (max-width: 1179px) and (orientation: landscape) {
+  #app-root.player-shell .mobile-landscape-reading-panel button,
+  #app-root.player-shell .mobile-landscape-control-card button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+
+  #app-root.player-shell .mobile-landscape-control-card input[type='range'] {
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+}
+
 /* Keep the same two lanes on narrow landscape phone viewports, but compress
    the controls to their bounded height. This branch is important for iOS
    webviews whose logical width can be half the screenshot pixel width. */
@@ -1723,8 +1764,8 @@
   }
 
   #app-root.player-shell .mobile-landscape-control-card .tablet-portrait-keypad .grid button {
-    height: 1.45rem;
-    min-height: 1.45rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
     border-radius: 0.45rem;
     font-size: 0.62rem;
   }

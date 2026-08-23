@@ -95,6 +95,13 @@ for (const viewport of viewports) {
     });
     expect(clippedMeaning, JSON.stringify(clippedMeaning, null, 2)).toBeNull();
 
+    // On the shortest portrait phones the reading card is independently
+    // scrollable so its navigation row remains reachable without restoring
+    // page-level scrolling.
+    if (viewport.height > viewport.width) {
+      await page.locator('section[aria-label="Kural verse"] button').last().scrollIntoViewIfNeeded();
+    }
+
     const clippedReadingActions = await page.locator('section[aria-label="Kural verse"]').evaluate(
       (section) => {
         return [...section.querySelectorAll("button")].flatMap((button) => {

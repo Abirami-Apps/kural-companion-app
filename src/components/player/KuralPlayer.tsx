@@ -154,6 +154,7 @@ export function KuralPlayer() {
                   pending={p.pending}
                   softDelay={p.softDelay}
                   onBackspace={p.backspace}
+                  onOpenKeypad={() => setKeypadOpen(true)}
                   onKeyboard={() => p.setShortcutsOpen(true)}
                 />
               </div>
@@ -223,6 +224,7 @@ export function KuralPlayer() {
                   pending={p.pending}
                   softDelay={p.softDelay}
                   onBackspace={p.backspace}
+                  onOpenKeypad={() => setKeypadOpen(true)}
                 />
               </div>
               {progress}
@@ -317,17 +319,24 @@ function NumberReadout({
   pending,
   softDelay,
   onBackspace,
+  onOpenKeypad,
   onKeyboard,
 }: {
   display: string;
   pending: boolean;
   softDelay: number;
   onBackspace: () => void;
+  onOpenKeypad?: () => void;
   onKeyboard?: () => void;
 }) {
   return (
     <div className="flex w-full items-center justify-center gap-2">
-      <div className="relative flex min-h-[66px] min-w-0 flex-1 items-center justify-center gap-4 overflow-hidden rounded-2xl border border-secondary-foreground/15 bg-secondary-foreground/[0.055] px-4">
+      <button
+        type="button"
+        onClick={onOpenKeypad}
+        aria-label={`Choose a Kural number, currently ${display}`}
+        className="relative flex min-h-[66px] min-w-0 flex-1 items-center justify-center gap-4 overflow-hidden rounded-2xl border border-secondary-foreground/15 bg-secondary-foreground/[0.055] px-4 text-inherit transition hover:bg-secondary-foreground/[0.11] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-light"
+      >
         <span data-fit-probe="lcd" className="digital-display text-[clamp(1.65rem,4vw,2.2rem)] font-bold text-gold-light">
           {display}
         </span>
@@ -341,7 +350,7 @@ function NumberReadout({
             style={{ animationDuration: `${softDelay}ms` }}
           />
         )}
-      </div>
+      </button>
       <button
         type="button"
         onClick={onBackspace}

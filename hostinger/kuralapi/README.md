@@ -20,6 +20,30 @@ https://api.abirami.app/health
 https://api.abirami.app/kurals/1
 ```
 
+## Admin editor, export and import
+
+Open `https://api.abirami.app/admin.html`, paste the configured admin token,
+and connect. The page can search and edit individual records, export every
+database column as JSON or CSV, and import either format. The token is kept in
+`sessionStorage` only; it is never part of the application bundle.
+
+The protected endpoints are:
+
+```text
+GET  /admin/kurals?q=...&limit=50&offset=0   browse/search rows
+PUT  /admin/kurals/{number}                  edit one row
+GET  /admin/export?format=json              full JSON export
+GET  /admin/export?format=csv               full CSV export
+POST /admin/import?mode=upsert              safe partial/full import
+POST /admin/import?mode=replace             deliberate 1-1330 replacement
+```
+
+Send the token as `X-Admin-Token`. Imports are transactional: if one row
+fails validation, no rows are committed. Every update creates a snapshot in
+`kural_revisions`. Keep `replace` mode for a complete export that contains
+exactly one row for every number from 1 through 1330; use the default `upsert`
+mode for corrections or partial files.
+
 The API maps `TamilPiriyan_urai` to the app's `meaning` field and keeps the
 additional translations/commentaries available for future UI work. The React
 app now requests this API for the current Kural, Chapters, Favourites and
