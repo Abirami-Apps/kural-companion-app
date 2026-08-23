@@ -136,7 +136,7 @@ test("landscape player and keypad remain fully visible", async ({ page }) => {
   expect(landscapeMain.scrollHeight).toBeLessThanOrEqual(landscapeMain.clientHeight + 1);
 
   const reading = page.getByRole("region", { name: "Kural verse" });
-  const controls = page.getByRole("region", { name: "Compact player controls" });
+  const controls = page.locator('[aria-label="Player controls"]');
   const readingBox = await reading.boundingBox();
   const controlsBox = await controls.boundingBox();
   expect(readingBox).not.toBeNull();
