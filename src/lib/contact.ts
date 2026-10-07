@@ -17,6 +17,61 @@ export type SupportMessage = {
   message: string;
 };
 
+export function getContactEndpoint(value: string | undefined): string {
+  if (!value?.trim()) return "";
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === "https:" && !url.username && !url.password && !url.hash
+      ? url.toString()
+      : "";
+  } catch {
+    return "";
+  }
+}
+
+export const contactEndpoint = getContactEndpoint(import.meta.env.VITE_CONTACT_ENDPOINT);
+
+export async function submitSupportMessage(
+  input: SupportMessage & { website: string },
+  endpoint = contactEndpoint,
+): Promise<void> {
+  const url = getContactEndpoint(endpoint);
+  if (!url) throw new Error("Direct sending is not configured. Please email support directly.");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 35_000);
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "omit",
+      redirect: "error",
+      signal: controller.signal,
+      body: JSON.stringify({
+        name: input.name.trim(),
+        email: input.email.trim(),
+        topic: input.topic,
+        message: input.message.trim(),
+        website: input.website,
+      }),
+    });
+    if (response.status === 429) {
+      throw new Error("Too many messages. Please try again later or email support directly.");
+    }
+    if (!response.ok) throw new Error("Submission could not be confirmed. Please email support directly.");
+    const result: unknown = await response.json();
+    if (!result || typeof result !== "object" || !("ok" in result) || result.ok !== true) {
+      throw new Error("Submission could not be confirmed. Please email support directly.");
+    }
+  } catch (error) {
+    if (error instanceof Error && /^(Too many messages|Submission could not)/.test(error.message)) {
+      throw error;
+    }
+    throw new Error("Submission could not be confirmed. Your draft is kept below; please email support directly.");
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 const singleLine = (value: string) => value.replace(/[\r\n]+/g, " ").trim();
 
 export function buildSupportMailto(input: SupportMessage): string {

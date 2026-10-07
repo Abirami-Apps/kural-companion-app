@@ -1,4 +1,4 @@
-import { FormEvent } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { ArrowLeft, LifeBuoy, Mail, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -8,24 +8,48 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import {
   buildSupportMailto,
+  contactEndpoint,
   CONTACT_TOPICS,
   type ContactTopic,
   SUPPORT_EMAIL,
+  submitSupportMessage,
 } from "@/lib/contact";
 
 export default function Contact() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const inFlight = useRef(false);
+  const [sending, setSending] = useState(false);
+  const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
-  const sendMessage = (event: FormEvent<HTMLFormElement>) => {
+  const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    window.location.href = buildSupportMailto({
+    if (inFlight.current) return;
+    const element = event.currentTarget;
+    const form = new FormData(element);
+    const input = {
       name: String(form.get("name") ?? ""),
       email: String(form.get("email") ?? ""),
       topic: String(form.get("topic") ?? CONTACT_TOPICS[0]) as ContactTopic,
       message: String(form.get("message") ?? ""),
-    });
+    };
+    if (!contactEndpoint) {
+      window.location.href = buildSupportMailto(input);
+      return;
+    }
+    inFlight.current = true;
+    setSending(true);
+    setFeedback(null);
+    try {
+      await submitSupportMessage({ ...input, website: String(form.get("website") ?? "") });
+      element.reset();
+      setFeedback({ kind: "success", text: "Message submitted. Our team will reply to the email you provided." });
+    } catch (error) {
+      setFeedback({ kind: "error", text: error instanceof Error ? error.message : "Submission could not be confirmed. Please email support directly." });
+    } finally {
+      inFlight.current = false;
+      setSending(false);
+    }
   };
 
   return (
@@ -53,10 +77,20 @@ export default function Contact() {
         <section aria-labelledby="send-message">
           <h2 id="send-message" className="text-xl font-semibold text-foreground">Send us a message</h2>
           <p className="mt-3 leading-7 text-foreground/80">
-            Fill in the details below. We will open your email app with the message ready for you to review and send.
+            {contactEndpoint
+              ? "Fill in the details below to send a message directly to our support team."
+              : "Fill in the details below. We will open your email app with the message ready for you to review and send."}
           </p>
 
           <form className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6" onSubmit={sendMessage}>
+            {contactEndpoint && (
+              <div className="hidden" aria-hidden="true">
+                <label htmlFor="contact-website">Leave this field empty</label>
+                <input id="contact-website" name="website" type="text" tabIndex={-1} autoComplete="off" />
+              </div>
+            )}
+            <fieldset disabled={sending} className="space-y-5">
+            <legend className="sr-only">Contact message details</legend>
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="contact-name">Name <span className="text-muted-foreground">(optional)</span></Label>
@@ -114,17 +148,23 @@ export default function Contact() {
               </p>
             </div>
 
-            <Button type="submit" className="min-h-11 w-full rounded-xl sm:w-auto">
+            <Button type="submit" disabled={sending} className="min-h-11 w-full rounded-xl sm:w-auto">
               <Send className="h-4 w-4" aria-hidden="true" />
-              Continue in email app
+              {sending ? "Sending…" : contactEndpoint ? "Send message" : "Continue in email app"}
             </Button>
+            </fieldset>
+            {feedback && (
+              <p role={feedback.kind === "error" ? "alert" : "status"} className="text-sm leading-6">
+                {feedback.text}
+              </p>
+            )}
           </form>
         </section>
 
         <section aria-labelledby="contact-email">
           <h2 id="contact-email" className="text-xl font-semibold text-foreground">Email directly</h2>
           <p className="mt-3 leading-7 text-foreground/80">
-            If the form does not open an email app, write to us directly. Use the email address connected to your Kural Companion account when your request concerns account data or a purchase.
+            You can also write to us directly. Use the email address connected to your Kural Companion account when your request concerns account data or a purchase.
           </p>
           <a
             href={`mailto:${SUPPORT_EMAIL}`}

@@ -4,9 +4,14 @@ RewriteEngine On
 
 # Keep the configuration and database schema private if they are ever uploaded
 # alongside the public API files.
-<FilesMatch "^(config\\.php|schema\\.sql)$">
+<FilesMatch "^(config[.]php|schema[.]sql|contact-core[.]php|contact[.]config[.]example[.]php|composer[.](json|lock))$">
   Require all denied
 </FilesMatch>
+
+# Composer libraries are loaded by PHP only, never served as web resources.
+RewriteRule ^vendor(?:/|$) - [F,L]
+RewriteRule ^\.contact-backup[^/]*(?:/|$) - [F,L]
+RewriteRule \.zip$ - [F,L,NC]
 
 # Route /health and /kurals/... to the single API entry point.
 RewriteCond %{REQUEST_FILENAME} !-f

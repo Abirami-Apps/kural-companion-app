@@ -52,3 +52,10 @@ Hourly preview, while retaining the bundled JSON as an offline fallback.
 The browser-side API origin is configured with `VITE_KURAL_API_URL` (the
 default is `https://api.abirami.app`). This is a public read-only URL; never
 place database credentials or the admin token in a `VITE_*` variable.
+
+## Support contact form
+
+The optional `contact.php` endpoint delivers messages to the existing Hostinger
+mailbox `support@abiramiaudio.com`. It is disabled until a private server-side
+SMTP configuration is supplied. Follow [CONTACT-SETUP.md](CONTACT-SETUP.md)
+before setting `VITE_CONTACT_ENDPOINT` or deploying this feature.

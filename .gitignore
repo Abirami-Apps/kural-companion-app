@@ -18,6 +18,8 @@ artifacts
 supabase/.env.billing
 supabase/.env.billing.live
 hostinger/kuralapi/config.php
+hostinger/kuralapi/vendor/
+kural-contact.config.php
 
 # Editor directories and files
 .vscode/*
