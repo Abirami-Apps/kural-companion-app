@@ -1,0 +1,35 @@
+Options -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Preserve the older content endpoint in the existing Hostinger directory.
+  RewriteRule ^api/v1/all/?$ api/v1/all.php [L]
+
+  # Let existing files, API endpoints and admin directories keep their handlers.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Deployment archives, local configuration and backups are not public assets.
+<FilesMatch "(^\.|\.(zip|bak|sql)$)">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Permissions-Policy "camera=(), geolocation=(), microphone=(), payment=()"
+
+  <FilesMatch "^(index\.html|sw\.js|registerSW\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # Preserve the existing read-only legacy API's cross-origin access.
+  <Files "all.php">
+    Header set Access-Control-Allow-Origin "*"
+  </Files>
+</IfModule>
