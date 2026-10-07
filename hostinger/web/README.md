@@ -8,12 +8,20 @@ Worker instead of the standalone web build.
 ## Current hosting target
 
 - Domain: `https://kural.abirami.app`
+- Production hosting: Hostinger, migrated on 7 October 2026.
+- DNS: `kural` CNAME -> `ftp.abirami.app` -> `147.93.23.21` (TTL 300).
+  The alias is only a DNS pointer; visitors still use HTTPS on
+  `kural.abirami.app`, not the FTP protocol.
 - Existing Cloud Startup document root:
   `/home/u280745247/domains/abirami.app/public_html/kuralapp`
 - Content API: `https://api.abirami.app` (keep its separate `kuralapi` root)
 - Audio: `https://cdn.abiramiaudio.com`
 - Accounts, account sync and entitlements: keep the existing Supabase project
 - Billing: keep the existing Razorpay integration and Supabase Edge Functions
+
+The old `.openai/hosting.json` is retained for the previous Sites deployment.
+Production web updates must now be uploaded to Hostinger, not published through
+Sites. The old OpenAI site was not deleted.
 
 The existing `admin`, `api`, and `data` directories are legacy files. Preserve
 them during uploads. `public/.htaccess` selects `index.html`, preserves the older
@@ -45,11 +53,20 @@ environment files with the static build.
    `kuralapp`. Leave the legacy directories intact.
 4. Before changing DNS, verify Hostinger serves the production host with the
    Hostinger origin IP (for example with curl's `--resolve` option).
-5. Replace only the `kural` OpenAI Sites CNAME with the Hostinger address supplied
-   by the hosting dashboard. Keep the same public domain and Supabase project;
+5. Point only the `kural` DNS record to the verified Hostinger server. Keep the
+   same public domain and Supabase project;
    existing accounts, premium records and webhook URLs remain in place.
 6. Verify HTTPS, direct route loads, static assets, and API connections. No new
    purchase or refund is needed just to migrate the frontend.
+
+The first deployment's archive was `kural-hostinger-web-20261007.zip`. Its
+`index.html` SHA-256 matched both the Hostinger origin and the public domain:
+`269053f30a5098092d6ef4229226d5ca52bae515254748ecec3dcd70ab05484e`.
+The original routing rules are backed up on the server as
+`.htaccess.pre-hostinger-20261007.bak`; the new rules deny public access to this
+backup and to ZIP archives. To roll back hosting, restore the `kural` CNAME to
+`custom-domains.chatgpt.site` (its old TTL was 600). This does not change Supabase
+or Razorpay data.
 
 ## Future automatic deployment
 
