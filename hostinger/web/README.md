@@ -50,7 +50,9 @@ environment files with the static build.
 1. Build with the production configuration above.
 2. Keep a backup of the existing `.htaccess` before replacing it.
 3. Upload only the contents of `dist/`, including the new `.htaccess`, into
-   `kuralapp`. Leave the legacy directories intact.
+   `kuralapp`. Leave the legacy directories intact. Retain previous hashed
+   files in `assets/` so already-open tabs can still load their lazy routes
+   while the service worker updates to the new release.
 4. Before changing DNS, verify Hostinger serves the production host with the
    Hostinger origin IP (for example with curl's `--resolve` option).
 5. Point only the `kural` DNS record to the verified Hostinger server. Keep the
@@ -67,6 +69,12 @@ The original routing rules are backed up on the server as
 backup and to ZIP archives. To roll back hosting, restore the `kural` CNAME to
 `custom-domains.chatgpt.site` (its old TTL was 600). This does not change Supabase
 or Razorpay data.
+
+The migration also retained 23 previous-release JavaScript chunks from
+`kural-hostinger-transition-assets-20261007.zip`. This resolved an old open
+browser session requesting the previous homepage chunk during the cutover.
+Both the rendered homepage and Contact page were verified on the live domain;
+the existing signed-in premium session was preserved.
 
 ## Future automatic deployment
 
